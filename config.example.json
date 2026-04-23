@@ -1,0 +1,13 @@
+{
+  "anthropic_api_key": "sk-ant-...",
+  "llama_cloud_api_key": "",
+  "edgar_user_agent": "10k-research your-name@example.com",
+  "model": "claude-sonnet-4-5",
+  "max_tokens": 4096,
+  "max_tokens_by_skill": {
+    "risk_analysis": 8192,
+    "mdna_analysis": 8192,
+    "cross_year_compare": 8192,
+    "insight_synthesis": 8192
+  }
+}

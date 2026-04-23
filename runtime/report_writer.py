@@ -1,0 +1,401 @@
+import json
+from datetime import datetime
+from pathlib import Path
+
+import markdown
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
+from weasyprint import HTML
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+_REPORT_CSS = (BASE_DIR / "runtime" / "report.css").read_text()
+_FONT_DIR = BASE_DIR / "runtime" / "fonts"
+
+def _build_pdf_css() -> str:
+    """Build CSS with @font-face for embedded Chinese fonts."""
+    font_regular = _FONT_DIR / "NotoSansTC-Regular.otf"
+    font_bold = _FONT_DIR / "NotoSansTC-Bold.otf"
+    font_css = ""
+    if font_regular.exists():
+        font_css += f"""
+@font-face {{
+    font-family: "Noto Sans TC";
+    src: url("file://{font_regular.resolve()}");
+    font-weight: normal;
+}}
+"""
+    if font_bold.exists():
+        font_css += f"""
+@font-face {{
+    font-family: "Noto Sans TC";
+    src: url("file://{font_bold.resolve()}");
+    font-weight: bold;
+}}
+"""
+    # Replace body font-family to prioritize Noto Sans TC
+    css = _REPORT_CSS.replace(
+        '"Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif',
+        '"Noto Sans TC", "Helvetica Neue", Arial, sans-serif',
+    )
+    return font_css + css
+
+PDF_CSS = _build_pdf_css()
+
+# Chart style
+rcParams.update({
+    "font.family": ["Heiti TC", "PingFang HK", "Arial Unicode MS", "sans-serif"],
+    "font.size": 10,
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+})
+
+
+def _fmt_val(val, is_pct=False):
+    """Format a number for display."""
+    if val is None:
+        return "—"
+    if is_pct:
+        return f"{val:.1f}%"
+    if abs(val) >= 1e9:
+        return f"${val / 1e9:,.1f}B"
+    if abs(val) >= 1e6:
+        return f"${val / 1e6:,.0f}M"
+    return f"{val:,.0f}"
+
+
+def _build_financial_tables(fin) -> list[str]:
+    """Build markdown tables from financial metrics."""
+    lines = []
+    metrics = fin.get("metrics", {})
+
+    # Collect all years
+    all_years = set()
+    for rows in metrics.values():
+        if isinstance(rows, list):
+            for r in rows:
+                if r.get("val") is not None:
+                    all_years.add(r["year"])
+    if not all_years:
+        return lines
+    years = sorted(all_years)
+
+    # Key metrics table
+    lines.append("### 關鍵財務指標")
+    header = "| 指標 | " + " | ".join(str(y) for y in years) + " |"
+    sep = "|------|" + "|".join("------:" for _ in years) + "|"
+    lines.append(header)
+    lines.append(sep)
+
+    metric_display = [
+        ("Revenue", "營收", False),
+        ("GrossMargin_pct", "毛利率", True),
+        ("OperatingMargin_pct", "營業利益率", True),
+        ("FCF_conversion", "FCF 轉換率", False),
+        ("CapEx_to_Revenue", "CapEx/營收", True),
+    ]
+    for key, label, is_pct in metric_display:
+        rows = metrics.get(key, [])
+        vals = {r["year"]: r.get("val") for r in rows if isinstance(r, dict)}
+        cells = []
+        for y in years:
+            v = vals.get(y)
+            if is_pct:
+                cells.append(_fmt_val(v, is_pct=True) if v is not None else "—")
+            elif key == "FCF_conversion":
+                cells.append(f"{v:.2f}" if v is not None else "—")
+            else:
+                cells.append(_fmt_val(v))
+        lines.append(f"| {label} | " + " | ".join(cells) + " |")
+
+    # YoY growth row for Revenue
+    rev_rows = metrics.get("Revenue", [])
+    rev_yoy = {r["year"]: r.get("yoy_pct") for r in rev_rows if isinstance(r, dict)}
+    if any(v is not None for v in rev_yoy.values()):
+        cells = []
+        for y in years:
+            v = rev_yoy.get(y)
+            cells.append(f"{v:+.1f}%" if v is not None else "—")
+        lines.append(f"| 營收 YoY | " + " | ".join(cells) + " |")
+    lines.append("")
+
+    # Capital allocation
+    cap_alloc = fin.get("capital_allocation_order", [])
+    if cap_alloc:
+        lines.append("### 資本配置優先序")
+        for i, item in enumerate(cap_alloc, 1):
+            lines.append(f"{i}. {item}")
+        lines.append("")
+
+    return lines
+
+
+def _build_quarterly_chart(quarterly: list[dict], out_dir: Path) -> str | None:
+    """Generate quarterly trend line chart. Returns image filename or None."""
+    if not quarterly or len(quarterly) < 2:
+        return None
+
+    labels = [q["quarter"] for q in quarterly]
+    rev_growth = [q.get("rev_growth_yoy") for q in quarterly]
+    op_margin = [q.get("op_margin") for q in quarterly]
+    net_margin = [q.get("net_margin") for q in quarterly]
+
+    fig, ax = plt.subplots(figsize=(5.5, 2.8))
+
+    x = range(len(labels))
+    if any(v is not None for v in rev_growth):
+        vals = [v if v is not None else float("nan") for v in rev_growth]
+        ax.plot(x, vals, "o-", color="#2980b9", linewidth=2, markersize=5, label="營收成長率 YoY")
+    if any(v is not None for v in op_margin):
+        vals = [v if v is not None else float("nan") for v in op_margin]
+        ax.plot(x, vals, "s-", color="#e67e22", linewidth=2, markersize=5, label="營業利益率")
+    if any(v is not None for v in net_margin):
+        vals = [v if v is not None else float("nan") for v in net_margin]
+        ax.plot(x, vals, "^-", color="#27ae60", linewidth=2, markersize=5, label="淨利率")
+
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("%")
+    ax.legend(loc="upper left", fontsize=7, framealpha=0.8)
+    ax.grid(axis="y", alpha=0.3)
+    fig.tight_layout()
+
+    chart_name = "quarterly_trend.png"
+    chart_path = out_dir / chart_name
+    fig.savefig(str(chart_path), dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return chart_name
+
+
+def save_report(ticker, results, eval_results, synthesis, quarterly=None) -> Path:
+    out_dir = BASE_DIR / "data" / "output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    insight = synthesis.get("insight", {})
+    comparator = synthesis.get("comparator", {})
+    completeness = synthesis.get("completeness", {})
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    draft_flag = "" if completeness.get("ready_to_publish", True) else " [DRAFT]"
+    grade = completeness.get("overall_grade", "")
+    grade_line = f"  |  Grade: {grade}" if grade else ""
+
+    lines = [
+        f"# {ticker} 10-K 投資研究報告{draft_flag}",
+        f"產出時間：{datetime.now().strftime('%Y-%m-%d %H:%M')}{grade_line}",
+        "",
+    ]
+
+    # ── 公司定位 ──
+    biz = results.get("business", {})
+    if biz.get("company_positioning"):
+        lines.append("## 公司定位")
+        lines.append(biz["company_positioning"])
+        lines.append("")
+
+    # ── 成長敘事 ──
+    if biz.get("growth_narrative"):
+        lines.append("## 成長敘事")
+        lines.append(biz["growth_narrative"])
+        lines.append("")
+
+    # ── 終端市場組合 ──
+    end_markets = biz.get("end_market_mix", [])
+    if end_markets:
+        lines.append("### 終端市場組合")
+        lines.append("| 市場 | 佔比 | 趨勢 |")
+        lines.append("|------|-----:|------|")
+        trend_zh = {"growing": "成長", "stable": "穩定", "declining": "下滑"}
+        for em in end_markets:
+            t = trend_zh.get(em.get("trend", ""), em.get("trend", ""))
+            lines.append(f"| {em.get('market', '')} | {em.get('pct', '')} | {t} |")
+        lines.append("")
+
+    # ── 整體信心 ──
+    confidence = insight.get("confidence", "unknown")
+    lines.append(f"**整體信心：{confidence}**")
+    if insight.get("confidence_reason"):
+        lines.append(f"> {insight['confidence_reason']}")
+    lines.append("")
+
+    low_conf = [
+        tid for tid, r in results.items()
+        if isinstance(r, dict) and r.get("low_confidence")
+    ]
+    if low_conf:
+        lines.append(f"**低信心任務：{', '.join(low_conf)}**")
+        lines.append("")
+
+    # ── 多頭論點 ──
+    lines.append("## 多頭論點（Bull Case）")
+    for item in insight.get("bull_case", []):
+        lines.append(f"- **{item.get('point', '')}**")
+        if item.get("evidence"):
+            lines.append(f"  - 佐證：{item['evidence']}")
+    lines.append("")
+
+    # ── 空頭論點 ──
+    lines.append("## 空頭論點（Bear Case）")
+    for item in insight.get("bear_case", []):
+        lines.append(f"- **{item.get('point', '')}**")
+        if item.get("evidence"):
+            lines.append(f"  - 佐證：{item['evidence']}")
+    lines.append("")
+
+    # ── 關鍵追蹤指標 ──
+    lines.append("## 關鍵追蹤指標（未來兩季）")
+    for item in insight.get("key_monitorables", []):
+        lines.append(f"- {item}")
+    lines.append("")
+
+    # ── 資訊優勢 ──
+    if insight.get("information_edge"):
+        lines.append("## 資訊優勢（Information Edge）")
+        for item in insight.get("information_edge", []):
+            lines.append(f"- {item}")
+        lines.append("")
+
+    # ── 財務數據 ──
+    fin = results.get("financial", {})
+    lines.append("## 財務數據")
+    lines.extend(_build_financial_tables(fin))
+
+    # ── 季度趨勢圖 ──
+    if quarterly:
+        chart_name = _build_quarterly_chart(quarterly or [], out_dir)
+        if chart_name:
+            lines.append("### 季度趨勢")
+            lines.append(f"![季度趨勢]({chart_name})")
+            lines.append("")
+
+    # ── 財務趨勢摘要 ──
+    if fin.get("trend_summary"):
+        lines.append("### 趨勢摘要")
+        lines.append(fin["trend_summary"])
+        lines.append("")
+
+    if fin.get("quality_flags"):
+        lines.append("### 品質警示")
+        for flag in fin["quality_flags"]:
+            lines.append(f"- {flag}")
+        lines.append("")
+
+    if fin.get("anomalies"):
+        lines.append("### 異常值")
+        for a in fin["anomalies"]:
+            lines.append(
+                f"- **{a.get('year', '')} {a.get('metric', '')}**："
+                f"{a.get('note', '')}"
+            )
+        lines.append("")
+
+    # ── 跨年度分析 ──
+    lines.append("## 跨年度分析")
+    mgmt_cred = comparator.get("mgmt_credibility", "N/A")
+    qual_trend = comparator.get("quality_trend", "N/A")
+    overall = comparator.get("overall_direction", "N/A")
+    lines.append("")
+    lines.append("| 維度 | 評估 |")
+    lines.append("|------|------|")
+    lines.append(f"| 管理層可信度 | {mgmt_cred} |")
+    lines.append(f"| 品質趨勢 | {qual_trend} |")
+    lines.append(f"| 整體方向 | {overall} |")
+    lines.append("")
+    if comparator.get("mgmt_credibility_reason"):
+        lines.append(f"> {comparator['mgmt_credibility_reason']}")
+        lines.append("")
+
+    # ── 不尋常操作 ──
+    uo = results.get("unusual_operations", {})
+    unusual_items = uo.get("unusual_items", [])
+    lines.append("## 不尋常操作")
+    if not unusual_items:
+        lines.append("> 未發現不尋常操作，財務處理符合一般揭露規範。")
+    else:
+        if uo.get("summary"):
+            lines.append(uo["summary"])
+            lines.append("")
+        for item in unusual_items:
+            cls_zh = {"industry_norm": "行業常態", "company_specific": "公司特殊",
+                      "hybrid": "混合型"}.get(item.get("classification", ""), item.get("classification", ""))
+            inv_zh = {"positive": "正面", "neutral": "中性", "negative": "負面"}.get(
+                item.get("investor_interpretation", ""), "")
+            lines.append(f"### {item.get('name', '')}")
+            lines.append(f"- 分類：{cls_zh}（{item.get('classification_rationale', '')}）")
+            lines.append(f"- 描述：{item.get('description', '')}")
+            if item.get("source_quote"):
+                lines.append(f"- 原文：*{item['source_quote']}*")
+            lines.append(f"- 財務影響：{item.get('financial_impact', '')}")
+            lines.append(f"- 投資者解讀：**{inv_zh}** — {item.get('investor_note', '')}")
+            lines.append("")
+    lines.append("")
+
+    # ── 交叉驗證 ──
+    if comparator.get("cross_checks"):
+        lines.append("## 交叉驗證")
+        for cc in comparator["cross_checks"]:
+            dims = ", ".join(cc.get("dimensions", []))
+            direction = cc.get("direction", "")
+            tag = {"positive": "正面", "negative": "負面", "neutral": "中性"}.get(direction, direction)
+            lines.append(f"- **[{tag}]**（{dims}）{cc.get('finding', '')}")
+            if cc.get("implication"):
+                lines.append(f"  - 影響：{cc['implication']}")
+        lines.append("")
+
+    # ── 術語表（僅 high importance）──
+    glossary = results.get("terms_glossary", {})
+    high_terms = [t for t in glossary.get("terms", []) if t.get("importance") == "high"]
+    if high_terms:
+        lines.append("## 附錄：關鍵術語")
+        lines.append("| 術語 | 分類 | 說明 |")
+        lines.append("|------|------|------|")
+        cat_zh = {"financial": "財務", "industry": "行業", "company_defined": "公司自定",
+                  "regulatory": "法規"}
+        for t in high_terms:
+            cat = cat_zh.get(t.get("category", ""), t.get("category", ""))
+            lines.append(f"| {t.get('term', '')} | {cat} | {t.get('explanation', '')} |")
+        lines.append("")
+
+    md_text = "\n".join(lines)
+
+    # ── Save Markdown ──
+    report_md = out_dir / f"{ticker}_{ts}_report.md"
+    report_md.write_text(md_text, encoding="utf-8")
+
+    # ── Save PDF ──
+    report_pdf = out_dir / f"{ticker}_{ts}_report.pdf"
+    # For PDF: replace relative image paths with file:// URI
+    pdf_md = md_text
+    chart_file = out_dir / "quarterly_trend.png"
+    if chart_file.exists():
+        pdf_md = pdf_md.replace(
+            "(quarterly_trend.png)",
+            f"(file://{chart_file.resolve()})",
+        )
+    html_body = markdown.markdown(pdf_md, extensions=["tables"])
+    html_full = (
+        f'<html><head><meta charset="utf-8">'
+        f'<style>{PDF_CSS}</style></head>'
+        f'<body>{html_body}</body></html>'
+    )
+    HTML(string=html_full, base_url=str(out_dir)).write_pdf(str(report_pdf))
+
+    # ── Save raw JSON ──
+    json_path = out_dir / f"{ticker}_{ts}_raw.json"
+    json_path.write_text(
+        json.dumps(
+            {"results": results, "eval": eval_results, "synthesis": synthesis},
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    print(f"\n{'='*50}")
+    print(f"  報告 (MD)：{report_md}")
+    print(f"  報告 (PDF)：{report_pdf}")
+    print(f"  原始 JSON：{json_path}")
+    print(f"{'='*50}")
+    return report_md

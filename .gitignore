@@ -1,0 +1,15 @@
+.env
+config.json
+.venv/
+data/cache/
+data/output/
+__pycache__/
+*.pyc
+*.otf
+*.ttf
+*.ttc
+.DS_Store
+.claude
+CLAUDE.md
+mdpdf.log
+specs

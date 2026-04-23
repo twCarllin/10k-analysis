@@ -1,0 +1,5 @@
+llama-parse>=0.5.0
+markitdown[pdf]>=0.1.5
+anthropic>=0.40.0
+requests>=2.32.0
+beautifulsoup4>=4.12.0

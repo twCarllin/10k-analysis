@@ -1,0 +1,102 @@
+@page {
+    size: A4;
+    margin: 2cm 2.5cm;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #1a1a1a;
+}
+
+h1 {
+    font-size: 20pt;
+    border-bottom: 2.5px solid #2c3e50;
+    padding-bottom: 8px;
+    margin-top: 0;
+    margin-bottom: 4px;
+}
+
+h2 {
+    font-size: 14pt;
+    color: #2c3e50;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+    margin-top: 20px;
+    page-break-after: avoid;
+}
+
+h3 {
+    font-size: 12pt;
+    color: #34495e;
+    margin-top: 14px;
+    page-break-after: avoid;
+}
+
+blockquote {
+    border-left: 3px solid #7f8c8d;
+    padding: 6px 12px;
+    margin: 8px 0;
+    color: #555;
+    background: #f9f9f9;
+    font-size: 10pt;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+    font-size: 9.5pt;
+}
+
+th {
+    background: #2c3e50;
+    color: white;
+    padding: 6px 10px;
+    text-align: right;
+    font-weight: 600;
+}
+
+th:first-child {
+    text-align: left;
+}
+
+td {
+    border-bottom: 1px solid #ddd;
+    padding: 5px 10px;
+    text-align: right;
+}
+
+td:first-child {
+    text-align: left;
+    font-weight: 500;
+}
+
+tr:nth-child(even) {
+    background: #f7f9fa;
+}
+
+ul {
+    margin: 6px 0;
+    padding-left: 22px;
+}
+
+li {
+    margin-bottom: 5px;
+}
+
+strong {
+    color: #2c3e50;
+}
+
+p {
+    margin: 6px 0;
+}
+
+img {
+    max-width: 95%;
+    height: auto;
+    display: block;
+    margin: 10px 0;
+}
