@@ -4,6 +4,8 @@
 
 輸入 ticker + 年份，輸出繁體中文 Markdown + PDF 報告，包含 Bull/Bear case、關鍵追蹤指標、財務數據表格與季度趨勢圖。
 
+輸出結果請參考 HWM_20260423_215655_report.pdf
+
 ## Quick Start
 
 ```bash
