@@ -36,12 +36,16 @@ def get_cik(ticker: str) -> str:
     raise ValueError(f"找不到 ticker: {ticker}")
 
 
-def download_10k_htm(ticker: str, year: int) -> Path:
+def download_filing(ticker: str, year: int, filing_type: str = "10-K",
+                    quarter: str | None = None) -> Path:
     """
     流程：
     1. submissions API 找 accession number
-    2. filing index JSON 找主文件 URL（type=="10-K"）
+    2. filing index JSON 找主文件 URL
     3. 下載並快取到 data/cache/htm/
+
+    filing_type: "10-K" 或 "10-Q"
+    quarter: 10-Q 時必須指定 "Q1"/"Q2"/"Q3"
     """
     cache_dir = BASE_DIR / "data/cache/htm"
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -55,11 +59,21 @@ def download_10k_htm(ticker: str, year: int) -> Path:
     r.raise_for_status()
     recent = r.json()["filings"]["recent"]
 
+    target_forms = {filing_type, f"{filing_type}/A"}
+
     for i, form in enumerate(recent["form"]):
-        if form != "10-K":
+        if form not in target_forms:
             continue
         if int(recent["filingDate"][i][:4]) not in (year, year + 1):
             continue
+        # 10-Q: match fiscal period (Q1/Q2/Q3)
+        if filing_type == "10-Q" and quarter:
+            fp = recent.get("reportDate", recent.get("filingDate", []))
+            if i < len(fp):
+                report_month = int(fp[i][5:7])
+                report_q = f"Q{(report_month - 1) // 3 + 1}"
+                if report_q != quarter:
+                    continue
 
         acc_no = recent["accessionNumber"][i]
         acc_clean = acc_no.replace("-", "")
@@ -69,14 +83,23 @@ def download_10k_htm(ticker: str, year: int) -> Path:
             f"{EDGAR_BASE}/Archives/edgar/data/"
             f"{int(cik)}/{acc_clean}/{filename}"
         )
-        cache_path = cache_dir / f"{ticker}_{year}_10K.{ext}"
+        label = f"{filing_type.replace('-', '')}"
+        if quarter:
+            label += f"_{quarter}"
+        cache_path = cache_dir / f"{ticker}_{year}_{label}.{ext}"
         if not cache_path.exists():
             r2 = requests.get(url, headers=HEADERS, timeout=120)
             r2.raise_for_status()
             cache_path.write_bytes(r2.content)
         return cache_path
 
-    raise FileNotFoundError(f"找不到 {ticker} {year} 10-K 主文件")
+    q_hint = f" {quarter}" if quarter else ""
+    raise FileNotFoundError(f"找不到 {ticker} {year}{q_hint} {filing_type} 主文件")
+
+
+# Backward compatibility alias
+def download_10k_htm(ticker: str, year: int) -> Path:
+    return download_filing(ticker, year, filing_type="10-K")
 
 
 XBRL_CONCEPTS = {
@@ -112,8 +135,8 @@ def get_xbrl_facts(ticker: str) -> dict:
     return data
 
 
-def extract_key_metrics(xbrl_facts: dict) -> dict:
-    """只取 form==10-K、fp==FY 的年度數字，最近 5 年。"""
+def extract_key_metrics(xbrl_facts: dict, filing_type: str = "10-K") -> dict:
+    """取 form==filing_type 的數字。10-K 取 fp==FY 最近 5 年；10-Q 取最近 5 季。"""
     us_gaap = xbrl_facts.get("facts", {}).get("us-gaap", {})
 
     def annual(concepts, unit="USD"):
@@ -122,16 +145,24 @@ def extract_key_metrics(xbrl_facts: dict) -> dict:
             values = units_dict.get(unit, [])
             if not values and unit == "USD":
                 values = units_dict.get("shares", [])
+            if filing_type == "10-K":
+                target_forms = ("10-K", "10-K/A")
+                target_fp = ("FY",)
+            else:
+                target_forms = ("10-Q", "10-Q/A", "10-K", "10-K/A")
+                target_fp = ("Q1", "Q2", "Q3", "Q4", "FY")
             entries = [
-                {"year": e["fy"], "val": e["val"], "filed": e.get("filed", "")}
+                {"year": e["fy"], "val": e["val"], "filed": e.get("filed", ""),
+                 "fp": e.get("fp", "")}
                 for e in values
-                if e.get("form") in ("10-K", "10-K/A") and e.get("fp") == "FY"
+                if e.get("form") in target_forms and e.get("fp") in target_fp
             ]
-            # Dedup: same year → keep latest filed (10-K/A overrides 10-K)
+            # Dedup: same (year, fp) → keep latest filed
             deduped = {}
             for row in sorted(entries, key=lambda x: x["filed"]):
-                deduped[row["year"]] = row
-            rows = sorted(deduped.values(), key=lambda x: x["year"])[-5:]
+                key = (row["year"], row["fp"]) if filing_type == "10-Q" else row["year"]
+                deduped[key] = row
+            rows = sorted(deduped.values(), key=lambda x: x["filed"])[-5:]
             if rows:
                 return [{"year": r["year"], "val": r["val"]} for r in rows]
         return []

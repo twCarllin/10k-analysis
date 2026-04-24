@@ -2,12 +2,13 @@ import re
 
 from agent_runner import run_agent, truncate_with_notice
 
-TARGET_SECTIONS = [
+# ── 10-K sections ──
+TARGET_SECTIONS_10K = [
     "item1", "item1a", "item1c", "item7",
     "item8", "item9a", "item10", "item11", "item13",
 ]
 
-HEADER_PATTERNS = {
+HEADER_PATTERNS_10K = {
     "item1":  r"^#{1,3}\s*item\s+1[\.\s]+business(?!\s*[abc])",
     "item1a": r"^#{1,3}\s*item\s+1a[\.\s]+risk",
     "item1c": r"^#{1,3}\s*item\s+1c[\.\s]+cyber",
@@ -20,23 +21,52 @@ HEADER_PATTERNS = {
     "item13": r"^#{1,3}\s*item\s+13",
 }
 
+# ── 10-Q sections ──
+# 10-Q Part I: Item 1 (Financial Statements), Item 2 (MD&A), Item 3 (Market Risk), Item 4 (Controls)
+# 10-Q Part II: Item 1 (Legal), Item 1A (Risk Factors, optional), Item 6 (Exhibits)
+TARGET_SECTIONS_10Q = [
+    "item1", "item2", "item3", "item4",
+]
 
-def split_sections(md_text: str) -> dict[str, str]:
+HEADER_PATTERNS_10Q = {
+    "item1":  r"(?:^#{1,3}\s*|^\|?\s*)item\s+1[\.\s]+.*financial",
+    "item1a": r"(?:^#{1,3}\s*|^\|?\s*)item\s+1a[\.\s]+.*risk",
+    "item2":  r"(?:^#{1,3}\s*|^\|?\s*)item\s+2[\.\s]+.*management",
+    "item3":  r"(?:^#{1,3}\s*|^\|?\s*)item\s+3[\.\s]+.*quantitative",
+    "item4":  r"(?:^#{1,3}\s*|^\|?\s*)item\s+4[\.\s]+.*controls",
+}
+
+# Default alias (backward compatible)
+TARGET_SECTIONS = TARGET_SECTIONS_10K
+HEADER_PATTERNS = HEADER_PATTERNS_10K
+
+
+def _get_config(filing_type: str = "10-K"):
+    if filing_type == "10-Q":
+        return TARGET_SECTIONS_10Q, HEADER_PATTERNS_10Q
+    return TARGET_SECTIONS_10K, HEADER_PATTERNS_10K
+
+
+def split_sections(md_text: str, filing_type: str = "10-K") -> dict[str, str]:
+    target_sections, header_patterns = _get_config(filing_type)
+
     # Layer 1: header-based
-    sections = _split_by_patterns(md_text, HEADER_PATTERNS)
-    if _is_valid(sections):
+    sections = _split_by_patterns(md_text, header_patterns, target_sections)
+    if _is_valid(sections, filing_type):
         return sections
 
     # Layer 2: TOC-guided
-    sections = _toc_guided_split(md_text)
-    if _is_valid(sections):
+    sections = _toc_guided_split(md_text, filing_type)
+    if _is_valid(sections, filing_type):
         return sections
 
     # Layer 3: LLM fallback
     return _llm_fallback(md_text)
 
 
-def _split_by_patterns(text, patterns) -> dict[str, str]:
+def _split_by_patterns(text, patterns, target_sections=None) -> dict[str, str]:
+    if target_sections is None:
+        target_sections = TARGET_SECTIONS_10K
     lines = text.split("\n")
     positions = {}
     for name, pattern in patterns.items():
@@ -48,7 +78,7 @@ def _split_by_patterns(text, patterns) -> dict[str, str]:
     sorted_pos = sorted(positions.items(), key=lambda x: x[1])
     result = {}
     for i, (name, start) in enumerate(sorted_pos):
-        if name not in TARGET_SECTIONS:
+        if name not in target_sections:
             continue
         end = sorted_pos[i + 1][1] if i + 1 < len(sorted_pos) else len(lines)
         result[name] = "\n".join(lines[start:end]).strip()
@@ -61,6 +91,64 @@ def _strip_md_formatting(text: str) -> str:
     text = re.sub(r"[|]", " ", text)  # pipes
     text = re.sub(r"\s+", " ", text).strip()
     return text
+
+
+def _parse_hierarchical_toc(lines, toc_end, known_titles, target_sections):
+    """Parse hierarchical TOC table. Returns {item_key: anchor_id}.
+
+    Handles two patterns:
+    - Parent rows: first cell has text (e.g. "| Financial Statements... |")
+    - Child rows: first cell is empty (e.g. "|  | | | Statements of Operations | ...")
+
+    For parents without anchors, uses the first child's anchor.
+    Children can also directly match a section (e.g. Risk Factors -> item1a).
+    """
+    anchor_re = re.compile(r"\[.*?\]\(#([^)]+)\)")
+    result = {}
+    current_parent_key = None
+
+    for line in lines[:toc_end]:
+        if "|" not in line:
+            continue
+
+        # Determine hierarchy: child row starts with "| " then immediately another "|"
+        is_child = bool(re.match(r"\|\s*\|", line))
+
+        # Extract title text (strip markdown formatting, pipes, whitespace)
+        title_text = _strip_md_formatting(line).strip()
+        if not title_text:
+            continue
+
+        # Extract anchor if present
+        anchor_match = anchor_re.search(line)
+        anchor_id = anchor_match.group(1) if anchor_match else None
+
+        if not is_child:
+            # Parent row: try to match known_titles
+            current_parent_key = None
+            for skey, known in known_titles.items():
+                if known[:15].lower() in title_text.lower():
+                    current_parent_key = skey
+                    if anchor_id and skey not in result and skey in target_sections:
+                        result[skey] = anchor_id
+                    break
+        else:
+            # Child row: first give anchor to parent if parent has no anchor yet
+            if (current_parent_key is not None
+                    and anchor_id
+                    and current_parent_key not in result
+                    and current_parent_key in target_sections):
+                result[current_parent_key] = anchor_id
+
+            # Also try to match child row directly against known_titles
+            if anchor_id:
+                for skey, known in known_titles.items():
+                    if known[:15].lower() in title_text.lower():
+                        if skey not in result and skey in target_sections:
+                            result[skey] = anchor_id
+                        break
+
+    return result
 
 
 def _detect_toc_end(lines, max_scan=300) -> int:
@@ -82,63 +170,85 @@ def _detect_toc_end(lines, max_scan=300) -> int:
     return cluster_end + 3
 
 
-def _toc_guided_split(md_text) -> dict[str, str]:
+KNOWN_TITLES_10K = {
+    "item1":  "Business",
+    "item1a": "Risk Factors",
+    "item1c": "Cybersecurity",
+    "item7":  "Management's Discussion and Analysis",
+    "item8":  "Financial Statements and Supplementary Data",
+    "item9a": "Controls and Procedures",
+    "item10": "Directors",
+    "item11": "Executive Compensation",
+    "item13": "Certain Relationships",
+}
+
+KNOWN_TITLES_10Q = {
+    "item1":  "Financial Statements",
+    "item1a": "Risk Factors",
+    "item2":  "Management's Discussion and Analysis",
+    "item3":  "Quantitative and Qualitative Disclosures About Market Risk",
+    "item4":  "Controls and Procedures",
+}
+
+
+def _toc_guided_split(md_text, filing_type: str = "10-K") -> dict[str, str]:
+    target_sections, _ = _get_config(filing_type)
+    known_titles = KNOWN_TITLES_10Q if filing_type == "10-Q" else KNOWN_TITLES_10K
+
     lines = md_text.split("\n")
     toc_end = _detect_toc_end(lines)
-    item_titles = {}
-    toc_re = re.compile(
-        r"(item\s+\d+[abc]?)\s*[.\-\u2013]?\s*(.+?)(?:\s+\.{2,}|\s+\d+\s*$|\s*$)",
-        re.IGNORECASE,
-    )
-    for line in lines[:toc_end]:
-        m = toc_re.search(line)
-        if m:
-            key = "item" + m.group(1).lower().split()[-1]
-            raw_title = m.group(2).strip()
-            title = _strip_md_formatting(raw_title)[:40]
-            if key in TARGET_SECTIONS and len(title) >= 3:
-                item_titles[key] = title
 
-    # Also try well-known section names as fallback anchors
-    KNOWN_TITLES = {
-        "item1":  "Business",
-        "item1a": "Risk Factors",
-        "item1c": "Cybersecurity",
-        "item7":  "Management's Discussion and Analysis",
-        "item8":  "Financial Statements and Supplementary Data",
-        "item9a": "Controls and Procedures",
-        "item10": "Directors",
-        "item11": "Executive Compensation",
-        "item13": "Certain Relationships",
-    }
-    for key, fallback in KNOWN_TITLES.items():
-        if key not in item_titles:
-            item_titles[key] = fallback
+    # ── Step 1: Parse TOC for item keys and anchors ──
+    item_anchors = _parse_hierarchical_toc(lines, toc_end, known_titles, target_sections)
+    item_titles = {k: known_titles.get(k, "") for k in target_sections}
 
+    # ── Step 2: Locate positions using anchors first, then text patterns ──
     positions = {}
+
+    # Strategy A: anchor-based (most reliable for files with TOC links)
+    # MarkItDown escapes _ → \_ in text but not in URLs,
+    # so normalize the line before matching
+    for key, anchor_id in item_anchors.items():
+        marker = f"[anchor:{anchor_id}]"
+        for i, line in enumerate(lines):
+            if marker in line.replace("\\_", "_"):
+                positions[key] = i
+                break
+
+    # Strategy B: text-based fallback for items without anchors
     for key, title in item_titles.items():
+        if key in positions:
+            continue
         item_num = key.replace("item", "")
-        # Primary: match "Item N. <title>" at start of cleaned line (skip inline refs)
         pat_strict = re.compile(
             rf"^\s*item\s+{re.escape(item_num)}[.\s]+{re.escape(title[:20])}",
             re.IGNORECASE,
         )
-        # Fallback: "Item N." at start of line
         pat_loose = re.compile(
             rf"^\s*item\s+{re.escape(item_num)}\s*\.",
             re.IGNORECASE,
         )
-        for pat in [pat_strict, pat_loose]:
+        pat_title_only = re.compile(
+            rf"^\s*{re.escape(title[:20])}",
+            re.IGNORECASE,
+        )
+        for pat in [pat_strict, pat_loose, pat_title_only]:
             for i, line in enumerate(lines[toc_end:], start=toc_end):
+                if "|" in line:
+                    continue
                 clean_line = _strip_md_formatting(line)
                 if pat.search(clean_line):
                     positions[key] = i
                     break
             if key in positions:
                 break
+
+    target_sections, _ = _get_config(filing_type)
     sorted_pos = sorted(positions.items(), key=lambda x: x[1])
     result = {}
     for i, (name, start) in enumerate(sorted_pos):
+        if name not in target_sections:
+            continue
         end = sorted_pos[i + 1][1] if i + 1 < len(sorted_pos) else len(lines)
         result[name] = "\n".join(lines[start:end]).strip()
     return result
@@ -170,7 +280,14 @@ def _llm_fallback(md_text) -> dict[str, str]:
     return result2
 
 
-def _is_valid(sections) -> bool:
+def _is_valid(sections, filing_type: str = "10-K") -> bool:
+    if filing_type == "10-Q":
+        critical = ["item1", "item2"]
+        return (
+            len(sections) >= 2
+            and all(k in sections for k in critical)
+            and all(len(v) >= 500 for v in sections.values())
+        )
     critical = ["item1a", "item7", "item8"]
     return (
         len(sections) >= 3
@@ -179,9 +296,13 @@ def _is_valid(sections) -> bool:
     )
 
 
-def validate_sections(sections) -> list[str]:
+def validate_sections(sections, filing_type: str = "10-K") -> list[str]:
     warnings = []
-    for name, min_c in {"item1a": 3000, "item7": 5000, "item8": 5000}.items():
+    if filing_type == "10-Q":
+        thresholds = {"item1": 2000, "item2": 3000}
+    else:
+        thresholds = {"item1a": 3000, "item7": 5000, "item8": 5000}
+    for name, min_c in thresholds.items():
         if len(sections.get(name, "")) < min_c:
             warnings.append(
                 f"{name}: {len(sections.get(name, ''))} 字（預期 >{min_c}），可能切割不完整"

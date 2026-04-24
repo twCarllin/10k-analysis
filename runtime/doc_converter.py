@@ -45,7 +45,34 @@ def _llamaparse(doc_path: Path) -> str | None:
         return None
 
 
+def _inject_anchor_markers(html: str) -> str:
+    """Convert empty anchor divs/spans to visible markers so markdown retains them.
+    e.g. <div id="abc123"></div> → <div id="abc123"><!-- anchor:abc123 --></div>
+    After markdown conversion these become searchable anchor comments.
+    """
+    # Match empty elements with id attributes (common SEC anchor pattern)
+    return re.sub(
+        r'<(div|span|a)\s+id="([^"]+)">\s*</\1>',
+        r'<\1 id="\2">[anchor:\2]</\1>',
+        html,
+    )
+
+
 def _markitdown_fallback(doc_path: Path) -> str:
     from markitdown import MarkItDown
+
+    # For HTM/HTML files, inject anchor markers before conversion
+    suffix = doc_path.suffix.lower()
+    if suffix in (".htm", ".html"):
+        import tempfile
+        html = doc_path.read_text(encoding="utf-8", errors="replace")
+        html = _inject_anchor_markers(html)
+        with tempfile.NamedTemporaryFile(suffix=".htm", mode="w",
+                                         encoding="utf-8", delete=False) as f:
+            f.write(html)
+            tmp_path = f.name
+        result = MarkItDown().convert(tmp_path).text_content
+        Path(tmp_path).unlink(missing_ok=True)
+        return result
 
     return MarkItDown().convert(str(doc_path)).text_content

@@ -7,6 +7,7 @@ last_modified: 2025-04-23
 
 ## Purpose
 分析 10-K Part III（Item 9A + 10 + 11 + 13）章節，萃取治理結構、審計意見與薪酬對齊。
+（僅適用於 10-K 年報，10-Q 季報不含此章節。）
 
 ## Input
 - `current_section`（必填）：Item 9A + 10 + 11 + 13 合併文字

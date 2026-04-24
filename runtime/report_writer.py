@@ -169,7 +169,8 @@ def _build_quarterly_chart(quarterly: list[dict], out_dir: Path) -> str | None:
     return chart_name
 
 
-def save_report(ticker, results, eval_results, synthesis, quarterly=None) -> Path:
+def save_report(ticker, results, eval_results, synthesis, quarterly=None,
+                filing_type="10-K", quarter=None) -> Path:
     out_dir = BASE_DIR / "data" / "output"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -182,8 +183,11 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None) -> Pat
     grade = completeness.get("overall_grade", "")
     grade_line = f"  |  Grade: {grade}" if grade else ""
 
+    filing_label = filing_type
+    if quarter:
+        filing_label += f" {quarter}"
     lines = [
-        f"# {ticker} 10-K 投資研究報告{draft_flag}",
+        f"# {ticker} {filing_label} 投資研究報告{draft_flag}",
         f"產出時間：{datetime.now().strftime('%Y-%m-%d %H:%M')}{grade_line}",
         "",
     ]
@@ -233,7 +237,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None) -> Pat
     for item in insight.get("bull_case", []):
         lines.append(f"- **{item.get('point', '')}**")
         if item.get("evidence"):
-            lines.append(f"  - 佐證：{item['evidence']}")
+            lines.append(f"  - 論述：{item['evidence']}")
     lines.append("")
 
     # ── 空頭論點 ──
@@ -241,7 +245,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None) -> Pat
     for item in insight.get("bear_case", []):
         lines.append(f"- **{item.get('point', '')}**")
         if item.get("evidence"):
-            lines.append(f"  - 佐證：{item['evidence']}")
+            lines.append(f"  - 論述：{item['evidence']}")
     lines.append("")
 
     # ── 關鍵追蹤指標 ──
@@ -250,9 +254,9 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None) -> Pat
         lines.append(f"- {item}")
     lines.append("")
 
-    # ── 資訊優勢 ──
+    # ── 10K 洞察 ──
     if insight.get("information_edge"):
-        lines.append("## 資訊優勢（Information Edge）")
+        lines.append("## 10K 洞察（Information Edge）")
         for item in insight.get("information_edge", []):
             lines.append(f"- {item}")
         lines.append("")

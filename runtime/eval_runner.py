@@ -76,7 +76,7 @@ def eval_single(task_id, skill_output, source_input) -> dict:
     return eval_result
 
 
-def eval_all(results, sections) -> dict:
+def eval_all(results, sections, filing_type: str = "10-K") -> dict:
     """Evaluate all task results, return dict of task_id -> eval_result."""
     source_map = {
         "business":        sections.get("item1_current", ""),
@@ -95,8 +95,13 @@ def eval_all(results, sections) -> dict:
         "terms_glossary":  sections.get("all_sections_md", ""),
         "unusual_operations": sections.get("item8_footnotes_md", ""),
     }
+    # 10-Q: skip governance evaluation
+    skip_tasks = {"governance"} if filing_type == "10-Q" else set()
+
     eval_results = {}
     for task_id, output in results.items():
+        if task_id in skip_tasks:
+            continue
         if isinstance(output, dict) and "error" not in output:
             source = source_map.get(task_id, "")
             eval_results[task_id] = eval_single(task_id, output, source)

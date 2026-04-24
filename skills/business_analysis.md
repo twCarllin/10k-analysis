@@ -6,7 +6,7 @@ last_modified: 2025-04-23
 # business_analysis
 
 ## Purpose
-分析 10-K Item 1 (Business) 章節，萃取業務結構、收入來源與競爭優勢。
+分析 SEC 申報文件 Business 章節（10-K Item 1），萃取業務結構、收入來源與競爭優勢。
 
 ## Input
 - `current_section`（必填）：當年 Item 1 全文

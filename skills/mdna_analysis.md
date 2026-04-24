@@ -6,7 +6,7 @@ last_modified: 2025-04-23
 # mdna_analysis
 
 ## Purpose
-分析 10-K Item 7 (MD&A) 章節，萃取業績驅動因子、管理層語氣與前瞻承諾。
+分析 SEC 申報文件 MD&A 章節（10-K Item 7 / 10-Q Item 2），萃取業績驅動因子、管理層語氣與前瞻承諾。
 
 ## Input
 - `current_section`（必填）：當年 Item 7 全文

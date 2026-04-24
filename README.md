@@ -18,8 +18,11 @@ brew install pango  # PDF 生成需要
 cp config.example.json config.json
 # 編輯 config.json 填入 anthropic_api_key
 
-# 3. 執行
+# 3. 執行（10-K 年報）
 python main.py HWM 2025 2024
+
+# 執行（10-Q 季報）
+python main.py HWM 2024 --filing-type 10-Q --quarter Q3
 ```
 
 ## 設定檔
@@ -140,7 +143,7 @@ python main.py HWM 2025 2024 --dry-run
 4. 多頭論點（Bull Case）
 5. 空頭論點（Bear Case）
 6. 關鍵追蹤指標（未來兩季）
-7. 資訊優勢（Information Edge）
+7. 10K 洞察（Information Edge）
 8. 財務數據（指標表格 + 季度趨勢折線圖 + 資本配置）
 9. 趨勢摘要 + 品質警示 + 異常值
 10. 跨年度分析

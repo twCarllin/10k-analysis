@@ -6,7 +6,7 @@ last_modified: 2025-04-23
 # terms_glossary
 
 ## Purpose
-掃描 10-K 全文，找出需要解釋的術語，產出報告附錄用的 glossary。
+掃描 SEC 申報文件全文，找出需要解釋的術語，產出報告附錄用的 glossary。
 讓非專業讀者能讀懂報告，也幫助其他 agent 建立共同語彙。
 
 ## Input

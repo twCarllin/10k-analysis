@@ -133,10 +133,12 @@ def _run_financial(sections, footnotes_summary, state, step_key, hint=""):
     return "financial", result
 
 
-def run_pipeline(ticker, sections, prior_sections=None, state=None):
+def run_pipeline(ticker, sections, prior_sections=None, state=None,
+                 filing_type="10-K", quarter=None):
     if state is None:
         state = PipelineState(ticker, sections.get("_year", 0),
-                              prior_sections.get("_year") if prior_sections else None)
+                              prior_sections.get("_year") if prior_sections else None,
+                              filing_type=filing_type, quarter=quarter)
 
     # Merge prior year sections into current for cross-year comparison
     if prior_sections:
@@ -144,9 +146,17 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None):
         sections["item1a_prior"] = prior_sections.get("item1a_current", "")
         sections["item7_prior"] = prior_sections.get("item7_current", "")
 
-    # Phase 1: all agents in parallel (business/risk/mdna/governance + 8 footnotes)
-    print("\n[Phase 1] business / risk / mdna / governance / footnotes x8")
-    results = _run_parallel(PHASE1_TASKS, sections, state, "phase1")
+    # Filter tasks based on filing type
+    phase1_tasks = PHASE1_TASKS
+    if filing_type == "10-Q":
+        skip_tasks = {"governance"}
+        phase1_tasks = [t for t in PHASE1_TASKS if t["task_id"] not in skip_tasks]
+
+    # Phase 1: all agents in parallel
+    task_names = " / ".join(t["task_id"] for t in phase1_tasks if not t["task_id"].startswith("fn_"))
+    fn_count = sum(1 for t in phase1_tasks if t["task_id"].startswith("fn_"))
+    print(f"\n[Phase 1] {task_names} / footnotes x{fn_count}")
+    results = _run_parallel(phase1_tasks, sections, state, "phase1")
 
     # Phase 2: financial (needs footnotes summary)
     print("\n[Phase 2] financial（三層 input）")
@@ -184,13 +194,13 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None):
         # Check if this eval round is fully cached
         all_cached = all(
             state.is_done(f"{eval_step}.{t['task_id']}")
-            for t in PHASE1_TASKS
+            for t in phase1_tasks
         ) and state.is_done(f"{eval_step}.financial")
 
         if all_cached:
             print(f"\n[Eval {attempt}/{MAX_RETRIES}]（快取）")
             eval_results = {}
-            for t in PHASE1_TASKS:
+            for t in phase1_tasks:
                 ev = state.get_result(f"{eval_step}.{t['task_id']}")
                 if ev:
                     eval_results[t["task_id"]] = ev
@@ -199,7 +209,7 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None):
                 eval_results["financial"] = fin_ev
         else:
             print(f"\n[Eval {attempt}/{MAX_RETRIES}]")
-            eval_results = eval_all(results, sections)
+            eval_results = eval_all(results, sections, filing_type=filing_type)
             # Save each eval result
             for tid, ev in eval_results.items():
                 state.mark_eval(f"{eval_step}.{tid}", ev)
@@ -222,7 +232,7 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None):
         )
         if p1_failed:
             retry_tasks = [
-                t for t in PHASE1_TASKS
+                t for t in phase1_tasks
                 if t["task_id"] in {f["task_id"] for f in p1_failed}
             ]
             hints = {f["task_id"]: f["retry_hint"] for f in p1_failed}
@@ -243,7 +253,7 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None):
     prior_results = None
     if prior_sections:
         print("\n[前年度分析]")
-        prior_results = _run_parallel(PHASE1_TASKS, prior_sections, state, "prior.phase1")
+        prior_results = _run_parallel(phase1_tasks, prior_sections, state, "prior.phase1")
         prior_fn_summary = _collect_footnotes_summary(prior_results)
         _, prior_fin = _run_financial(
             prior_sections, prior_fn_summary,
@@ -326,6 +336,7 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None):
     report_path = save_report(
         ticker, results, eval_results, synthesis,
         quarterly=sections.get("_quarterly", []),
+        filing_type=filing_type, quarter=quarter,
     )
 
     print("  [State] Pipeline 完成（state 保留供 --only 使用）")

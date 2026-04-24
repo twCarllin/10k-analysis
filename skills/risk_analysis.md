@@ -6,7 +6,7 @@ last_modified: 2025-04-23
 # risk_analysis
 
 ## Purpose
-分析 10-K Item 1A (Risk Factors) 章節，萃取風險清單、優先排序與跨年變動。
+分析 SEC 申報文件 Risk Factors 章節（10-K Item 1A / 10-Q Item 1A），萃取風險清單、優先排序與跨期變動。
 
 ## Input
 - `current_section`（必填）：當年 Item 1A 全文
