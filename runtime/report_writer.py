@@ -217,21 +217,6 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             lines.append(f"| {em.get('market', '')} | {em.get('pct', '')} | {t} |")
         lines.append("")
 
-    # ── 整體信心 ──
-    confidence = insight.get("confidence", "unknown")
-    lines.append(f"**整體信心：{confidence}**")
-    if insight.get("confidence_reason"):
-        lines.append(f"> {insight['confidence_reason']}")
-    lines.append("")
-
-    low_conf = [
-        tid for tid, r in results.items()
-        if isinstance(r, dict) and r.get("low_confidence")
-    ]
-    if low_conf:
-        lines.append(f"**低信心任務：{', '.join(low_conf)}**")
-        lines.append("")
-
     # ── 多頭論點 ──
     lines.append("## 多頭論點（Bull Case）")
     for item in insight.get("bull_case", []):
@@ -360,6 +345,16 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         for t in high_terms:
             cat = cat_zh.get(t.get("category", ""), t.get("category", ""))
             lines.append(f"| {t.get('term', '')} | {cat} | {t.get('explanation', '')} |")
+        lines.append("")
+
+    # ── 低信心任務 ──
+    low_conf = [
+        tid for tid, r in results.items()
+        if isinstance(r, dict) and r.get("low_confidence")
+    ]
+    if low_conf:
+        lines.append("## 附錄：低信心任務")
+        lines.append(f"以下任務因資料不足或品質未達門檻，結果僅供參考：{', '.join(low_conf)}")
         lines.append("")
 
     md_text = "\n".join(lines)

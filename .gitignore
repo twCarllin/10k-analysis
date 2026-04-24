@@ -14,3 +14,5 @@ CLAUDE.md
 mdpdf.log
 specs
 task/
+retro/
+subagents_record/
