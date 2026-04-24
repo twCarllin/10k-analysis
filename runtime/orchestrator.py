@@ -149,8 +149,12 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
     # Filter tasks based on filing type
     phase1_tasks = PHASE1_TASKS
     if filing_type == "10-Q":
-        skip_tasks = {"governance"}
+        skip_tasks = {"governance", "business", "risk"}
         phase1_tasks = [t for t in PHASE1_TASKS if t["task_id"] not in skip_tasks]
+
+    # Skip fn_pension if content is too short (immaterial)
+    if len(sections.get("fn_pension", "")) < 500:
+        phase1_tasks = [t for t in phase1_tasks if t["task_id"] != "fn_pension"]
 
     # Phase 1: all agents in parallel
     task_names = " / ".join(t["task_id"] for t in phase1_tasks if not t["task_id"].startswith("fn_"))

@@ -96,7 +96,7 @@ def eval_all(results, sections, filing_type: str = "10-K") -> dict:
         "unusual_operations": sections.get("item8_footnotes_md", ""),
     }
     # 10-Q: skip governance evaluation
-    skip_tasks = {"governance"} if filing_type == "10-Q" else set()
+    skip_tasks = {"governance", "business", "risk"} if filing_type == "10-Q" else set()
 
     eval_results = {}
     for task_id, output in results.items():
