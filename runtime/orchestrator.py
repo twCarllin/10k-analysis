@@ -60,6 +60,7 @@ KEY_MAP = {
     "fn_pension":       "current_section",
     "fn_compensation":  "current_section",
     "fn_tax":           "current_section",
+    "fn_combined":      "current_section",
     "all_sections_md":  "all_sections_md",
 }
 
@@ -105,6 +106,14 @@ def _run_parallel(tasks, sections, state, step_prefix, hints=None):
 
 def _collect_footnotes_summary(results) -> dict:
     """Collect all fn_* results into a single summary dict for financial agent."""
+    # 10-Q: fn_combined carries all footnotes in one dict
+    if "fn_combined" in results:
+        val = results["fn_combined"]
+        if isinstance(val, dict) and "error" not in val:
+            return {"fn_combined": val}
+        print("  [WARNING] fn_combined 結果無效，下游 footnotes summary 將為空")
+        return {}
+    # 10-K: original behavior
     summary = {}
     for tid in FOOTNOTES_TASK_IDS:
         if tid in results and isinstance(results[tid], dict):
@@ -151,6 +160,13 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
     if filing_type == "10-Q":
         skip_tasks = {"governance", "business", "risk"}
         phase1_tasks = [t for t in PHASE1_TASKS if t["task_id"] not in skip_tasks]
+        # Replace 8 individual fn_* tasks with 1 combined footnotes task for 10-Q
+        phase1_tasks = [t for t in phase1_tasks if not t["task_id"].startswith("fn_")]
+        phase1_tasks.append({
+            "task_id": "fn_combined",
+            "skill": "footnotes_combined",
+            "input_keys": ["fn_combined"],
+        })
 
     # Skip fn_pension if content is too short (immaterial)
     if len(sections.get("fn_pension", "")) < 500:

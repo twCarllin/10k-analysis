@@ -45,13 +45,13 @@ def build_sections(ticker, year, file_path=None, filing_type="10-K",
     if filing_type == "10-Q":
         # 10-Q mapping: item1 → Financial Statements, item2 → MD&A
         item_fs = raw.get("item1", "")
-        fn_subs = split_footnotes(item_fs)
         result = {
             "item1_current": "",  # 10-Q has no Business section
             "item1a_current": raw.get("item1a", ""),  # optional in 10-Q
             "item7_current": raw.get("item2", ""),  # Item 2 = MD&A
             "item8_fs": extract_fs_tables(item_fs),
             "partiii_current": "",  # no Part III in 10-Q
+            "fn_combined": extract_footnotes(item_fs),  # 10-Q: single combined footnotes task
             "_split_warnings": warnings,
             "_year": year,
         }
@@ -75,9 +75,9 @@ def build_sections(ticker, year, file_path=None, filing_type="10-K",
             "_year": year,
         }
 
-    # Add each footnotes sub-section
-    for fn_key, fn_text in fn_subs.items():
-        result[fn_key] = fn_text
+        # Add each footnotes sub-section (10-K only)
+        for fn_key, fn_text in fn_subs.items():
+            result[fn_key] = fn_text
     # Glossary input: truncated concat of key sections
     from agent_runner import truncate_with_notice
     all_sections_md = (

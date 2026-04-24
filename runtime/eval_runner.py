@@ -18,6 +18,7 @@ REQUIRED_KEYS = {
     "fn_pension":      ["funded_status", "assumptions", "insufficient_data"],
     "fn_compensation": ["sbc", "insufficient_data"],
     "fn_tax":          ["effective_rate", "deferred_tax", "insufficient_data"],
+    "fn_combined":     ["revenue_recognition", "segments", "debt_structure", "goodwill", "contingencies", "sbc", "effective_rate", "insufficient_data"],
     "terms_glossary":  ["terms", "insufficient_data"],
     "unusual_operations": ["unusual_items", "summary", "insufficient_data"],
 }
@@ -92,6 +93,7 @@ def eval_all(results, sections, filing_type: str = "10-K") -> dict:
         "fn_pension":      sections.get("fn_pension", ""),
         "fn_compensation": sections.get("fn_compensation", ""),
         "fn_tax":          sections.get("fn_tax", ""),
+        "fn_combined":     sections.get("fn_combined", ""),
         "terms_glossary":  sections.get("all_sections_md", ""),
         "unusual_operations": sections.get("item8_footnotes_md", ""),
     }
