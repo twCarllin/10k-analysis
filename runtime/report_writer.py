@@ -66,7 +66,8 @@ def _fmt_val(val, is_pct=False):
     return f"{val:,.0f}"
 
 
-def _build_financial_tables(fin) -> list[str]:
+def _build_financial_tables(fin, filing_type="10-K", quarter=None,
+                            current_year=None) -> list[str]:
     """Build markdown tables from financial metrics."""
     lines = []
     metrics = fin.get("metrics", {})
@@ -82,9 +83,17 @@ def _build_financial_tables(fin) -> list[str]:
         return lines
     years = sorted(all_years)
 
+    # Build display labels: for 10-Q, mark current year with quarter
+    year_labels = {}
+    for y in years:
+        if filing_type == "10-Q" and quarter and current_year and y == current_year:
+            year_labels[y] = f"{y} {quarter}"
+        else:
+            year_labels[y] = str(y)
+
     # Key metrics table
     lines.append("### 關鍵財務指標")
-    header = "| 指標 | " + " | ".join(str(y) for y in years) + " |"
+    header = "| 指標 | " + " | ".join(year_labels[y] for y in years) + " |"
     sep = "|------|" + "|".join("------:" for _ in years) + "|"
     lines.append(header)
     lines.append(sep)
@@ -192,26 +201,8 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         "",
     ]
 
-    # ── Investment Verdict ──
-    _check = lambda v: "✓" if v else "✗"
+    # ── Rerate signal (rendered later, after bear case) ──
     rerate = results.get("rerate_signal", {})
-    if rerate.get("verdict") and "error" not in rerate:
-        verdict = rerate["verdict"]
-        verdict_icon = {"RERATING": "🟢", "WATCH": "⚑", "EARLY": "🔵",
-                        "NEUTRAL": "⚪", "DERATING": "🔴"}.get(verdict, "")
-        conditions = rerate.get("rerating_conditions", {})
-        lines.append(f"## Investment Verdict: {verdict} {verdict_icon}")
-        lines.append("")
-        lines.append(f"**Re-rate 條件達成：{conditions.get('conditions_met', 0)}/3**")
-        lines.append(f"- 結構轉型（Segment）：{_check(conditions.get('structure_changing'))}")
-        lines.append(f"- 財務品質（Margin/Cash）：{_check(conditions.get('quality_changing'))}")
-        lines.append(f"- 管理層敘事（MD&A）：{_check(conditions.get('narrative_changing'))}")
-        lines.append("")
-        if rerate.get("verdict_rationale"):
-            lines.append(f"> {rerate['verdict_rationale']}")
-            lines.append("")
-        lines.append("---")
-        lines.append("")
 
     # ── 公司定位 ──
     biz = results.get("business", {})
@@ -254,6 +245,38 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             lines.append(f"  - 論述：{item['evidence']}")
     lines.append("")
 
+    # ── 評價趨勢判斷（Re-rate / De-rate）──
+    if rerate.get("verdict") and "error" not in rerate:
+        verdict = rerate["verdict"]
+        verdict_icon = {"RERATING": "🟢", "WATCH": "⚑", "EARLY": "🔵",
+                        "NEUTRAL": "⚪", "DERATING": "🔴"}.get(verdict, "")
+        verdict_zh = {"RERATING": "���價上修", "WATCH": "持續觀察",
+                      "EARLY": "訊號初現", "NEUTRAL": "維持現狀",
+                      "DERATING": "評價下修"}.get(verdict, verdict)
+        conditions = rerate.get("rerating_conditions", {})
+        lines.append(f"## 評價趨勢判斷：{verdict_zh} {verdict_icon}")
+        lines.append("")
+        # Describe each condition naturally
+        cond_lines = []
+        if conditions.get("structure_changing"):
+            cond_lines.append("✓ 業務結構正在轉型，高毛利部門佔比持續上升")
+        else:
+            cond_lines.append("✗ 業務結構尚未出現明顯轉型")
+        if conditions.get("quality_changing"):
+            cond_lines.append("✓ 財務品質改善中，利潤率或現金流趨勢向好")
+        else:
+            cond_lines.append("✗ 財務品質尚未改善，利潤率或現金流仍承壓")
+        if conditions.get("narrative_changing"):
+            cond_lines.append("✓ 管理層敘事已從計畫導向轉為成果導向")
+        else:
+            cond_lines.append("✗ 管理層敘事仍���留在計畫階段")
+        for cl in cond_lines:
+            lines.append(f"- {cl}")
+        lines.append("")
+        if rerate.get("verdict_rationale"):
+            lines.append(f"> {rerate['verdict_rationale']}")
+            lines.append("")
+
     # ── 關鍵追蹤指標 ──
     lines.append("## 關鍵追蹤指標（未來兩季）")
     for item in insight.get("key_monitorables", []):
@@ -286,7 +309,16 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     # ── 財務數據 ──
     fin = results.get("financial", {})
     lines.append("## 財務數據")
-    lines.extend(_build_financial_tables(fin))
+    # Extract current year from metrics for column labeling
+    _all_yrs = set()
+    for _rows in fin.get("metrics", {}).values():
+        if isinstance(_rows, list):
+            for _r in _rows:
+                if _r.get("val") is not None:
+                    _all_yrs.add(_r["year"])
+    _cur_year = max(_all_yrs) if _all_yrs else None
+    lines.extend(_build_financial_tables(fin, filing_type=filing_type,
+                                         quarter=quarter, current_year=_cur_year))
 
     # ── 季度趨勢圖 ──
     if quarterly:
