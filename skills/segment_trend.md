@@ -51,11 +51,9 @@ last_modified: 2025-04-23
 一致：敘事有數字支撐，可信度高
 不一致：管理層在說轉型，但數字還看不到 → 早期投資 or 口號
 
-### Step 4：辨認 Re-rate 候選條件（結構面）
-文章標準：結構在變（Segment）是 re-rate 三條件之一。
+### Step 4：與 MD&A 敘事交叉驗證結果摘要
 
-若 structural_shift == "upgrading" 且趨勢連續 2 年以上
-→ rerating_candidate_structure = true
+將 Step 3 的一致性結論寫入 mdna_consistency 欄位。
 
 ## Output Format
 ```json
@@ -68,11 +66,9 @@ last_modified: 2025-04-23
       "margin_quality": "high|medium|low"
     }
   ],
-  "structural_shift": "upgrading|downgrading|stable|diversifying",
   "shift_description": "公司正在去硬體化，SaaS + AI 合計佔比從 25% 升至 60%",
   "mdna_consistency": "consistent|inconsistent|no_prior_data",
   "mdna_consistency_note": "",
-  "rerating_candidate_structure": true,
   "watch_segments": ["需要持續追蹤的 segment 名稱"],
   "insufficient_data": false
 }

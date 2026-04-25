@@ -93,8 +93,6 @@ last_modified: 2025-04-23
       "interpretation": "短期壓利潤、投資新業務，毛利未崩，為 re-rate 鋪路"
     }
   ],
-  "dominant_signal": "bullish|bearish|mixed|neutral",
-  "rerating_candidate_quality": true,
   "insufficient_data": false
 }
 ```

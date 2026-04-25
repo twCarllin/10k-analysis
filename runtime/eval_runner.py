@@ -21,8 +21,8 @@ REQUIRED_KEYS = {
     "fn_combined":     ["revenue_recognition", "segments", "debt_structure", "goodwill", "contingencies", "sbc", "effective_rate", "insufficient_data"],
     "terms_glossary":  ["terms", "insufficient_data"],
     "unusual_operations": ["unusual_items", "summary", "insufficient_data"],
-    "segment_trend": ["segment_table", "structural_shift", "insufficient_data"],
-    "three_statement_cross": ["checks", "overall_signals", "dominant_signal", "insufficient_data"],
+    "segment_trend": ["segment_table", "insufficient_data"],
+    "three_statement_cross": ["checks", "overall_signals", "insufficient_data"],
     "rerate_signal": ["rerating_conditions", "verdict", "monitoring_checklist", "insufficient_data"],
 }
 

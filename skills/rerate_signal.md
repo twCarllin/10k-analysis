@@ -23,23 +23,33 @@ Re-rate = 結構在變（Segment）+ 品質在變（Margin/Cash）+ 敘事在變
 
 ## Instructions
 
-### Step 1：評估三個 Re-rate 條件
+### Step 1：從上游事實判定三個 Re-rate 條件
+
+上游 agent 只輸出事實（數字、列表、原文引述），所有投資判斷由本 skill 根據以下規則執行。
 
 條件 A：結構在變（Segment）
-- 來源：segment_summary.rerating_candidate_structure
-- 判斷：高毛利業務佔比持續上升，趨勢已持續 2 年以上
+- 來源：segment_summary.segment_table
+- 判斷規則：
+  1. 找出所有 margin_quality == "high" 且 direction == "rising" 的 segment
+  2. 其中任一 segment 的 revenue_pct 在最近 2 年內上升超過 5 個百分點 → structure_changing = true
+  3. 否則 → structure_changing = false
+  4. 若 segment_table 為空或 insufficient_data == true → false
 
 條件 B：品質在變（Margin / Cash）
-- 來源：three_statement_summary.rerating_candidate_quality
-- 判斷：dominant_signal == "bullish"，三表無重大矛盾
+- 來源：three_statement_summary.overall_signals 和 checks
+- 判斷規則：
+  1. 計算 overall_signals 中 signal_type == "bullish" 的數量（B）和 "bearish" 的數量（R）
+  2. B > R 且 R == 0 → quality_changing = true
+  3. 否則 → quality_changing = false
+  4. 若 checks 中 revenue_vs_cashflow.signal == "bearish" → 強制 false（現金流矛盾一票否決）
 
 條件 C：敘事在變（MD&A Narrative Shift）
-- 來源欄位：mdna_summary.narrative_shift.mature_stage_language 和 early_stage_language
-- 判斷規則（由本 skill 自行判定，mdna 只提供事實）：
+- 來源：mdna_summary.narrative_shift.mature_stage_language 和 early_stage_language
+- 判斷規則：
   1. 計算 mature_stage_language 條目數（M）和 early_stage_language 條目數（E）
   2. M >= 3 且 M > E → narrative_changing = true
   3. 否則 → narrative_changing = false
-  4. 若 mdna_summary 無 narrative_shift 欄位 → narrative_changing = false
+  4. 若 mdna_summary 無 narrative_shift 欄位 → false
 - 特別關注的績效性語言（出現在 mature 清單中權重較高）：
   recurring revenue / visibility / platform / lifetime value /
   operating leverage / margin expansion
@@ -53,10 +63,10 @@ Re-rate = 結構在變（Segment）+ 品質在變（Margin/Cash）+ 敘事在變
 零個條件成立，且無 De-rate 觸發條件         → NEUTRAL
 
 De-rate 觸發條件（任一成立即降級）：
-- three_statement_summary.dominant_signal == "bearish"
+- three_statement_summary.overall_signals 中 bearish 數量 >= 2
 - mdna_summary.promises_broken 連續兩期有項目
-- financial_summary.quality_flags 有 "revenue 數字可信度降低"
-- segment_summary.structural_shift == "downgrading"
+- financial_summary.quality_flags 數量 >= 3
+- segment_summary.segment_table 中任一 margin_quality == "high" 的 segment direction == "falling"
 
 ### Step 3：建立追蹤清單（Monitoring Checklist）
 
