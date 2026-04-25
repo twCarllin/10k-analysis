@@ -105,6 +105,7 @@ def download_10k_htm(ticker: str, year: int) -> Path:
 XBRL_CONCEPTS = {
     "Revenue": [
         "Revenues",
+        "RevenueFromContractWithCustomerIncludingAssessedTax",
         "RevenueFromContractWithCustomerExcludingAssessedTax",
         "SalesRevenueNet",
     ],
@@ -140,6 +141,7 @@ def extract_key_metrics(xbrl_facts: dict, filing_type: str = "10-K") -> dict:
     us_gaap = xbrl_facts.get("facts", {}).get("us-gaap", {})
 
     def annual(concepts, unit="USD"):
+        all_rows = []
         for concept in concepts:
             units_dict = us_gaap.get(concept, {}).get("units", {})
             values = units_dict.get(unit, [])
@@ -157,15 +159,16 @@ def extract_key_metrics(xbrl_facts: dict, filing_type: str = "10-K") -> dict:
                 for e in values
                 if e.get("form") in target_forms and e.get("fp") in target_fp
             ]
-            # Dedup: same (year, fp) → keep latest filed
-            deduped = {}
-            for row in sorted(entries, key=lambda x: x["filed"]):
-                key = (row["year"], row["fp"]) if filing_type == "10-Q" else row["year"]
-                deduped[key] = row
-            rows = sorted(deduped.values(), key=lambda x: x["filed"])[-5:]
-            if rows:
-                return [{"year": r["year"], "val": r["val"]} for r in rows]
-        return []
+            all_rows.extend(entries)
+        if not all_rows:
+            return []
+        # Dedup: same (year, fp) → keep latest filed
+        deduped = {}
+        for row in sorted(all_rows, key=lambda x: x["filed"]):
+            key = (row["year"], row["fp"]) if filing_type == "10-Q" else row["year"]
+            deduped[key] = row
+        rows = sorted(deduped.values(), key=lambda x: x["filed"])[-5:]
+        return [{"year": r["year"], "val": r["val"]} for r in rows]
 
     result = {}
     for k, v in XBRL_CONCEPTS.items():
@@ -178,6 +181,7 @@ def extract_key_metrics(xbrl_facts: dict, filing_type: str = "10-K") -> dict:
 
 QUARTERLY_CONCEPTS = {
     "Revenue": [
+        "RevenueFromContractWithCustomerIncludingAssessedTax",
         "RevenueFromContractWithCustomerExcludingAssessedTax",
         "Revenues",
         "SalesRevenueNet",

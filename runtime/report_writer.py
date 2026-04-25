@@ -18,6 +18,9 @@ def _build_pdf_css() -> str:
     """Build CSS with @font-face for embedded Chinese fonts."""
     font_regular = _FONT_DIR / "NotoSansTC-Regular.otf"
     font_bold = _FONT_DIR / "NotoSansTC-Bold.otf"
+    # Also support .ttf variant
+    if not font_regular.exists():
+        font_regular = _FONT_DIR / "NotoSansTC-Regular.ttf"
     font_css = ""
     if font_regular.exists():
         font_css += f"""
@@ -46,7 +49,7 @@ PDF_CSS = _build_pdf_css()
 
 # Chart style
 rcParams.update({
-    "font.family": ["Heiti TC", "PingFang HK", "Arial Unicode MS", "sans-serif"],
+    "font.family": ["Noto Sans TC", "Heiti TC", "PingFang HK", "Arial Unicode MS", "sans-serif"],
     "font.size": 10,
     "axes.spines.top": False,
     "axes.spines.right": False,
@@ -71,7 +74,7 @@ def _build_financial_tables(fin) -> list[str]:
     lines = []
     metrics = fin.get("metrics", {})
 
-    # Collect all years
+    # Collect all years from ALL metric series
     all_years = set()
     for rows in metrics.values():
         if isinstance(rows, list):
@@ -82,43 +85,103 @@ def _build_financial_tables(fin) -> list[str]:
         return lines
     years = sorted(all_years)
 
-    # Key metrics table
-    lines.append("### 關鍵財務指標")
+    # ── Comprehensive trend table with raw + derived metrics ──
+    lines.append("### 年度趨勢")
+
+    # Helper: get value-by-year dict for a metric
+    def val_map(key):
+        rows = metrics.get(key, [])
+        return {r["year"]: r.get("val") for r in rows if isinstance(r, dict)} if rows else {}
+
+    rev = val_map("Revenue")
+    oi = val_map("OperatingIncome")
+    ni = val_map("NetIncome")
+    ocf = val_map("OperatingCashFlow")
+    capex = val_map("CapEx")
+    ltd = val_map("LongTermDebt")
+    shares = val_map("SharesOutstanding")
+
+    # Build rows: label, values, format
+    trend_rows = [
+        ("營收", rev, "money"),
+        ("營業利益", oi, "money"),
+        ("淨利", ni, "money"),
+        ("營業現金流", ocf, "money"),
+        ("資本支出", capex, "money"),
+        ("長期負債", ltd, "money"),
+        ("流通股數", shares, "shares"),
+    ]
+
+    # Derived ratio rows
+    margin_data = {}
+    fcf_data = {}
+    capex_ratio_data = {}
+    for y in years:
+        if rev.get(y) and oi.get(y):
+            margin_data[y] = oi[y] / rev[y] * 100
+        if ocf.get(y) and rev.get(y):
+            fcf_val = ocf[y] - (capex.get(y, 0) or 0)
+            fcf_data[y] = fcf_val / rev[y] * 100
+        if capex.get(y) and rev.get(y):
+            capex_ratio_data[y] = capex[y] / rev[y] * 100
+
+    # Revenue YoY
+    rev_yoy = {}
+    rev_rows = metrics.get("Revenue", [])
+    for r in rev_rows:
+        if isinstance(r, dict) and r.get("yoy_pct") is not None:
+            rev_yoy[r["year"]] = r["yoy_pct"]
+    # Also compute from raw if missing
+    for y in years:
+        if y not in rev_yoy and rev.get(y) and rev.get(y - 1):
+            rev_yoy[y] = (rev[y] - rev[y - 1]) / rev[y - 1] * 100
+
+    ni_yoy = {}
+    for y in years:
+        if ni.get(y) and ni.get(y - 1):
+            ni_yoy[y] = (ni[y] - ni[y - 1]) / ni[y - 1] * 100
+
+    # Net margin
+    net_margin = {}
+    for y in years:
+        if ni.get(y) and rev.get(y):
+            net_margin[y] = ni[y] / rev[y] * 100
+
+    trend_rows += [
+        ("營收 YoY", rev_yoy, "pct_change"),
+        ("淨利 YoY", ni_yoy, "pct_change"),
+        ("營業利益率", margin_data, "pct"),
+        ("淨利率", net_margin, "pct"),
+        ("FCF 轉換率", fcf_data, "pct"),
+        ("CapEx/營收", capex_ratio_data, "pct"),
+    ]
+
+    # Build table
     header = "| 指標 | " + " | ".join(str(y) for y in years) + " |"
     sep = "|------|" + "|".join("------:" for _ in years) + "|"
     lines.append(header)
     lines.append(sep)
 
-    metric_display = [
-        ("Revenue", "營收", False),
-        ("GrossMargin_pct", "毛利率", True),
-        ("OperatingMargin_pct", "營業利益率", True),
-        ("FCF_conversion", "FCF 轉換率", False),
-        ("CapEx_to_Revenue", "CapEx/營收", True),
-    ]
-    for key, label, is_pct in metric_display:
-        rows = metrics.get(key, [])
-        vals = {r["year"]: r.get("val") for r in rows if isinstance(r, dict)}
+    for label, data, fmt in trend_rows:
         cells = []
         for y in years:
-            v = vals.get(y)
-            if is_pct:
-                cells.append(_fmt_val(v, is_pct=True) if v is not None else "—")
-            elif key == "FCF_conversion":
-                cells.append(f"{v:.2f}" if v is not None else "—")
-            else:
+            v = data.get(y)
+            if v is None:
+                cells.append("—")
+            elif fmt == "money":
                 cells.append(_fmt_val(v))
+            elif fmt == "shares":
+                if v >= 1e6:
+                    cells.append(f"{v / 1e6:.1f}M")
+                else:
+                    cells.append(f"{v:,.0f}")
+            elif fmt == "pct":
+                cells.append(f"{v:.1f}%")
+            elif fmt == "pct_change":
+                cells.append(f"{v:+.1f}%")
+            else:
+                cells.append(str(v))
         lines.append(f"| {label} | " + " | ".join(cells) + " |")
-
-    # YoY growth row for Revenue
-    rev_rows = metrics.get("Revenue", [])
-    rev_yoy = {r["year"]: r.get("yoy_pct") for r in rev_rows if isinstance(r, dict)}
-    if any(v is not None for v in rev_yoy.values()):
-        cells = []
-        for y in years:
-            v = rev_yoy.get(y)
-            cells.append(f"{v:+.1f}%" if v is not None else "—")
-        lines.append(f"| 營收 YoY | " + " | ".join(cells) + " |")
     lines.append("")
 
     # Capital allocation
@@ -251,12 +314,23 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     lines.append("## 財務數據")
     lines.extend(_build_financial_tables(fin))
 
-    # ── 季度趨勢圖 ──
+    # ── 季度趨勢 ──
     if quarterly:
         chart_name = _build_quarterly_chart(quarterly or [], out_dir)
+        lines.append("### 季度趨勢")
         if chart_name:
-            lines.append("### 季度趨勢")
             lines.append(f"![季度趨勢]({chart_name})")
+            lines.append("")
+        # Quarterly data table
+        if len(quarterly) >= 2:
+            lines.append("| 季度 | 營收 | 營收 YoY | 營業利益率 | 淨利率 |")
+            lines.append("|------|-----:|------:|------:|------:|")
+            for q in quarterly:
+                rev_q = _fmt_val(q.get("revenue")) if q.get("revenue") else "—"
+                rev_yoy = f"{q['rev_growth_yoy']:+.1f}%" if q.get("rev_growth_yoy") is not None else "—"
+                op_m = f"{q['op_margin']:.1f}%" if q.get("op_margin") is not None else "—"
+                ni_m = f"{q['net_margin']:.1f}%" if q.get("net_margin") is not None else "—"
+                lines.append(f"| {q.get('quarter', '')} | {rev_q} | {rev_yoy} | {op_m} | {ni_m} |")
             lines.append("")
 
     # ── 財務趨勢摘要 ──
