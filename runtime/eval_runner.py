@@ -21,6 +21,9 @@ REQUIRED_KEYS = {
     "fn_combined":     ["revenue_recognition", "segments", "debt_structure", "goodwill", "contingencies", "sbc", "effective_rate", "insufficient_data"],
     "terms_glossary":  ["terms", "insufficient_data"],
     "unusual_operations": ["unusual_items", "summary", "insufficient_data"],
+    "segment_trend": ["segment_table", "structural_shift", "insufficient_data"],
+    "three_statement_cross": ["checks", "overall_signals", "dominant_signal", "insufficient_data"],
+    "rerate_signal": ["rerating_conditions", "verdict", "monitoring_checklist", "insufficient_data"],
 }
 
 HARD_RULES = {
@@ -32,6 +35,12 @@ HARD_RULES = {
     ],
     "financial": [
         lambda src, out: not out.get("metrics", {}),
+    ],
+    "three_statement_cross": [
+        # If financial_summary has real content but overall_signals is empty → fail
+        lambda src, out: (
+            len(src) > 100 and not out.get("overall_signals")
+        ),
     ],
 }
 
@@ -96,6 +105,9 @@ def eval_all(results, sections, filing_type: str = "10-K") -> dict:
         "fn_combined":     sections.get("fn_combined", ""),
         "terms_glossary":  sections.get("all_sections_md", ""),
         "unusual_operations": sections.get("item8_footnotes_md", ""),
+        "segment_trend":     sections.get("xbrl_data", ""),
+        "three_statement_cross": sections.get("xbrl_data", ""),
+        "rerate_signal":     sections.get("xbrl_data", ""),
     }
     # 10-Q: skip governance evaluation
     skip_tasks = {"governance", "business", "risk"} if filing_type == "10-Q" else set()

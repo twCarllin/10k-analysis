@@ -192,6 +192,27 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         "",
     ]
 
+    # ── Investment Verdict ──
+    _check = lambda v: "✓" if v else "✗"
+    rerate = results.get("rerate_signal", {})
+    if rerate.get("verdict") and "error" not in rerate:
+        verdict = rerate["verdict"]
+        verdict_icon = {"RERATING": "🟢", "WATCH": "⚑", "EARLY": "🔵",
+                        "NEUTRAL": "⚪", "DERATING": "🔴"}.get(verdict, "")
+        conditions = rerate.get("rerating_conditions", {})
+        lines.append(f"## Investment Verdict: {verdict} {verdict_icon}")
+        lines.append("")
+        lines.append(f"**Re-rate 條件達成：{conditions.get('conditions_met', 0)}/3**")
+        lines.append(f"- 結構轉型（Segment）：{_check(conditions.get('structure_changing'))}")
+        lines.append(f"- 財務品質（Margin/Cash）：{_check(conditions.get('quality_changing'))}")
+        lines.append(f"- 管理層敘事（MD&A）：{_check(conditions.get('narrative_changing'))}")
+        lines.append("")
+        if rerate.get("verdict_rationale"):
+            lines.append(f"> {rerate['verdict_rationale']}")
+            lines.append("")
+        lines.append("---")
+        lines.append("")
+
     # ── 公司定位 ──
     biz = results.get("business", {})
     if biz.get("company_positioning"):
@@ -237,6 +258,22 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     lines.append("## 關鍵追蹤指標（未來兩季）")
     for item in insight.get("key_monitorables", []):
         lines.append(f"- {item}")
+    # Merge rerate_signal monitoring_checklist
+    rerate_monitor = rerate.get("monitoring_checklist", [])
+    if rerate_monitor:
+        lines.append("")
+        lines.append("**Re-rate 追蹤清單：**")
+        for i, item in enumerate(rerate_monitor, 1):
+            lines.append(f"{i}. {item}")
+    # Validation triggers
+    triggers = rerate.get("validation_triggers", {})
+    if triggers.get("thesis_confirmed") or triggers.get("thesis_failed"):
+        lines.append("")
+        lines.append("**Thesis 驗證點：**")
+        if triggers.get("thesis_confirmed"):
+            lines.append(f"- 確認：{triggers['thesis_confirmed']}")
+        if triggers.get("thesis_failed"):
+            lines.append(f"- 失敗：{triggers['thesis_failed']}")
     lines.append("")
 
     # ── 10K 洞察 ──

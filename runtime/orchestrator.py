@@ -179,11 +179,53 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
     results = _run_parallel(phase1_tasks, sections, state, "phase1")
 
     # Phase 2: financial (needs footnotes summary)
-    print("\n[Phase 2] financial（三層 input）")
+    print("\n[Phase 2a] financial（三層 input）")
     fn_summary = _collect_footnotes_summary(results)
     _, fin = _run_financial(sections, fn_summary,
                             state, "phase2.financial")
     results["financial"] = fin
+
+    # Phase 2b: segment_trend (needs xbrl + business + mdna)
+    print("\n[Phase 2b] segment_trend")
+    st_key = "phase2b.segment_trend"
+    cached_st = state.get_result(st_key)
+    if cached_st is not None:
+        results["segment_trend"] = cached_st
+        print("    \u2713 segment_trend（快取）")
+    else:
+        state.mark_running(st_key)
+        results["segment_trend"] = run_agent(
+            "analyst_agent", "segment_trend", {
+                "xbrl_json":        sections.get("xbrl_data", ""),
+                "business_summary": json.dumps(results.get("business", {}),
+                                               ensure_ascii=False),
+                "mdna_summary":     json.dumps(results.get("mdna", {}),
+                                               ensure_ascii=False),
+            },
+            task_label=st_key,
+        )
+        state.mark_done(st_key, results["segment_trend"])
+        print("    \u2713 segment_trend")
+
+    # Phase 2c: three_statement_cross (needs financial + xbrl)
+    print("\n[Phase 2c] three_statement_cross")
+    tsc_key = "phase2c.three_statement_cross"
+    cached_tsc = state.get_result(tsc_key)
+    if cached_tsc is not None:
+        results["three_statement_cross"] = cached_tsc
+        print("    \u2713 three_statement_cross（快取）")
+    else:
+        state.mark_running(tsc_key)
+        results["three_statement_cross"] = run_agent(
+            "analyst_agent", "three_statement_cross", {
+                "financial_summary": json.dumps(results.get("financial", {}),
+                                                ensure_ascii=False),
+                "xbrl_json":         sections.get("xbrl_data", ""),
+            },
+            task_label=tsc_key,
+        )
+        state.mark_done(tsc_key, results["three_statement_cross"])
+        print("    \u2713 three_statement_cross")
 
     # Phase 3: unusual_operations (needs footnotes + financial)
     print("\n[Phase 3] unusual_operations")
@@ -206,6 +248,32 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
         )
         state.mark_done(uo_key, results["unusual_operations"])
         print("    \u2713 unusual_operations")
+
+    # Phase 3b: rerate_signal (needs segment_trend + three_statement_cross + mdna + financial)
+    print("\n[Phase 3b] rerate_signal")
+    rs_key = "phase3b.rerate_signal"
+    cached_rs = state.get_result(rs_key)
+    if cached_rs is not None:
+        results["rerate_signal"] = cached_rs
+        print("    \u2713 rerate_signal（快取）")
+    else:
+        state.mark_running(rs_key)
+        results["rerate_signal"] = run_agent(
+            "analyst_agent", "rerate_signal", {
+                "segment_summary":         json.dumps(results.get("segment_trend", {}),
+                                                      ensure_ascii=False),
+                "three_statement_summary": json.dumps(results.get("three_statement_cross", {}),
+                                                      ensure_ascii=False),
+                "mdna_summary":            json.dumps(results.get("mdna", {}),
+                                                      ensure_ascii=False),
+                "financial_summary":       json.dumps(results.get("financial", {}),
+                                                      ensure_ascii=False),
+            },
+            task_label=rs_key,
+        )
+        state.mark_done(rs_key, results["rerate_signal"])
+        verdict = results["rerate_signal"].get("verdict", "?")
+        print(f"    \u2713 rerate_signal \u2192 {verdict}")
 
     # Eval loop
     eval_results = {}
