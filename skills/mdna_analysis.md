@@ -23,14 +23,14 @@ last_modified: 2025-04-23
 比對管理層用語的演變，特別追蹤以下類型的轉變：
 
 描述性語言（早期）：
-  "We continue to focus on / We are investing in / We are exploring"
+  舉例: "We continue to focus on / We are investing in / We are exploring"
   → 代表：還在說計畫，沒有成果
 
 績效性語言（成熟）：
-  "driving / delivering / visibility / recurring / lifetime value / platform"
+  舉例: "driving / delivering / visibility / recurring / lifetime value
   → 代表：已在說成果，市場容易給更高倍數
 
-Re-rate 關鍵詞清單（出現即標記）：
+財務關鍵詞清單（出現即標記）：
   recurring revenue, visibility, platform transformation,
   lifetime value, operating leverage, margin expansion,
   annualized run rate, contracted backlog
@@ -54,9 +54,7 @@ Re-rate 關鍵詞清單（出現即標記）：
   "narrative_shift": {
     "early_stage_language": [],
     "mature_stage_language": [],
-    "shift_detected": false,
-    "shift_description": "",
-    "rerating_candidate_narrative": false
+    "shift_description": ""
   },
   "silence_analysis": [],
   "insufficient_data": false

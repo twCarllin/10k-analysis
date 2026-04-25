@@ -34,10 +34,13 @@ Re-rate = 結構在變（Segment）+ 品質在變（Margin/Cash）+ 敘事在變
 - 判斷：dominant_signal == "bullish"，三表無重大矛盾
 
 條件 C：敘事在變（MD&A Narrative Shift）
-- 來源欄位：mdna_summary.narrative_shift.rerating_candidate_narrative
-- 若 mdna_summary 無 narrative_shift 欄位（prior_section 不存在），條件 C 預設為 false
-- 判斷：管理層關鍵詞從描述性（focus on）→ 績效性（driving / visibility / recurring）
-- 特別關注的 re-rate 語言：
+- 來源欄位：mdna_summary.narrative_shift.mature_stage_language 和 early_stage_language
+- 判斷規則（由本 skill 自行判定，mdna 只提供事實）：
+  1. 計算 mature_stage_language 條目數（M）和 early_stage_language 條目數（E）
+  2. M >= 3 且 M > E → narrative_changing = true
+  3. 否則 → narrative_changing = false
+  4. 若 mdna_summary 無 narrative_shift 欄位 → narrative_changing = false
+- 特別關注的績效性語言（出現在 mature 清單中權重較高）：
   recurring revenue / visibility / platform / lifetime value /
   operating leverage / margin expansion
 
