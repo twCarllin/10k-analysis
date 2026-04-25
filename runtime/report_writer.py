@@ -269,9 +269,6 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         for cl in cond_lines:
             lines.append(f"- {cl}")
         lines.append("")
-        if rerate.get("verdict_rationale"):
-            lines.append(f"> {rerate['verdict_rationale']}")
-            lines.append("")
 
     # ── 關鍵追蹤指標 ──
     lines.append("## 關鍵追蹤指標（未來兩季）")
