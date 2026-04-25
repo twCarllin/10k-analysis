@@ -46,13 +46,10 @@ Re-rate = 結構在變（Segment）+ 品質在變（Margin/Cash）+ 敘事在變
 條件 C：敘事在變（MD&A Narrative Shift）
 - 來源：mdna_summary.narrative_shift.mature_stage_language 和 early_stage_language
 - 判斷規則：
-  1. 計算 mature_stage_language 條目數（M）和 early_stage_language 條目數（E）
-  2. M >= 3 且 M > E → narrative_changing = true
+  1. 計算 mature_stage_language 條目數（M）
+  2. M >= 3 → narrative_changing = true
   3. 否則 → narrative_changing = false
   4. 若 mdna_summary 無 narrative_shift 欄位 → false
-- 特別關注的績效性語言（出現在 mature 清單中權重較高）：
-  recurring revenue / visibility / platform / lifetime value /
-  operating leverage / margin expansion
 
 ### Step 2：判斷 Re-rate / De-rate 狀態
 
