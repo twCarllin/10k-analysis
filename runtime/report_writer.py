@@ -188,16 +188,15 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     completeness = synthesis.get("completeness", {})
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    draft_flag = "" if completeness.get("ready_to_publish", True) else " [DRAFT]"
-    grade = completeness.get("overall_grade", "")
-    grade_line = f"  |  Grade: {grade}" if grade else ""
+    critical_gaps = completeness.get("critical_gaps", [])
+    gap_flag = "  ⚠ 有待補充項目" if critical_gaps else ""
 
     filing_label = filing_type
     if quarter:
         filing_label += f" {quarter}"
     lines = [
-        f"# {ticker} {filing_label} 投資研究報告{draft_flag}",
-        f"產出時間：{datetime.now().strftime('%Y-%m-%d %H:%M')}{grade_line}",
+        f"# {ticker} {filing_label} 投資研究報告",
+        f"產出時間：{datetime.now().strftime('%Y-%m-%d %H:%M')}{gap_flag}",
         "",
     ]
 

@@ -441,9 +441,8 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
             task_label=cc_key,
         )
         state.mark_done(cc_key, completeness)
-        grade = completeness.get("overall_grade", "?")
-        ready = completeness.get("ready_to_publish", False)
-        print(f"    \u2713 grade={grade}  ready={ready}")
+        gaps = completeness.get("critical_gaps", [])
+        print(f"    \u2713 completeness（gaps: {len(gaps)}）")
 
     synthesis = {"comparator": comparator, "insight": insight, "completeness": completeness}
 

@@ -48,32 +48,12 @@ last_modified: 2025-04-23
 - 0：明顯矛盾未被識別
 
 識別 Critical Gaps：
-- 任何維度 < 5 分 → critical gap，必須列出 remedy
-- eval_summary 中 pass = false 的 task 超過 2 個 → 信心自動降一級
-
-## Grade 標準
-A = total >= 55（覆蓋完整）
-B = total >= 45（有小缺口但不影響判斷）
-C = total >= 35（有 critical gap，需補充）
-D = total < 35（覆蓋嚴重不足，建議重跑）
-
-ready_to_publish = false 條件（任一即觸發）：
-- overall_grade == "D"
-- critical_gaps 數量 >= 2
-- low_confidence_task_count >= 3
+- 任何維度覆蓋明顯不足 → critical gap，必須列出具體 issue 和 remedy
+- 10-Q 季報天生缺少 Business / Risk Factors 章節，不應因此標記為 critical gap
 
 ## Output Format
 ```json
 {
-  "scores": {
-    "business_coverage": 0,
-    "risk_coverage": 0,
-    "financial_coverage": 0,
-    "quality_signal": 0,
-    "forward_looking": 0,
-    "consistency": 0
-  },
-  "total": 0,
   "critical_gaps": [
     {
       "dimension": "",
@@ -82,9 +62,7 @@ ready_to_publish = false 條件（任一即觸發）：
     }
   ],
   "low_confidence_task_count": 0,
-  "overall_grade": "A|B|C|D",
-  "grade_rationale": "",
-  "ready_to_publish": true,
+  "summary": "一句話總結報告品質與主要缺口",
   "insufficient_data": false
 }
 ```
