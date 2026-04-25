@@ -35,7 +35,19 @@ last_modified: 2025-04-23
   lifetime value, operating leverage, margin expansion,
   annualized run rate, contracted backlog
 
-6. 他不講什麼（Silence Analysis）
+6. Narrative Momentum（若有 prior_section）
+
+量化前後期敘事語言的變化軌跡：
+- 計算本期與前期的 early_stage_language 條目數差異 → `early_delta`
+- 計算本期與前期的 mature_stage_language 條目數差異 → `mature_delta`
+- 判斷 `direction`：
+  - `accelerating`：mature_delta > 0 或 early_delta > 0（敘事在成長）
+  - `stable`：兩個 delta 都 == 0
+  - `decelerating`：mature_delta < 0 或 early_delta < 0（敘事在退縮）
+
+若無 prior_section，momentum 所有欄位填 null。
+
+7. 他不講什麼（Silence Analysis）
 
 比對前一年 MD&A 強調的主題，今年是否消失：
 - 某個業務去年強調，今年完全不提 → 可能表現不佳
@@ -54,7 +66,12 @@ last_modified: 2025-04-23
   "narrative_shift": {
     "early_stage_language": [],
     "mature_stage_language": [],
-    "shift_description": ""
+    "shift_description": "",
+    "momentum": {
+      "early_delta": null,
+      "mature_delta": null,
+      "direction": null
+    }
   },
   "silence_analysis": [],
   "insufficient_data": false

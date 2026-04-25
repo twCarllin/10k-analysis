@@ -1,10 +1,44 @@
 # 10-K Multi-Agent Investment Research Pipeline
 
-從 SEC EDGAR 10-K 文件自動萃取投資 insight，使用 multi-agent + skill 架構。
+從 SEC EDGAR 10-K/10-Q 文件自動萃取投資 insight，使用 multi-agent + skill 架構。
 
 輸入 ticker + 年份，輸出繁體中文 Markdown + PDF 報告，包含 Bull/Bear case、關鍵追蹤指標、財務數據表格與季度趨勢圖。
 
-輸出結果請參考 INTC_20260425_014513_report.pdf
+輸出結果請參考 INTC_20260425_183226_report.pdf
+
+## 最新變更（2025-04-25）
+
+### CLI 自動推算前期
+- 不再需要手動輸入 `prior_year`，系統自動推算：
+  - 10-K → 自動比對前一年 10-K
+  - 10-Q Q1 → 自動比對前一年 10-K（看年度承諾是否開始兌現）
+  - 10-Q Q2/Q3 → 自動比對前一季（追蹤敘事演進）
+- 新增 `--prior-year` flag 可手動覆蓋
+
+### 評價趨勢判斷（3 條件獨立判斷）
+新增「評價趨勢判斷」區塊，以紅綠燈號呈現三個維度：
+
+| 燈號 | 意義 |
+|------|------|
+| 🟢 | 條件成立 |
+| 🟡 | 尚未成立但趨勢正在成長（emerging） |
+| 🔴 | 條件不成立 |
+
+三個維度：
+- **營收結構在變**：高毛利部門營收佔比是否持續上升（來源：segment_trend）
+- **營收品質在變**：利潤率與現金流趨勢是否向好（來源：three_statement_cross）
+- **敘事在變**：管理層語言是否從計畫期轉向成果期（來源：mdna_analysis）
+
+每個條件由獨立 agent 判斷，互不影響，避免模型因整體面好壞而產生一致性偏差。各條件附帶繁體中文論述，引用具體數字佐證。
+
+### 敘事動能追蹤（Narrative Momentum）
+mdna_analysis 新增 `momentum` 欄位，追蹤前後期敘事語言的變化軌跡：
+- `early_delta` / `mature_delta`：早期/成熟語言數量的前後期差異
+- `direction`：accelerating（成長）/ stable / decelerating（退縮）
+- Q1 與 10-K 比、Q2+ 與前一季比，quarter-over-quarter 追蹤敘事演進
+
+## To Do
+- 利用程式和 eval 降低對模型的依賴程度
 
 ## Quick Start
 
@@ -18,11 +52,11 @@ brew install pango  # PDF 生成需要
 cp config.example.json config.json
 # 編輯 config.json 填入 anthropic_api_key
 
-# 3. 執行（10-K 年報）
-python main.py HWM 2025 2024
+# 3. 執行（10-K 年報，自動比對前一年）
+python main.py HWM 2025
 
-# 執行（10-Q 季報）
-python main.py HWM 2024 --filing-type 10-Q --quarter Q3
+# 執行（10-Q 季報，自動比對前期）
+python main.py HWM 2025 --filing-type 10-Q --quarter Q1
 ```
 
 ## 設定檔
@@ -45,20 +79,26 @@ python main.py HWM 2024 --filing-type 10-Q --quarter Q3
 ## CLI 用法
 
 ```bash
-# 完整分析（當年 + 前年比較）
-python main.py <TICKER> <YEAR> [PRIOR_YEAR]
+# 完整分析（前期自動推算）
+python main.py <TICKER> <YEAR>
+
+# 10-Q 季報（Q1 比對 10-K，Q2+ 比對前一季）
+python main.py <TICKER> <YEAR> --filing-type 10-Q --quarter Q1
+
+# 手動覆蓋前期年份
+python main.py HWM 2025 --prior-year 2022
 
 # 指定本地檔案
 python main.py HWM 2025 --file ./data/cache/htm/HWM_2025_10K.htm
 
 # 只重跑特定 agent（其餘從快取載入）
-python main.py HWM 2025 2024 --only business,risk
+python main.py HWM 2025 --only business,risk
 
 # 清除 checkpoint 重新開始
-python main.py HWM 2025 2024 --clean
+python main.py HWM 2025 --clean
 
 # 不發 API，用 mock 結果測試流程
-python main.py HWM 2025 2024 --dry-run
+python main.py HWM 2025 --dry-run
 ```
 
 ## Pipeline 架構
@@ -80,13 +120,19 @@ python main.py HWM 2025 2024 --dry-run
      │ terms_glossary                                    │
      └───────────────────────────────────────────────────┘
                            │
-     ┌─────── Phase 2 (序列) ───┐
-     │ financial (XBRL+FS+fn)   │
-     └──────────────────────────┘
+     ┌─────── Phase 2 (序列) ─────────────────────┐
+     │ 2a: financial (XBRL+FS+fn)               │
+     │ 2b: segment_trend (XBRL+biz+mdna)        │
+     │ 2c: three_statement_cross (financial+XBRL)│
+     └──────────────────────────────────────────┘
                            │
-     ┌─────── Phase 3 (序列) ──────────┐
-     │ unusual_operations              │
-     └─────────────────────────────────┘
+     ┌─────── Phase 3 ────────────────────────────┐
+     │ 3a: unusual_operations                     │
+     │ 3b: rerate（3 條件平行）                     │
+     │     ├── rerate_structure (segment_trend)   │
+     │     ├── rerate_quality (3_statement_cross) │
+     │     └── rerate_narrative (mdna)            │
+     └────────────────────────────────────────────┘
                            │
      ┌─────── Phase 4 (Eval Loop) ─────┐
      │ hard_rule → schema → LLM eval   │
@@ -129,6 +175,11 @@ python main.py HWM 2025 2024 --dry-run
 | fn_tax | footnotes_tax | Note H | 所得稅、遞延稅、不確定稅務部位 |
 | terms_glossary | terms_glossary | 全文摘要 | 術語表（附錄） |
 | financial | financial_analysis | XBRL+FS+fn | 財務指標趨勢、交叉驗證 |
+| segment_trend | segment_trend | XBRL+biz+mdna | 部門營收佔比趨勢、結構轉型識別 |
+| 3_stmt_cross | three_statement_cross | financial+XBRL | 三表矛盾檢查、bullish/bearish 訊號 |
+| rerate_structure | rerate_structure | segment_trend | 營收結構是否轉型（獨立判斷） |
+| rerate_quality | rerate_quality | 3_stmt_cross | 營收品質是否改善（獨立判斷） |
+| rerate_narrative | rerate_narrative | mdna | 敘事是否從計畫轉成果（獨立判斷） |
 | unusual_ops | unusual_operations | fn+fin+原文 | 不尋常會計操作識別 |
 | cross_year | cross_year_compare | 兩年結果 | 跨年度矛盾與印證 |
 | insight | insight_synthesis | 全部結果 | Bull/Bear/追蹤指標 |
@@ -142,14 +193,15 @@ python main.py HWM 2025 2024 --dry-run
 3. 整體信心
 4. 多頭論點（Bull Case）
 5. 空頭論點（Bear Case）
-6. 關鍵追蹤指標（未來兩季）
-7. 10K 洞察（Information Edge）
-8. 財務數據（指標表格 + 季度趨勢折線圖 + 資本配置）
-9. 趨勢摘要 + 品質警示 + 異常值
-10. 跨年度分析
-11. 不尋常操作
-12. 交叉驗證
-13. 附錄：關鍵術語
+6. **評價趨勢判斷**（🟢🟡🔴 紅綠燈 + 論述）
+7. 關鍵追蹤指標（未來兩季）
+8. 10K 洞察（Information Edge）
+9. 財務數據（指標表格 + 季度趨勢折線圖 + 資本配置）
+10. 趨勢摘要 + 品質警示 + 異常值
+11. 跨年度分析
+12. 不尋常操作
+13. 交叉驗證
+14. 附錄：關鍵術語
 
 ## Checkpoint / Resume
 
@@ -182,7 +234,7 @@ tenk/
 ├── requirements.txt
 ├── agents/
 │   └── analyst_agent.md             # 共用 agent 定義
-├── skills/                          # 20 個 skill .md
+├── skills/                          # 24 個 skill .md
 ├── runtime/
 │   ├── agent_runner.py              # Claude API + context log + dry-run
 │   ├── orchestrator.py              # 多階段執行 + eval loop + checkpoint

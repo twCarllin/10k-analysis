@@ -23,7 +23,6 @@ REQUIRED_KEYS = {
     "unusual_operations": ["unusual_items", "summary", "insufficient_data"],
     "segment_trend": ["segment_table", "insufficient_data"],
     "three_statement_cross": ["checks", "overall_signals", "insufficient_data"],
-    "rerate_signal": ["rerating_conditions", "verdict", "monitoring_checklist", "insufficient_data"],
 }
 
 HARD_RULES = {
@@ -107,7 +106,6 @@ def eval_all(results, sections, filing_type: str = "10-K") -> dict:
         "unusual_operations": sections.get("item8_footnotes_md", ""),
         "segment_trend":     sections.get("xbrl_data", ""),
         "three_statement_cross": sections.get("xbrl_data", ""),
-        "rerate_signal":     sections.get("xbrl_data", ""),
     }
     # 10-Q: skip governance evaluation
     skip_tasks = {"governance", "business", "risk"} if filing_type == "10-Q" else set()

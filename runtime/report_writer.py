@@ -189,7 +189,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     critical_gaps = completeness.get("critical_gaps", [])
-    gap_flag = "  ⚠ 有待補充項目" if critical_gaps else ""
+    gap_flag = ""
 
     filing_label = filing_type
     if quarter:
@@ -244,52 +244,34 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             lines.append(f"  - 論述：{item['evidence']}")
     lines.append("")
 
-    # ── 評價趨勢判斷（Re-rate / De-rate）──
-    if rerate.get("verdict") and "error" not in rerate:
-        verdict = rerate["verdict"]
-        verdict_icon = {"RERATING": "🟢", "WATCH": "⚑", "EARLY": "🔵",
-                        "NEUTRAL": "⚪", "DERATING": "🔴"}.get(verdict, "")
-        conditions = rerate.get("rerating_conditions", {})
-        lines.append(f"## 評價趨勢判斷 {verdict_icon}")
+    # ── 評價趨勢判斷 ──
+    if rerate and "error" not in rerate:
+        lines.append("## 評價趨勢判斷")
         lines.append("")
-        # Describe each condition naturally
-        cond_lines = []
-        if conditions.get("structure_changing"):
-            cond_lines.append("✓ 業務結構正在轉型，高毛利部門佔比持續上升")
-        else:
-            cond_lines.append("✗ 業務結構尚未出現明顯轉型")
-        if conditions.get("quality_changing"):
-            cond_lines.append("✓ 財務品質改善中，利潤率或現金流趨勢向好")
-        else:
-            cond_lines.append("✗ 財務品質尚未改善，利潤率或現金流仍承壓")
-        if conditions.get("narrative_changing"):
-            cond_lines.append("✓ 管理層敘事已從計畫導向轉為成果導向")
-        else:
-            cond_lines.append("✗ 管理層敘事仍停留在計畫階段")
-        for cl in cond_lines:
-            lines.append(f"- {cl}")
-        lines.append("")
+        for key, label in [
+            ("structure_changing", "營收結構在變"),
+            ("quality_changing", "營收品質在變"),
+            ("narrative_changing", "敘事在變"),
+        ]:
+            cond = rerate.get(key, {})
+            result = cond.get("result", False)
+            emerging = cond.get("emerging", False)
+            if result:
+                icon = "🟢"
+            elif emerging:
+                icon = "🟡"
+            else:
+                icon = "🔴"
+            rationale = cond.get("rationale", "")
+            lines.append(f"### {icon} {label}")
+            if rationale:
+                lines.append(f"{rationale}")
+            lines.append("")
 
     # ── 關鍵追蹤指標 ──
     lines.append("## 關鍵追蹤指標（未來兩季）")
     for item in insight.get("key_monitorables", []):
         lines.append(f"- {item}")
-    # Merge rerate_signal monitoring_checklist
-    rerate_monitor = rerate.get("monitoring_checklist", [])
-    if rerate_monitor:
-        lines.append("")
-        lines.append("**Re-rate 追蹤清單：**")
-        for i, item in enumerate(rerate_monitor, 1):
-            lines.append(f"{i}. {item}")
-    # Validation triggers
-    triggers = rerate.get("validation_triggers", {})
-    if triggers.get("thesis_confirmed") or triggers.get("thesis_failed"):
-        lines.append("")
-        lines.append("**Thesis 驗證點：**")
-        if triggers.get("thesis_confirmed"):
-            lines.append(f"- 確認：{triggers['thesis_confirmed']}")
-        if triggers.get("thesis_failed"):
-            lines.append(f"- 失敗：{triggers['thesis_failed']}")
     lines.append("")
 
     # ── 10K 洞察 ──

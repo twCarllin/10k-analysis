@@ -1,15 +1,23 @@
 """
 Usage:
-  python main.py <TICKER> <YEAR> [PRIOR_YEAR] [--file PATH] [--clean] [--dry-run]
+  python main.py <TICKER> <YEAR> [--file PATH] [--clean] [--dry-run]
                  [--only TASK1,TASK2,...] [--filing-type 10-K|10-Q]
-                 [--quarter Q1|Q2|Q3]
+                 [--quarter Q1|Q2|Q3] [--prior-year YEAR]
+
+Prior period is auto-determined:
+  10-K        → prior = 10-K (year - 1)
+  10-Q Q1     → prior = 10-K (year - 1)
+  10-Q Q2     → prior = 10-Q Q1 (same year)
+  10-Q Q3     → prior = 10-Q Q2 (same year)
 
 Examples:
-  python main.py HWM 2024 2023
-  python main.py HWM 2024 2023 --dry-run
-  python main.py HWM 2024 2023 --clean
-  python main.py HWM 2024 2023 --only fn_revenue,fn_segment,fn_receivables
-  python main.py HWM 2024 --filing-type 10-Q --quarter Q3
+  python main.py HWM 2024                                  # 10-K, auto prior=2023
+  python main.py HWM 2024 --dry-run
+  python main.py HWM 2024 --clean
+  python main.py HWM 2024 --only fn_revenue,fn_segment
+  python main.py HWM 2025 --filing-type 10-Q --quarter Q1  # prior=10-K 2024
+  python main.py HWM 2025 --filing-type 10-Q --quarter Q2  # prior=10-Q Q1 2025
+  python main.py HWM 2024 --prior-year 2022                # override prior year
 """
 import sys
 import json
@@ -29,6 +37,22 @@ from section_splitter import (
 )
 from orchestrator import run_pipeline
 from pipeline_state import PipelineState
+
+
+def _determine_prior(year, filing_type, quarter, override=None):
+    """Determine prior period for narrative comparison.
+
+    Returns (prior_year, prior_filing_type, prior_quarter).
+    """
+    if filing_type == "10-K":
+        return (override or year - 1), "10-K", None
+    # 10-Q
+    if quarter == "Q1":
+        return (override or year - 1), "10-K", None
+    elif quarter == "Q2":
+        return (override or year), "10-Q", "Q1"
+    elif quarter == "Q3":
+        return (override or year), "10-Q", "Q2"
 
 
 def build_sections(ticker, year, file_path=None, filing_type="10-K",
@@ -96,7 +120,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("ticker")
     p.add_argument("year", type=int)
-    p.add_argument("prior_year", type=int, nargs="?")
+    p.add_argument("--prior-year", type=int, default=None,
+                   help="手動覆蓋前期年份（預設自動推算）")
     p.add_argument("--file", default=None)
     p.add_argument("--clean", action="store_true",
                    help="清除 checkpoint 重新開始")
@@ -126,13 +151,19 @@ def main():
         set_dry_run(True)
         print("  [Mode] dry-run — 不發 API，使用 mock 結果")
 
+    # Determine prior period
+    prior_year, prior_ft, prior_q = _determine_prior(
+        args.year, filing_type, quarter, args.prior_year)
+
     # Initialize state (auto-detects existing checkpoint)
-    state = PipelineState(ticker, args.year, args.prior_year,
-                          filing_type=filing_type, quarter=quarter)
+    state = PipelineState(ticker, args.year, prior_year,
+                          filing_type=filing_type, quarter=quarter,
+                          prior_filing_type=prior_ft, prior_quarter=prior_q)
     if args.clean:
         state.clear()
-        state = PipelineState(ticker, args.year, args.prior_year,
-                              filing_type=filing_type, quarter=quarter)
+        state = PipelineState(ticker, args.year, prior_year,
+                              filing_type=filing_type, quarter=quarter,
+                              prior_filing_type=prior_ft, prior_quarter=prior_q)
         print("  [State] 已清除 checkpoint，重新開始")
 
     # --only: invalidate specified tasks + downstream (eval, synthesis)
@@ -148,13 +179,18 @@ def main():
         # Always invalidate downstream: eval, synthesis, phase3, phase5
         for key in list(state._data["steps"].keys()):
             if (key.startswith("eval_") or key.startswith("synthesis.")
-                    or key.startswith("phase3.") or key.startswith("phase5.")):
+                    or key.startswith("phase3.") or key.startswith("phase3b.")
+                    or key.startswith("phase5.")):
                 state.invalidate(key)
         state._save()
         print(f"  [State] 重跑：{', '.join(only_tasks)}（+ eval + synthesis）")
 
     q_label = f" {quarter}" if quarter else ""
-    print(f"\n{'='*50}\n  {ticker} {args.year} {filing_type}{q_label}\n{'='*50}")
+    prior_label = f"{prior_ft.replace('-','')}"
+    if prior_q:
+        prior_label += f" {prior_q}"
+    print(f"\n{'='*50}\n  {ticker} {args.year} {filing_type}{q_label}"
+          f"  (prior: {prior_year} {prior_label})\n{'='*50}")
 
     xbrl_facts = get_xbrl_facts(ticker)
     xbrl_json = json.dumps(
@@ -166,12 +202,10 @@ def main():
     sections["xbrl_data"] = xbrl_json
     sections["_quarterly"] = quarterly
 
-    prior_sections = None
-    if args.prior_year:
-        print(f"\n  前年度 sections ({args.prior_year})...")
-        prior_sections = build_sections(ticker, args.prior_year,
-                                        filing_type=filing_type, quarter=quarter)
-        prior_sections["xbrl_data"] = xbrl_json
+    print(f"\n  前期 sections ({prior_year} {prior_label})...")
+    prior_sections = build_sections(ticker, prior_year,
+                                    filing_type=prior_ft, quarter=prior_q)
+    prior_sections["xbrl_data"] = xbrl_json
 
     run_pipeline(ticker, sections, prior_sections, state=state,
                  filing_type=filing_type, quarter=quarter)

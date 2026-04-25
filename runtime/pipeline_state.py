@@ -9,12 +9,16 @@ class PipelineState:
     """Per-agent checkpoint manager. Each agent call is an independent checkpoint."""
 
     def __init__(self, ticker: str, year: int, prior_year: int | None = None,
-                 filing_type: str = "10-K", quarter: str | None = None):
+                 filing_type: str = "10-K", quarter: str | None = None,
+                 prior_filing_type: str | None = None,
+                 prior_quarter: str | None = None):
         self.ticker = ticker
         self.year = year
         self.prior_year = prior_year
         self.filing_type = filing_type
         self.quarter = quarter
+        self.prior_filing_type = prior_filing_type
+        self.prior_quarter = prior_quarter
         suffix = filing_type.replace("-", "")
         if quarter:
             suffix += f"_{quarter}"
@@ -28,7 +32,9 @@ class PipelineState:
                     or self._data.get("year") != year
                     or self._data.get("prior_year") != prior_year
                     or self._data.get("filing_type", "10-K") != filing_type
-                    or self._data.get("quarter") != quarter):
+                    or self._data.get("quarter") != quarter
+                    or self._data.get("prior_filing_type") != prior_filing_type
+                    or self._data.get("prior_quarter") != prior_quarter):
                 print(f"  [State] 參數不同，重新開始")
                 self._init_fresh()
             else:
@@ -51,6 +57,8 @@ class PipelineState:
             "prior_year": self.prior_year,
             "filing_type": self.filing_type,
             "quarter": self.quarter,
+            "prior_filing_type": self.prior_filing_type,
+            "prior_quarter": self.prior_quarter,
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
             "steps": {},

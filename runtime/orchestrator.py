@@ -249,31 +249,53 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
         state.mark_done(uo_key, results["unusual_operations"])
         print("    \u2713 unusual_operations")
 
-    # Phase 3b: rerate_signal (needs segment_trend + three_statement_cross + mdna + financial)
-    print("\n[Phase 3b] rerate_signal")
-    rs_key = "phase3b.rerate_signal"
-    cached_rs = state.get_result(rs_key)
-    if cached_rs is not None:
-        results["rerate_signal"] = cached_rs
-        print("    \u2713 rerate_signal（快取）")
-    else:
-        state.mark_running(rs_key)
-        results["rerate_signal"] = run_agent(
-            "analyst_agent", "rerate_signal", {
-                "segment_summary":         json.dumps(results.get("segment_trend", {}),
-                                                      ensure_ascii=False),
-                "three_statement_summary": json.dumps(results.get("three_statement_cross", {}),
-                                                      ensure_ascii=False),
-                "mdna_summary":            json.dumps(results.get("mdna", {}),
-                                                      ensure_ascii=False),
-                "financial_summary":       json.dumps(results.get("financial", {}),
-                                                      ensure_ascii=False),
-            },
-            task_label=rs_key,
-        )
-        state.mark_done(rs_key, results["rerate_signal"])
-        verdict = results["rerate_signal"].get("verdict", "?")
-        print(f"    \u2713 rerate_signal \u2192 {verdict}")
+    # Phase 3b: rerate (3 independent agent calls in parallel)
+    print("\n[Phase 3b] rerate（3 條件平行判斷）")
+    rerate_tasks = [
+        ("structure", "rerate_structure", "phase3b.rerate_structure",
+         {"segment_summary": json.dumps(results.get("segment_trend", {}),
+                                        ensure_ascii=False)}),
+        ("quality", "rerate_quality", "phase3b.rerate_quality",
+         {"three_statement_summary": json.dumps(
+             results.get("three_statement_cross", {}), ensure_ascii=False)}),
+        ("narrative", "rerate_narrative", "phase3b.rerate_narrative",
+         {"mdna_summary": json.dumps(results.get("mdna", {}),
+                                     ensure_ascii=False)}),
+    ]
+    rerate_results = {}
+    futures_map = {}
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        for label, skill, step_key, inputs in rerate_tasks:
+            cached = state.get_result(step_key)
+            if cached is not None:
+                rerate_results[label] = cached
+                print(f"    \u2713 {label}（快取）")
+            else:
+                state.mark_running(step_key)
+                fut = pool.submit(
+                    run_agent, "analyst_agent", skill, inputs,
+                    task_label=step_key,
+                )
+                futures_map[fut] = (label, step_key)
+        for fut in as_completed(futures_map):
+            label, step_key = futures_map[fut]
+            res = fut.result()
+            state.mark_done(step_key, res)
+            rerate_results[label] = res
+            icon = "✓" if res.get("result") else "✗"
+            print(f"    {icon} {label}")
+
+    # Assemble into combined rerate_signal result
+    results["rerate_signal"] = {
+        "structure_changing": rerate_results.get("structure", {}),
+        "quality_changing": rerate_results.get("quality", {}),
+        "narrative_changing": rerate_results.get("narrative", {}),
+        "insufficient_data": any(
+            r.get("insufficient_data", False)
+            for r in rerate_results.values()
+            if isinstance(r, dict)
+        ),
+    }
 
     # Eval loop
     eval_results = {}
@@ -388,10 +410,9 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
                 continue
             if trim_key == "rerate_signal":
                 slim_results[trim_key] = {
-                    "verdict": val.get("verdict"),
-                    "rerating_conditions": val.get("rerating_conditions"),
-                    "verdict_rationale": val.get("verdict_rationale"),
-                    "derating_flags": val.get("derating_flags"),
+                    "structure_changing": val.get("structure_changing"),
+                    "quality_changing": val.get("quality_changing"),
+                    "narrative_changing": val.get("narrative_changing"),
                 }
             elif trim_key == "segment_trend":
                 slim_results[trim_key] = {
