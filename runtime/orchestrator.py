@@ -379,11 +379,37 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
         print("    ✓ insight_synthesis（快取）")
     else:
         state.mark_running(synth_insight_key)
+        # Slim down Phase 2b/2c/3b results to avoid overwhelming insight_synthesis
+        # (large input causes agent to output markdown instead of JSON)
+        slim_results = dict(results)
+        for trim_key in ("segment_trend", "three_statement_cross", "rerate_signal"):
+            val = slim_results.get(trim_key)
+            if not isinstance(val, dict):
+                continue
+            if trim_key == "rerate_signal":
+                slim_results[trim_key] = {
+                    "verdict": val.get("verdict"),
+                    "rerating_conditions": val.get("rerating_conditions"),
+                    "verdict_rationale": val.get("verdict_rationale"),
+                    "derating_flags": val.get("derating_flags"),
+                }
+            elif trim_key == "segment_trend":
+                slim_results[trim_key] = {
+                    "structural_shift": val.get("structural_shift"),
+                    "shift_description": val.get("shift_description"),
+                    "rerating_candidate_structure": val.get("rerating_candidate_structure"),
+                }
+            elif trim_key == "three_statement_cross":
+                slim_results[trim_key] = {
+                    "dominant_signal": val.get("dominant_signal"),
+                    "rerating_candidate_quality": val.get("rerating_candidate_quality"),
+                    "overall_signals": val.get("overall_signals"),
+                }
         insight = run_agent(
             "analyst_agent",
             "insight_synthesis",
             {
-                "analysis_results": json.dumps(results, ensure_ascii=False),
+                "analysis_results": json.dumps(slim_results, ensure_ascii=False),
                 "comparator_result": json.dumps(comparator, ensure_ascii=False),
             },
             task_label=synth_insight_key,
