@@ -249,11 +249,8 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         verdict = rerate["verdict"]
         verdict_icon = {"RERATING": "🟢", "WATCH": "⚑", "EARLY": "🔵",
                         "NEUTRAL": "⚪", "DERATING": "🔴"}.get(verdict, "")
-        verdict_zh = {"RERATING": "���價上修", "WATCH": "持續觀察",
-                      "EARLY": "訊號初現", "NEUTRAL": "維持現狀",
-                      "DERATING": "評價下修"}.get(verdict, verdict)
         conditions = rerate.get("rerating_conditions", {})
-        lines.append(f"## 評價趨勢判斷：{verdict_zh} {verdict_icon}")
+        lines.append(f"## 評價趨勢判斷 {verdict_icon}")
         lines.append("")
         # Describe each condition naturally
         cond_lines = []
@@ -268,7 +265,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         if conditions.get("narrative_changing"):
             cond_lines.append("✓ 管理層敘事已從計畫導向轉為成果導向")
         else:
-            cond_lines.append("✗ 管理層敘事仍���留在計畫階段")
+            cond_lines.append("✗ 管理層敘事仍停留在計畫階段")
         for cl in cond_lines:
             lines.append(f"- {cl}")
         lines.append("")
