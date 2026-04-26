@@ -64,6 +64,29 @@ def split_sections(md_text: str, filing_type: str = "10-K") -> dict[str, str]:
     return _llm_fallback(md_text)
 
 
+# Plain-text patterns (no markdown # headers) for BS4/iXBRL extracted text
+_PLAIN_PATTERNS_10K = {
+    "item1":  r"^\s*ITEM\s+1\s*[\.\s]+BUSINESS\s*$",
+    "item1a": r"^\s*ITEM\s+1A\s*[\.\s]+RISK",
+    "item1c": r"^\s*ITEM\s+1C\s*[\.\s]+CYBER",
+    "item7":  r"^\s*ITEM\s+7\s*[\.\s]+MANAGEMENT",
+    "item7a": r"^\s*ITEM\s+7A\s*[\.\s]",
+    "item8":  r"^\s*ITEM\s+8\s*[\.\s]+FINANCIAL",
+    "item9a": r"^\s*ITEM\s+9A\s*[\.\s]",
+    "item10": r"^\s*ITEM\s+10\s*[\.\s]",
+    "item11": r"^\s*ITEM\s+11\s*[\.\s]",
+    "item13": r"^\s*ITEM\s+13\s*[\.\s]",
+}
+
+_PLAIN_PATTERNS_10Q = {
+    "item1":  r"^\s*ITEM\s+1\s*[\.\s]+.*FINANCIAL",
+    "item1a": r"^\s*ITEM\s+1A\s*[\.\s]+.*RISK",
+    "item2":  r"^\s*ITEM\s+2\s*[\.\s]+.*MANAGEMENT",
+    "item3":  r"^\s*ITEM\s+3\s*[\.\s]+.*QUANTITATIVE",
+    "item4":  r"^\s*ITEM\s+4\s*[\.\s]+.*CONTROLS",
+}
+
+
 def _split_by_patterns(text, patterns, target_sections=None) -> dict[str, str]:
     if target_sections is None:
         target_sections = TARGET_SECTIONS_10K
@@ -75,6 +98,17 @@ def _split_by_patterns(text, patterns, target_sections=None) -> dict[str, str]:
         ]
         if matches:
             positions[name] = matches[-1]
+    # If markdown-header patterns found very few sections, try plain-text patterns
+    if len(positions) < 3:
+        plain = _PLAIN_PATTERNS_10Q if "item2" in target_sections else _PLAIN_PATTERNS_10K
+        for name, pattern in plain.items():
+            if name in positions:
+                continue  # already found via markdown pattern
+            matches = [
+                i for i, l in enumerate(lines) if re.match(pattern, l, re.IGNORECASE)
+            ]
+            if matches:
+                positions[name] = matches[-1]
     sorted_pos = sorted(positions.items(), key=lambda x: x[1])
     result = {}
     for i, (name, start) in enumerate(sorted_pos):
@@ -286,13 +320,14 @@ def _is_valid(sections, filing_type: str = "10-K") -> bool:
         return (
             len(sections) >= 2
             and all(k in sections for k in critical)
-            and all(len(v) >= 500 for v in sections.values())
+            and all(len(sections[k]) >= 500 for k in critical if k in sections)
         )
-    critical = ["item1a", "item7", "item8"]
+    critical = ["item1a", "item7"]
+    # item8 can legitimately be short (e.g. "presented following Item 15")
     return (
         len(sections) >= 3
-        and any(k in sections for k in critical)
-        and all(len(v) >= 1000 for v in sections.values())
+        and any(k in sections for k in critical + ["item8"])
+        and all(len(sections[k]) >= 200 for k in critical if k in sections)
     )
 
 

@@ -1,15 +1,31 @@
 import json
+import os
 import re
 import time
 from pathlib import Path
 from datetime import datetime
 
-import anthropic
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 _config = json.loads((BASE_DIR / "config.json").read_text())
-client = anthropic.Anthropic(api_key=_config["anthropic_api_key"])
+
+_provider = _config.get("provider", "anthropic")
+
+if _provider == "anthropic":
+    import anthropic
+    _api_key = _config.get("anthropic_api_key", "") or _config.get("api_key", "")
+    _model = _config.get("model", "claude-sonnet-4-5")
+    client = anthropic.Anthropic(api_key=_api_key)
+else:
+    from openai import OpenAI
+    _api_key = (
+        _config.get("api_key", "")
+        or _config.get("anthropic_api_key", "")
+        or os.environ.get("ZAI_API_KEY_PRIMARY", "")
+    )
+    _model = _config.get("model", "glm-5.1")
+    _base_url = _config.get("base_url", "https://api.z.ai/api/coding/paas/v4")
+    client = OpenAI(api_key=_api_key, base_url=_base_url)
 
 _dry_run = False
 
@@ -20,7 +36,6 @@ def set_dry_run(enabled: bool):
 
 
 _MOCK_OUTPUTS = json.loads((BASE_DIR / "runtime" / "mock_outputs.json").read_text())
-
 
 def truncate_with_notice(text: str, max_chars: int) -> str:
     """Truncate text with explicit notice to the agent."""
@@ -53,7 +68,7 @@ def run_agent(agent_name, skill_name, inputs,
         print(f"      [dry-run] {label}")
         return json.loads(json.dumps(mock))  # deep copy
 
-    model = model or _config.get("model", "claude-sonnet-4-5")
+    model = model or _model
     skill_limits = _config.get("max_tokens_by_skill", {})
     max_tokens = max_tokens or skill_limits.get(skill_name) or _config.get("max_tokens", 4096)
     agent_md = (BASE_DIR / f"agents/{agent_name}.md").read_text()
@@ -67,16 +82,31 @@ def run_agent(agent_name, skill_name, inputs,
 
     user_content = "\n".join(parts)
 
-    response = client.messages.create(
-        model=model,
-        max_tokens=max_tokens,
-        system=system,
-        messages=[{"role": "user", "content": user_content}],
-    )
-
-    raw = response.content[0].text.strip()
+    if _provider == "anthropic":
+        response = client.messages.create(
+            model=model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": user_content}],
+        )
+        raw = response.content[0].text.strip()
+        usage = response.usage
+    else:
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=max_tokens,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user_content},
+            ],
+        )
+        raw = response.choices[0].message.content.strip()
+        usage = type("Usage", (), {
+            "input_tokens": response.usage.prompt_tokens if response.usage else 0,
+            "output_tokens": response.usage.completion_tokens if response.usage else 0,
+        })()
     skill_ver = _get_skill_version(skill_name)
-    _save_context(label, system, user_content, raw, response.usage, skill_ver)
+    _save_context(label, system, user_content, raw, usage, skill_ver)
 
     raw_clean = re.sub(r"^```(?:json)?\s*", "", raw)
     raw_clean = re.sub(r"\s*```$", "", raw_clean)
