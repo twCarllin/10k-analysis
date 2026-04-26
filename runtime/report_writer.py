@@ -70,17 +70,23 @@ def _fmt_val(val, is_pct=False):
 
 
 def _build_financial_tables(fin, filing_type="10-K", quarter=None,
-                            current_year=None) -> list[str]:
-    """Build markdown tables from financial metrics."""
+                            current_year=None, xbrl_metrics=None) -> list[str]:
+    """Build markdown tables from financial metrics.
+
+    Falls back to raw XBRL metrics for fields the agent doesn't return
+    (e.g. OperatingIncome / NetIncome / OCF / CapEx / LongTermDebt /
+    SharesOutstanding), so the trend table can be rendered even when
+    the financial agent only emits derived ratios.
+    """
     lines = []
     metrics = fin.get("metrics", {})
+    xbrl_metrics = xbrl_metrics or {}
 
-    # Collect all years from ALL metric series
     all_years = set()
-    for rows in metrics.values():
+    for rows in list(metrics.values()) + list(xbrl_metrics.values()):
         if isinstance(rows, list):
             for r in rows:
-                if r.get("val") is not None:
+                if isinstance(r, dict) and r.get("val") is not None:
                     all_years.add(r["year"])
     if not all_years:
         return lines
@@ -96,8 +102,20 @@ def _build_financial_tables(fin, filing_type="10-K", quarter=None,
     lines.append("### 年度趨勢")
 
     def val_map(key):
-        rows = metrics.get(key, [])
-        return {r["year"]: r.get("val") for r in rows if isinstance(r, dict)} if rows else {}
+        rows = metrics.get(key) or []
+        result = {
+            r["year"]: r["val"]
+            for r in rows
+            if isinstance(r, dict) and r.get("val") is not None
+        }
+        if result:
+            return result
+        rows = xbrl_metrics.get(key) or []
+        return {
+            r["year"]: r["val"]
+            for r in rows
+            if isinstance(r, dict) and r.get("val") is not None
+        }
 
     rev = val_map("Revenue")
     oi = val_map("OperatingIncome")
@@ -233,7 +251,7 @@ def _build_quarterly_chart(quarterly: list[dict], out_dir: Path) -> str | None:
 
 
 def save_report(ticker, results, eval_results, synthesis, quarterly=None,
-                filing_type="10-K", quarter=None) -> Path:
+                filing_type="10-K", quarter=None, xbrl_metrics=None) -> Path:
     out_dir = BASE_DIR / "data" / "output"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -302,11 +320,15 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     if rerate and "error" not in rerate:
         lines.append("## 評價趨勢判斷")
         lines.append("")
-        for key, label in [
+        rerate_items = [
             ("structure_changing", "營收結構在變"),
             ("quality_changing", "營收品質在變"),
             ("narrative_changing", "敘事在變"),
-        ]:
+        ]
+        if filing_type == "10-Q":
+            rerate_items = [it for it in rerate_items
+                            if it[0] != "structure_changing"]
+        for key, label in rerate_items:
             cond = rerate.get(key, {})
             result = cond.get("result", False)
             emerging = cond.get("emerging", False)
@@ -347,7 +369,8 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
                     _all_yrs.add(_r["year"])
     _cur_year = max(_all_yrs) if _all_yrs else None
     lines.extend(_build_financial_tables(fin, filing_type=filing_type,
-                                         quarter=quarter, current_year=_cur_year))
+                                         quarter=quarter, current_year=_cur_year,
+                                         xbrl_metrics=xbrl_metrics))
 
     # ── 季度趨勢 ──
     if quarterly:

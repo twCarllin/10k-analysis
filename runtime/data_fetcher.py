@@ -113,8 +113,16 @@ XBRL_CONCEPTS = {
     "OperatingIncome": ["OperatingIncomeLoss"],
     "NetIncome": ["NetIncomeLoss"],
     "OperatingCashFlow": ["NetCashProvidedByUsedInOperatingActivities"],
-    "CapEx": ["PaymentsToAcquirePropertyPlantAndEquipment"],
-    "LongTermDebt": ["LongTermDebt", "LongTermDebtNoncurrent"],
+    "CapEx": [
+        "PaymentsToAcquirePropertyPlantAndEquipment",
+        "PaymentsToAcquireProductiveAssets",
+    ],
+    "LongTermDebt": [
+        "LongTermDebt",
+        "LongTermDebtNoncurrent",
+        "LongTermDebtAndCapitalLeaseObligations",
+        "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
+    ],
     "SharesOutstanding": ["CommonStockSharesOutstanding"],
 }
 
@@ -153,12 +161,21 @@ def extract_key_metrics(xbrl_facts: dict, filing_type: str = "10-K") -> dict:
             else:
                 target_forms = ("10-Q", "10-Q/A", "10-K", "10-K/A")
                 target_fp = ("Q1", "Q2", "Q3", "Q4", "FY")
-            entries = [
-                {"year": e["fy"], "val": e["val"], "filed": e.get("filed", ""),
-                 "fp": e.get("fp", "")}
-                for e in values
-                if e.get("form") in target_forms and e.get("fp") in target_fp
-            ]
+            entries = []
+            for e in values:
+                if e.get("form") not in target_forms or e.get("fp") not in target_fp:
+                    continue
+                is_instant = not e.get("start")
+                if is_instant and e.get("end"):
+                    year = int(e["end"][:4])
+                else:
+                    year = e["fy"]
+                entries.append({
+                    "year": year,
+                    "val": e["val"],
+                    "filed": e.get("filed", ""),
+                    "fp": e.get("fp", ""),
+                })
             all_rows.extend(entries)
         if not all_rows:
             return []

@@ -249,12 +249,11 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
         state.mark_done(uo_key, results["unusual_operations"])
         print("    \u2713 unusual_operations")
 
-    # Phase 3b: rerate (3 independent agent calls in parallel)
-    print("\n[Phase 3b] rerate（3 條件平行判斷）")
+    # Phase 3b: rerate (independent agent calls in parallel)
+    # 10-Q segment data is too thin to judge revenue-mix shifts, so we skip
+    # the `structure` condition for quarterly filings.
+    print("\n[Phase 3b] rerate（條件平行判斷）")
     rerate_tasks = [
-        ("structure", "rerate_structure", "phase3b.rerate_structure",
-         {"segment_summary": json.dumps(results.get("segment_trend", {}),
-                                        ensure_ascii=False)}),
         ("quality", "rerate_quality", "phase3b.rerate_quality",
          {"three_statement_summary": json.dumps(
              results.get("three_statement_cross", {}), ensure_ascii=False)}),
@@ -262,6 +261,12 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
          {"mdna_summary": json.dumps(results.get("mdna", {}),
                                      ensure_ascii=False)}),
     ]
+    if filing_type != "10-Q":
+        rerate_tasks.insert(0, (
+            "structure", "rerate_structure", "phase3b.rerate_structure",
+            {"segment_summary": json.dumps(
+                results.get("segment_trend", {}), ensure_ascii=False)},
+        ))
     rerate_results = {}
     futures_map = {}
     with ThreadPoolExecutor(max_workers=3) as pool:
@@ -467,10 +472,14 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
 
     synthesis = {"comparator": comparator, "insight": insight, "completeness": completeness}
 
+    xbrl_metrics_raw = (
+        json.loads(sections["xbrl_data"]) if sections.get("xbrl_data") else {}
+    )
     report_path = save_report(
         ticker, results, eval_results, synthesis,
         quarterly=sections.get("_quarterly", []),
         filing_type=filing_type, quarter=quarter,
+        xbrl_metrics=xbrl_metrics_raw,
     )
 
     print("  [State] Pipeline 完成（state 保留供 --only 使用）")
