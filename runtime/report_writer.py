@@ -458,15 +458,18 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         lines.append("## 競爭壓力（即時訊號）")
         cp_signals = results.get("mdna", {}).get("competitive_pressure_signals", [])
         if cp_signals:
-            severity_zh = {"high": "High", "medium": "Medium", "low": "Low"}
+            severity_zh = {"high": "高", "medium": "中", "low": "低"}
             vs_prior_zh = {"intensifying": "加劇", "stable": "持平", "easing": "緩解"}
             for sig in cp_signals:
                 sev = severity_zh.get(sig.get("severity", ""), sig.get("severity", ""))
                 vs = sig.get("vs_prior_quarter")
                 vs_str = vs_prior_zh.get(vs, "—") if vs else "—"
+                summary = sig.get("summary_zh") or sig.get("quote", "")
                 lines.append(
-                    f'- [{sev}] "{sig.get("quote", "")}" — {sig.get("market", "")}（vs 上季：{vs_str}）'
+                    f'- [{sev}] **{summary}** — {sig.get("market", "")}（vs 上季：{vs_str}）'
                 )
+                if sig.get("summary_zh") and sig.get("quote"):
+                    lines.append(f'  > "{sig["quote"]}"')
         else:
             lines.append("> 本季 MD&A 無明顯競爭壓力新增揭露。")
         lines.append("")

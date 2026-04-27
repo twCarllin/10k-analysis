@@ -64,8 +64,9 @@ last_modified: 2025-04-23
 `pricing pressure`、`competitive environment`、`market share`、`new entrants`、`competitor`、`competitive dynamics`、`increased competition`、`competitive headwinds`
 
 對每個命中段落輸出：
-- `quote`：原文 1-2 句（≤ 200 字）
-- `market`：受影響的業務線或市場
+- `summary_zh`：中文摘要（≤ 60 字），中文為主，可保留少量專有名詞英文（如 ASP、CCG、AI 等）
+- `quote`：原文 1-2 句（≤ 200 字），verbatim 引用作為審計依據
+- `market`：受影響的業務線或市場（中文為主）
 - `severity`：`high` / `medium` / `low`
 - `vs_prior_quarter`：Q2/Q3 用 `intensifying` / `stable` / `easing`（與 prior_section 比較）；Q1 一律填 `null`（prior 是去年 10-K，季→年比較不對等）
 
@@ -92,7 +93,7 @@ last_modified: 2025-04-23
   },
   "silence_analysis": [],
   "competitive_pressure_signals": [
-    {"quote": "", "market": "", "severity": "high|medium|low", "vs_prior_quarter": "intensifying|stable|easing|null"}
+    {"summary_zh": "", "quote": "", "market": "", "severity": "high|medium|low", "vs_prior_quarter": "intensifying|stable|easing|null"}
   ],
   "insufficient_data": false
 }
