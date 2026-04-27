@@ -78,6 +78,7 @@ def _run_task(task, sections, state, step_prefix, hint=""):
         for k in task["input_keys"]
         if k in KEY_MAP
     }
+    inputs.update(task.get("extra_inputs", {}))
     if hint:
         inputs["retry_hint"] = hint
     result = run_agent("analyst_agent", task["skill"], inputs,
@@ -167,6 +168,11 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
             "skill": "footnotes_combined",
             "input_keys": ["fn_combined"],
         })
+        phase1_tasks = [
+            {**t, "extra_inputs": {"filing_type": filing_type, "quarter": quarter or ""}}
+            if t["task_id"] == "mdna" else t
+            for t in phase1_tasks
+        ]
 
     # Skip fn_pension if content is too short (immaterial)
     if len(sections.get("fn_pension", "")) < 500:

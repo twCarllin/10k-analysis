@@ -24,6 +24,9 @@
     "mgmt_tone_evidence": "管理層預期持續成長",
     "promises_fulfilled": ["營收成長達成"],
     "promises_broken": [],
+    "narrative_shift": {"early_stage_language": [], "mature_stage_language": [], "shift_description": "", "momentum": {"early_delta": null, "mature_delta": null, "direction": null}},
+    "silence_analysis": [],
+    "competitive_pressure_signals": [],
     "insufficient_data": false
   },
   "footnotes_revenue": {
