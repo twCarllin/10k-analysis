@@ -160,6 +160,9 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
     phase1_tasks = PHASE1_TASKS
     if filing_type == "10-Q":
         skip_tasks = {"governance", "business", "risk"}
+        if quarter in ("Q2", "Q3"):
+            skip_tasks |= {"terms_glossary"}
+            print("[Phase 1] terms_glossary skipped (Q2/Q3 10-Q)")
         phase1_tasks = [t for t in PHASE1_TASKS if t["task_id"] not in skip_tasks]
         # Replace 8 individual fn_* tasks with 1 combined footnotes task for 10-Q
         phase1_tasks = [t for t in phase1_tasks if not t["task_id"].startswith("fn_")]
@@ -192,26 +195,30 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
     results["financial"] = fin
 
     # Phase 2b: segment_trend (needs xbrl + business + mdna)
-    print("\n[Phase 2b] segment_trend")
-    st_key = "phase2b.segment_trend"
-    cached_st = state.get_result(st_key)
-    if cached_st is not None:
-        results["segment_trend"] = cached_st
-        print("    \u2713 segment_trend（快取）")
+    if filing_type == "10-Q":
+        print("\n[Phase 2b] segment_trend skipped (10-Q)")
+        results["segment_trend"] = {"insufficient_data": True, "_skipped_reason": "10-Q lacks business_summary"}
     else:
-        state.mark_running(st_key)
-        results["segment_trend"] = run_agent(
-            "analyst_agent", "segment_trend", {
-                "xbrl_json":        sections.get("xbrl_data", ""),
-                "business_summary": json.dumps(results.get("business", {}),
-                                               ensure_ascii=False),
-                "mdna_summary":     json.dumps(results.get("mdna", {}),
-                                               ensure_ascii=False),
-            },
-            task_label=st_key,
-        )
-        state.mark_done(st_key, results["segment_trend"])
-        print("    \u2713 segment_trend")
+        print("\n[Phase 2b] segment_trend")
+        st_key = "phase2b.segment_trend"
+        cached_st = state.get_result(st_key)
+        if cached_st is not None:
+            results["segment_trend"] = cached_st
+            print("    \u2713 segment_trend（快取）")
+        else:
+            state.mark_running(st_key)
+            results["segment_trend"] = run_agent(
+                "analyst_agent", "segment_trend", {
+                    "xbrl_json":        sections.get("xbrl_data", ""),
+                    "business_summary": json.dumps(results.get("business", {}),
+                                                   ensure_ascii=False),
+                    "mdna_summary":     json.dumps(results.get("mdna", {}),
+                                                   ensure_ascii=False),
+                },
+                task_label=st_key,
+            )
+            state.mark_done(st_key, results["segment_trend"])
+            print("    \u2713 segment_trend")
 
     # Phase 2c: three_statement_cross (needs financial + xbrl)
     print("\n[Phase 2c] three_statement_cross")
@@ -330,7 +337,7 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
                 eval_results["financial"] = fin_ev
         else:
             print(f"\n[Eval {attempt}/{MAX_RETRIES}]")
-            eval_results = eval_all(results, sections, filing_type=filing_type)
+            eval_results = eval_all(results, sections, filing_type=filing_type, quarter=quarter)
             # Save each eval result
             for tid, ev in eval_results.items():
                 state.mark_eval(f"{eval_step}.{tid}", ev)

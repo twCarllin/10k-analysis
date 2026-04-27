@@ -85,7 +85,7 @@ def eval_single(task_id, skill_output, source_input) -> dict:
     return eval_result
 
 
-def eval_all(results, sections, filing_type: str = "10-K") -> dict:
+def eval_all(results, sections, filing_type: str = "10-K", quarter=None) -> dict:
     """Evaluate all task results, return dict of task_id -> eval_result."""
     source_map = {
         "business":        sections.get("item1_current", ""),
@@ -107,8 +107,12 @@ def eval_all(results, sections, filing_type: str = "10-K") -> dict:
         "segment_trend":     sections.get("xbrl_data", ""),
         "three_statement_cross": sections.get("xbrl_data", ""),
     }
-    # 10-Q: skip governance evaluation
+    # 10-Q: skip governance evaluation and tasks without meaningful input
     skip_tasks = {"governance", "business", "risk"} if filing_type == "10-Q" else set()
+    if filing_type == "10-Q":
+        skip_tasks |= {"segment_trend"}
+    if quarter in ("Q2", "Q3"):
+        skip_tasks |= {"terms_glossary"}
 
     eval_results = {}
     for task_id, output in results.items():
