@@ -251,7 +251,8 @@ def _build_quarterly_chart(quarterly: list[dict], out_dir: Path) -> str | None:
 
 
 def save_report(ticker, results, eval_results, synthesis, quarterly=None,
-                filing_type="10-K", quarter=None, xbrl_metrics=None) -> Path:
+                filing_type="10-K", quarter=None, xbrl_metrics=None,
+                prior_year=None) -> Path:
     out_dir = BASE_DIR / "data" / "output"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -281,6 +282,41 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         lines.append("## 公司定位")
         lines.append(biz["company_positioning"])
         lines.append("")
+
+    # ── Competitor Landscape ──
+    comp = results.get("competitor_mapping", {})
+    if comp.get("named_competitors"):
+        comp_mode = comp.get("mode", "normal")
+        if comp_mode == "q1_vs_10k":
+            year_label = str(prior_year) if prior_year else ""
+            lines.append(f"## Competitor Landscape（基準：{year_label} 10-K）")
+        else:
+            lines.append("## Competitor Landscape")
+        yoy_zh = {"new": "新增", "removed": "移除", "unchanged": "持平", "baseline": "基準"}
+        lines.append("| 競爭對手 | Ticker | 市場 | 變化 |")
+        lines.append("|---------|--------|------|------|")
+        for c in comp["named_competitors"]:
+            name = c.get("name", "")
+            ticker_val = c.get("ticker", "")
+            markets = "、".join(c.get("markets", []))
+            status_zh = yoy_zh.get(c.get("yoy_status", ""), c.get("yoy_status", ""))
+            lines.append(f"| {name} | {ticker_val} | {markets} | {status_zh} |")
+        lines.append("")
+        position_zh = {"leader": "領先", "challenger": "挑戰者", "niche": "利基", "follower": "跟隨"}
+        pos = position_zh.get(comp.get("market_position", ""), comp.get("market_position", ""))
+        evidence = comp.get("market_position_evidence", "")
+        lines.append(f"**市場定位**：{pos}")
+        if evidence:
+            lines.append(f"> {evidence}")
+        lines.append("")
+        quality_zh = {"high": "高", "medium": "中", "low": "低"}
+        q = quality_zh.get(comp.get("disclosure_quality", ""), comp.get("disclosure_quality", ""))
+        rationale = comp.get("disclosure_rationale", "")
+        lines.append(f"**揭露品質**：{q}（{rationale}）")
+        lines.append("")
+        if comp_mode == "q1_vs_10k" and comp.get("baseline_note"):
+            lines.append(f"*{comp['baseline_note']}*")
+            lines.append("")
 
     # ── 成長敘事 ──
     if biz.get("growth_narrative"):

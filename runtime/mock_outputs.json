@@ -99,6 +99,18 @@
     "tax_credits": ["R&D $44M"],
     "insufficient_data": false
   },
+  "competitor_mapping": {
+    "named_competitors": [
+      {"name": "Mock Corp", "ticker": "MOCK", "markets": ["aerospace"], "yoy_status": "unchanged", "note": ""}
+    ],
+    "market_position": "challenger",
+    "market_position_evidence": "We are the second-largest supplier in...",
+    "disclosure_quality": "medium",
+    "disclosure_rationale": "lists competitors but not detailed market share",
+    "mode": "normal",
+    "baseline_note": "",
+    "insufficient_data": false
+  },
   "governance_analysis": {
     "audit_opinion": "unqualified",
     "internal_control_issues": [],

@@ -11,6 +11,8 @@ MAX_RETRIES = 2
 PHASE1_TASKS = [
     {"task_id": "business",   "skill": "business_analysis",
      "input_keys": ["item1_current", "item1_prior"]},
+    {"task_id": "competitor_mapping", "skill": "competitor_mapping",
+     "input_keys": ["item1_current", "item1_prior"]},
     {"task_id": "risk",       "skill": "risk_analysis",
      "input_keys": ["item1a_current", "item1a_prior"]},
     {"task_id": "mdna",       "skill": "mdna_analysis",
@@ -45,8 +47,9 @@ FOOTNOTES_TASK_IDS = [
 ]
 
 KEY_MAP = {
-    "item1_current":    "current_section",
-    "item1_prior":      "prior_section",
+    "item1_current":         "current_section",
+    "item1_prior":           "prior_section",
+    "item1_prior_as_current": "current_section",
     "item1a_current":   "current_section",
     "item1a_prior":     "prior_section",
     "item7_current":    "current_section",
@@ -155,14 +158,15 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
         sections["item1_prior"] = prior_sections.get("item1_current", "")
         sections["item1a_prior"] = prior_sections.get("item1a_current", "")
         sections["item7_prior"] = prior_sections.get("item7_current", "")
+        sections["item1_prior_as_current"] = prior_sections.get("item1_current", "")
 
     # Filter tasks based on filing type
     phase1_tasks = PHASE1_TASKS
     if filing_type == "10-Q":
         skip_tasks = {"governance", "business", "risk"}
         if quarter in ("Q2", "Q3"):
-            skip_tasks |= {"terms_glossary"}
-            print("[Phase 1] terms_glossary skipped (Q2/Q3 10-Q)")
+            skip_tasks |= {"terms_glossary", "competitor_mapping"}
+            print("[Phase 1] terms_glossary / competitor_mapping skipped (Q2/Q3 10-Q)")
         phase1_tasks = [t for t in PHASE1_TASKS if t["task_id"] not in skip_tasks]
         # Replace 8 individual fn_* tasks with 1 combined footnotes task for 10-Q
         phase1_tasks = [t for t in phase1_tasks if not t["task_id"].startswith("fn_")]
@@ -176,6 +180,19 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
             if t["task_id"] == "mdna" else t
             for t in phase1_tasks
         ]
+        # Q1: rewrite competitor_mapping to use prior year 10-K as baseline
+        if quarter == "Q1":
+            q1_prior_year = prior_sections.get("_year") if prior_sections else None
+            if q1_prior_year is None:
+                phase1_tasks = [t for t in phase1_tasks if t["task_id"] != "competitor_mapping"]
+                print("[Phase 1] competitor_mapping skipped (Q1 missing prior year)")
+            else:
+                phase1_tasks = [
+                    {**t, "input_keys": ["item1_prior_as_current"],
+                           "extra_inputs": {"mode": "q1_vs_10k", "prior_year": str(q1_prior_year)}}
+                    if t["task_id"] == "competitor_mapping" else t
+                    for t in phase1_tasks
+                ]
 
     # Skip fn_pension if content is too short (immaterial)
     if len(sections.get("fn_pension", "")) < 500:
@@ -493,6 +510,7 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
         quarterly=sections.get("_quarterly", []),
         filing_type=filing_type, quarter=quarter,
         xbrl_metrics=xbrl_metrics_raw,
+        prior_year=prior_sections.get("_year") if prior_sections else None,
     )
 
     print("  [State] Pipeline 完成（state 保留供 --only 使用）")
