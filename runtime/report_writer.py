@@ -328,12 +328,12 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     end_markets = biz.get("end_market_mix", [])
     if end_markets:
         lines.append("### 終端市場組合")
-        lines.append("| 市場 | 佔比 | 趨勢 |")
-        lines.append("|------|-----:|------|")
+        lines.append("| 市場 | 趨勢 |")
+        lines.append("|------|------|")
         trend_zh = {"growing": "成長", "stable": "穩定", "declining": "下滑"}
         for em in end_markets:
             t = trend_zh.get(em.get("trend", ""), em.get("trend", ""))
-            lines.append(f"| {em.get('market', '')} | {em.get('pct', '')} | {t} |")
+            lines.append(f"| {em.get('market', '')} | {t} |")
         lines.append("")
 
     # ── 多頭論點 ──
@@ -390,7 +390,12 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     if insight.get("information_edge"):
         lines.append("## 10K 洞察（Information Edge）")
         for item in insight.get("information_edge", []):
-            lines.append(f"- {item}")
+            if isinstance(item, dict):
+                lines.append(f"- **{item.get('signal', '')}**")
+                if item.get("source"):
+                    lines.append(f"  - 來源：{item['source']}")
+            else:
+                lines.append(f"- {item}")
         lines.append("")
 
     # ── 財務數據 ──

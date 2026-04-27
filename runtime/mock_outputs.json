@@ -155,7 +155,7 @@
     "bull_case": [{"point": "營運槓桿效益顯現", "evidence": "利潤率擴張 670bps"}],
     "bear_case": [{"point": "客戶集中風險", "evidence": "波音產量下降影響"}],
     "key_monitorables": ["波音交機量", "應收帳款證券化動用率"],
-    "information_edge": ["法國稅務爭議實質解決"],
+    "information_edge": [{"signal": "法國稅務爭議實質解決", "source": "footnotes_tax 揭露估計負債大幅下調"}],
     "confidence": "medium",
     "confidence_reason": "財務數據完整但治理資訊不足",
     "low_confidence_tasks": [],

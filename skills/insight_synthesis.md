@@ -26,7 +26,7 @@ last_modified: 2025-04-23
   "bull_case": [{"point": "", "evidence": ""}],
   "bear_case": [{"point": "", "evidence": ""}],
   "key_monitorables": [],
-  "information_edge": [],
+  "information_edge": [{"signal": "", "source": ""}],
   "confidence": "high|medium|low",
   "confidence_reason": "",
   "low_confidence_tasks": [],
