@@ -56,9 +56,9 @@ last_modified: 2025-04-23
 - 某個風險去年詳細說明，今年只用一句帶過 → 可能問題惡化
 - 某個 KPI 去年列入，今年從 MD&A 移除 → 可能達不到
 
-8. 即時競爭壓力偵測（10-Q Q2/Q3 模式）
+8. 即時競爭壓力偵測（10-Q 全季模式）
 
-僅在 `filing_type` 為 `"10-Q"` 且 `quarter` 為 `"Q2"` 或 `"Q3"` 時執行本步驟；否則輸出 `competitive_pressure_signals: []`。
+僅在 `filing_type` 為 `"10-Q"` 時執行本步驟（含 Q1/Q2/Q3）；10-K 一律輸出 `competitive_pressure_signals: []`。
 
 在 MD&A 全文搜尋以下關鍵字（不限大小寫）：
 `pricing pressure`、`competitive environment`、`market share`、`new entrants`、`competitor`、`competitive dynamics`、`increased competition`、`competitive headwinds`
@@ -67,7 +67,7 @@ last_modified: 2025-04-23
 - `quote`：原文 1-2 句（≤ 200 字）
 - `market`：受影響的業務線或市場
 - `severity`：`high` / `medium` / `low`
-- `vs_prior_quarter`：`intensifying` / `stable` / `easing`；若無 prior_section 則填 `null`
+- `vs_prior_quarter`：Q2/Q3 用 `intensifying` / `stable` / `easing`（與 prior_section 比較）；Q1 一律填 `null`（prior 是去年 10-K，季→年比較不對等）
 
 無命中時輸出空陣列（合法結果，不算 insufficient_data）。
 

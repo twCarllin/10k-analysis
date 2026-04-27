@@ -448,8 +448,8 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             )
         lines.append("")
 
-    # ── 競爭壓力（即時訊號，Q2/Q3 only）──
-    if filing_type == "10-Q" and quarter in ("Q2", "Q3"):
+    # ── 競爭壓力（即時訊號，10-Q 全季）──
+    if filing_type == "10-Q":
         lines.append("## 競爭壓力（即時訊號）")
         cp_signals = results.get("mdna", {}).get("competitive_pressure_signals", [])
         if cp_signals:
