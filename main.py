@@ -113,6 +113,10 @@ def build_sections(ticker, year, file_path=None, filing_type="10-K",
     result["all_sections_md"] = all_sections_md
     # For unusual_operations
     result["item8_footnotes_md"] = truncate_with_notice(extract_footnotes(item_fs), 8000)
+    # For supply_chain_analysis (10-K: item8, 10-Q: item_fs)
+    result["item8_footnotes_current"] = truncate_with_notice(
+        extract_footnotes(item8 if filing_type != "10-Q" else item_fs), 12000
+    )
     return result
 
 
