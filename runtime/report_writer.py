@@ -336,6 +336,92 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             lines.append(f"| {em.get('market', '')} | {t} |")
         lines.append("")
 
+    # ── 供應鏈分析 ──
+    sc = results.get("supply_chain")
+    if sc and not sc.get("insufficient_data", False):
+        lines.append("## 供應鏈分析")
+        lines.append("")
+        risk_zh = {"high": "高", "medium": "中", "low": "低"}
+        trend_zh_sc = {"improving": "改善", "stable": "持平", "deteriorating": "惡化"}
+        overall_risk = risk_zh.get(sc.get("overall_risk_level", ""), sc.get("overall_risk_level", ""))
+        trend_sc = trend_zh_sc.get(sc.get("trend", ""), sc.get("trend", ""))
+        lines.append(f"**整體風險：{overall_risk}　趨勢：{trend_sc}**")
+        lines.append("")
+
+        # 原物料
+        raw_materials = sc.get("raw_materials", [])
+        if raw_materials:
+            lines.append("### 原物料")
+            lines.append("| 原物料 | 用途 | 集中風險 | 地緣風險 |")
+            lines.append("|--------|------|----------|----------|")
+            conc_zh = {"high": "高", "medium": "中", "low": "低"}
+            for rm in raw_materials:
+                conc = conc_zh.get(rm.get("source_concentration", ""), rm.get("source_concentration", ""))
+                lines.append(f"| {rm.get('material', '')} | {rm.get('usage', '')} | {conc} | {rm.get('geographic_risk', '')} |")
+            lines.append("")
+
+        # 主要風險
+        sc_risks = sc.get("supply_chain_risks", [])
+        if sc_risks:
+            lines.append("### 主要風險")
+            cat_zh = {
+                "concentration": "集中",
+                "geopolitical": "地緣",
+                "price": "價格",
+                "shortage": "短缺",
+                "logistics": "物流",
+                "regulatory": "法規",
+            }
+            yoy_zh = {"new": "新增", "escalated": "升級", "stable": "持平", "resolved": "已解"}
+            for risk in sc_risks:
+                cat = cat_zh.get(risk.get("category", ""), risk.get("category", ""))
+                yoy = yoy_zh.get(risk.get("yoy_status", ""), risk.get("yoy_status", ""))
+                lines.append(f"- [{cat} / {yoy}] {risk.get('title', '')}：{risk.get('summary', '')}")
+            lines.append("")
+
+        # 跨期變化
+        yoy = sc.get("yoy_changes", {})
+        improvements = yoy.get("improvements", [])
+        deteriorations = yoy.get("deteriorations", [])
+        if improvements or deteriorations:
+            lines.append("### 跨期變化")
+            lines.append("**改善訊號**")
+            if improvements:
+                for item in improvements:
+                    lines.append(f"- {item}")
+            else:
+                lines.append("- —")
+            lines.append("")
+            lines.append("**惡化訊號**")
+            if deteriorations:
+                for item in deteriorations:
+                    lines.append(f"- {item}")
+            else:
+                lines.append("- —")
+            lines.append("")
+
+        # MD&A 實際影響
+        mdna_impact = sc.get("mdna_impact", {})
+        impact_desc = mdna_impact.get("impact_description", "") if mdna_impact else ""
+        if impact_desc:
+            outlook_zh = {"conservative": "保守", "neutral": "中性", "optimistic": "樂觀"}
+            mgmt_out = outlook_zh.get(mdna_impact.get("mgmt_outlook", ""), mdna_impact.get("mgmt_outlook", ""))
+            lines.append("### MD&A 實際影響")
+            lines.append(f"{impact_desc}（管理層展望：{mgmt_out}）")
+            lines.append("")
+
+        # 採購承諾（僅 found == true 時顯示）
+        pc = sc.get("purchase_commitments", {})
+        if pc.get("found", False):
+            lines.append("### 採購承諾")
+            total_desc = pc.get("total_commitment_description", "")
+            pct = pc.get("commitment_to_revenue_pct", "")
+            if pct:
+                lines.append(f"{total_desc}（佔 Revenue 約 {pct}）")
+            else:
+                lines.append(total_desc)
+            lines.append("")
+
     # ── 多頭論點 ──
     lines.append("## 多頭論點（Bull Case）")
     for item in insight.get("bull_case", []):
