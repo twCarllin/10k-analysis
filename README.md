@@ -6,6 +6,24 @@
 
 輸出結果請參考 INTC_20260425_183226_report.pdf
 
+## 最新變更（2026-04-28）
+
+### 供應鏈分析（supply_chain_analysis）
+新增獨立 skill，從多個 section 系統性萃取供應鏈資訊：
+- 來源：Item 1 Business（原物料、單一來源風險）+ Item 1A Risk Factors（地緣 / 集中風險）+ Item 7 MD&A（實際財務影響）+ Item 8 Footnotes（採購承諾）
+- 分類六大類別：concentration / geopolitical / price / shortage / logistics / regulatory
+- 跨年比較產出 improvements / deteriorations 訊號
+- 10-K + 10-Q Q1 跑、Q2/Q3 skip（Q2/Q3 通常只一句「No material changes」）
+- 獨立模組，**不接** rerate / cross_year / insight_synthesis，只在 report 自有「## 供應鏈分析」段落呈現
+
+### 競爭對手識別（competitor_mapping）
+新增獨立 skill，從 Item 1 Business 抽取結構化競爭資訊：
+- named_competitors（清單 + ticker + 受競爭市場）
+- market_position（leader / challenger / niche / follower）+ evidence quote
+- disclosure_quality（high / medium / low + rationale）
+- yoy 變化標記（new / removed / unchanged）
+- Q1 baseline 模式：Q1 10-Q 沿用去年 10-K 為基準（標題顯示「（基準：YYYY 10-K）」）；Q2/Q3 skip
+
 ## 最新變更（2025-04-25）
 
 ### CLI 自動推算前期
@@ -116,8 +134,9 @@ python main.py HWM 2025 --dry-run
                      orchestrator.py
                            │
      ┌─────── Phase 1 (平行) ───────────────────────────┐
-     │ business │ risk │ mdna │ governance │ fn_* x8     │
-     │ terms_glossary                                    │
+     │ business │ competitor_mapping │ risk │ mdna       │
+     │ governance │ fn_* x8 │ terms_glossary             │
+     │ supply_chain（10-K + Q1）                         │
      └───────────────────────────────────────────────────┘
                            │
      ┌─────── Phase 2 (序列) ─────────────────────┐
@@ -162,6 +181,8 @@ python main.py HWM 2025 --dry-run
 | Agent | Skill | Input | 說明 |
 |-------|-------|-------|------|
 | business | business_analysis | Item 1 | 公司定位、成長敘事、業務結構、競爭優勢 |
+| competitor_mapping | competitor_mapping | Item 1 | 對手清單、市場定位、揭露品質（Q1 用去年 10-K baseline） |
+| supply_chain | supply_chain_analysis | Item 1+1A+7+8 footnotes | 原物料、單一來源風險、地緣 / 集中 / 短缺分類、跨期改善/惡化訊號 |
 | risk | risk_analysis | Item 1A | 風險清單、跨年變動、措辭強度 |
 | mdna | mdna_analysis | Item 7 | 業績驅動因子、管理層語氣、承諾追蹤 |
 | governance | governance_analysis | Item 9A+10+11+13 | 審計意見、薪酬結構、治理品質 |
@@ -189,19 +210,22 @@ python main.py HWM 2025 --dry-run
 ## 報告結構
 
 1. 公司定位
-2. 成長敘事 + 終端市場組合表
-3. 整體信心
-4. 多頭論點（Bull Case）
-5. 空頭論點（Bear Case）
-6. **評價趨勢判斷**（🟢🟡🔴 紅綠燈 + 論述）
-7. 關鍵追蹤指標（未來兩季）
-8. 10K 洞察（Information Edge）
-9. 財務數據（指標表格 + 季度趨勢折線圖 + 資本配置）
-10. 趨勢摘要 + 品質警示 + 異常值
-11. 跨年度分析
-12. 不尋常操作
-13. 交叉驗證
-14. 附錄：關鍵術語
+2. Competitor Landscape（10-K / Q1，Q1 標註 baseline 來源）
+3. 成長敘事 + 終端市場組合表
+4. 供應鏈分析（10-K + Q1，6 子段：整體 / 原物料 / 主要風險 / 跨期變化 / MD&A 實際影響 / 採購承諾）
+5. 整體信心
+6. 多頭論點（Bull Case）
+7. 空頭論點（Bear Case）
+8. **評價趨勢判斷**（🟢🟡🔴 紅綠燈 + 論述）
+9. 關鍵追蹤指標（未來兩季）
+10. 10K 洞察（Information Edge）
+11. 財務數據（指標表格 + 季度趨勢折線圖 + 資本配置）
+12. 趨勢摘要 + 品質警示 + 異常值
+13. 競爭壓力（即時訊號）（Q2/Q3 10-Q）
+14. 跨年度分析
+15. 不尋常操作
+16. 交叉驗證
+17. 附錄：關鍵術語
 
 ## Checkpoint / Resume
 
