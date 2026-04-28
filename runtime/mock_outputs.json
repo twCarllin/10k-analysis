@@ -185,5 +185,24 @@
     "grade_rationale": "覆蓋完整，小缺口不影響判斷",
     "ready_to_publish": true,
     "insufficient_data": false
+  },
+  "supply_chain_analysis": {
+    "raw_materials": [
+      {"material": "Titanium alloy", "usage": "fan blades / structural components", "source_concentration": "high", "geographic_risk": "Russia/China exposure", "notes": "diversification ongoing"}
+    ],
+    "named_suppliers": [
+      {"name": "Mock Titanium Co.", "material_or_service": "titanium ingot", "single_source": false, "yoy_status": "existing"}
+    ],
+    "supply_chain_risks": [
+      {"title": "原物料地緣政治集中", "summary": "鈦合金主要來源國地緣政治風險升高", "category": "geopolitical", "yoy_status": "escalated", "mdna_realized": false}
+    ],
+    "mdna_impact": {"financial_impact_mentioned": true, "impact_description": "Supply chain inflation increased COGS by approximately $XX million", "mgmt_outlook": "neutral"},
+    "purchase_commitments": {"found": true, "total_commitment_description": "Mock long-term supply agreement", "take_or_pay_noted": false, "commitment_to_revenue_pct": ""},
+    "yoy_changes": {"improvements": ["新增第二供應商開發中"], "deteriorations": ["地緣風險揭露語氣升級 may→has"]},
+    "overall_risk_level": "medium",
+    "trend": "stable",
+    "rerating_relevance": "neutral",
+    "rerating_note": "供應鏈整體風險穩定，不構成投資判斷的重大加分或減分依據",
+    "insufficient_data": false
   }
 }
