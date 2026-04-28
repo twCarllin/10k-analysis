@@ -146,6 +146,30 @@ def _run_financial(sections, footnotes_summary, state, step_key, hint=""):
     return "financial", result
 
 
+def _run_supply_chain(sections, state, step_key, hint=""):
+    cached = state.get_result(step_key)
+    if cached is not None:
+        print(f"    \u2713 supply_chain（快取）")
+        return "supply_chain", cached
+
+    state.mark_running(step_key)
+    inputs = {
+        "item1_current":           sections.get("item1_current", ""),
+        "item1a_current":          sections.get("item1a_current", ""),
+        "item7_current":           sections.get("item7_current", ""),
+        "item8_footnotes_current": sections.get("item8_footnotes_current", ""),
+        "item1_prior":             sections.get("item1_prior", ""),
+        "item1a_prior":            sections.get("item1a_prior", ""),
+    }
+    if hint:
+        inputs["retry_hint"] = hint
+    result = run_agent("analyst_agent", "supply_chain_analysis", inputs,
+                       task_label=step_key)
+    state.mark_done(step_key, result)
+    print(f"    \u2713 supply_chain")
+    return "supply_chain", result
+
+
 def run_pipeline(ticker, sections, prior_sections=None, state=None,
                  filing_type="10-K", quarter=None):
     if state is None:
@@ -198,11 +222,24 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
     if len(sections.get("fn_pension", "")) < 500:
         phase1_tasks = [t for t in phase1_tasks if t["task_id"] != "fn_pension"]
 
-    # Phase 1: all agents in parallel
+    # Phase 1: all agents in parallel (+ supply_chain for 10-K and Q1)
     task_names = " / ".join(t["task_id"] for t in phase1_tasks if not t["task_id"].startswith("fn_"))
     fn_count = sum(1 for t in phase1_tasks if t["task_id"].startswith("fn_"))
-    print(f"\n[Phase 1] {task_names} / footnotes x{fn_count}")
-    results = _run_parallel(phase1_tasks, sections, state, "phase1")
+    run_supply = (filing_type == "10-K") or (filing_type == "10-Q" and quarter == "Q1")
+    supply_label = " / supply_chain" if run_supply else ""
+    print(f"\n[Phase 1] {task_names} / footnotes x{fn_count}{supply_label}")
+    results = {}
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        futures = {
+            pool.submit(_run_task, t, sections, state, "phase1", ""): t["task_id"]
+            for t in phase1_tasks
+        }
+        if run_supply:
+            futures[pool.submit(_run_supply_chain, sections, state, "phase1.supply_chain")] = "supply_chain"
+        for fut in as_completed(futures):
+            tid = futures[fut]
+            _, output = fut.result()
+            results[tid] = output
 
     # Phase 2: financial (needs footnotes summary)
     print("\n[Phase 2a] financial（三層 input）")
@@ -340,7 +377,9 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
         all_cached = all(
             state.is_done(f"{eval_step}.{t['task_id']}")
             for t in phase1_tasks
-        ) and state.is_done(f"{eval_step}.financial")
+        ) and state.is_done(f"{eval_step}.financial") and (
+            not run_supply or state.is_done(f"{eval_step}.supply_chain")
+        )
 
         if all_cached:
             print(f"\n[Eval {attempt}/{MAX_RETRIES}]（快取）")
@@ -352,6 +391,10 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
             fin_ev = state.get_result(f"{eval_step}.financial")
             if fin_ev:
                 eval_results["financial"] = fin_ev
+            if run_supply:
+                sc_ev = state.get_result(f"{eval_step}.supply_chain")
+                if sc_ev:
+                    eval_results["supply_chain"] = sc_ev
         else:
             print(f"\n[Eval {attempt}/{MAX_RETRIES}]")
             eval_results = eval_all(results, sections, filing_type=filing_type, quarter=quarter)
@@ -371,9 +414,12 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
 
         # Retry failed tasks — use retry step prefix so results don't conflict
         retry_prefix = f"retry{attempt}"
-        p1_failed = [f for f in failed if f["task_id"] != "financial"]
+        p1_failed = [f for f in failed if f["task_id"] not in ("financial", "supply_chain")]
         fin_failed = next(
             (f for f in failed if f["task_id"] == "financial"), None
+        )
+        sc_failed = next(
+            (f for f in failed if f["task_id"] == "supply_chain"), None
         )
         if p1_failed:
             retry_tasks = [
@@ -393,6 +439,13 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
                 hint=fin_failed["retry_hint"],
             )
             results["financial"] = fin
+        if sc_failed:
+            print("    重試：supply_chain")
+            _, sc = _run_supply_chain(
+                sections, state, f"{retry_prefix}.supply_chain",
+                hint=sc_failed["retry_hint"],
+            )
+            results["supply_chain"] = sc
 
     # Prior year analysis
     prior_results = None
