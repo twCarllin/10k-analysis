@@ -12,9 +12,9 @@
     "insufficient_data": false
   },
   "risk_analysis": {
-    "risks": [{"title": "客戶集中風險", "summary": "主要客戶波音產量下降", "type": "operational", "status": "expanded", "intensity_delta": "may→will"}],
-    "top_3": ["客戶集中風險", "原物料成本", "地緣政治"],
-    "delta_summary": "風險措辭強化",
+    "risks": [{"title": "客戶集中風險", "description": "主要客戶波音產量下降，可能影響營收與獲利能力", "category": "operational", "importance": "high"}],
+    "top_3": [{"title": "客戶集中風險", "rationale": "佔營收 25% 且需求下降"}, {"title": "原物料成本", "rationale": "鈦合金供應集中且地緣風險升高"}, {"title": "地緣政治", "rationale": "出口管制可能擴大"}],
+    "delta_summary": "風險輪廓較前期，措辭強度上升",
     "insufficient_data": false
   },
   "mdna_analysis": {
