@@ -56,6 +56,39 @@ rcParams.update({
 })
 
 
+TONE_MAP = {
+    # 激烈用詞 → 中性
+    "惡化": "下降",
+    "暴增": "快速增加",
+    "暴跌": "快速下降",
+    "崩盤": "下滑",
+    "崩跌": "下滑",
+    "警訊": "需留意",
+    "危機": "需留意",
+    "嚴重": "明顯",
+    "大幅": "",  # 完全移除
+    # metric 名稱（XBRL concept 格式 → 人類可讀）
+    "OperatingIncomeLoss": "Operating Income",  # 必須在 OperatingIncome 之前
+    "OperatingIncome": "Operating Income",
+    "GrossProfit": "Gross Profit",
+    "NetIncomeLoss": "Net Income",  # 必須在 NetIncome 之前
+    "NetIncome": "Net Income",
+    "OperatingCashFlow": "Operating Cash Flow",
+    "CapEx": "Capital Expenditure",
+    "LongTermDebt": "Long-term Debt",
+    "SharesOutstanding": "Shares Outstanding",
+}
+
+
+def tone_filter(text):
+    """套用於 LLM 動態輸出文字，不套用於寫死 markdown 結構或 enum value。"""
+    if not isinstance(text, str):
+        return text
+    for old, new in TONE_MAP.items():
+        text = text.replace(old, new)
+    return text
+
+
 def _fmt_val(val, is_pct=False):
     """Format a number for display."""
     if val is None:
@@ -376,7 +409,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             for risk in sc_risks:
                 cat = cat_zh.get(risk.get("category", ""), risk.get("category", ""))
                 yoy = yoy_zh.get(risk.get("yoy_status", ""), risk.get("yoy_status", ""))
-                lines.append(f"- [{cat} / {yoy}] {risk.get('title', '')}：{risk.get('summary', '')}")
+                lines.append(f"- [{cat} / {yoy}] {risk.get('title', '')}：{tone_filter(risk.get('summary', ''))}")
             lines.append("")
 
         # 跨期變化
@@ -388,14 +421,14 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             lines.append("**改善訊號**")
             if improvements:
                 for item in improvements:
-                    lines.append(f"- {item}")
+                    lines.append(f"- {tone_filter(item)}")
             else:
                 lines.append("- —")
             lines.append("")
             lines.append("**惡化訊號**")
             if deteriorations:
                 for item in deteriorations:
-                    lines.append(f"- {item}")
+                    lines.append(f"- {tone_filter(item)}")
             else:
                 lines.append("- —")
             lines.append("")
@@ -407,7 +440,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             outlook_zh = {"conservative": "保守", "neutral": "中性", "optimistic": "樂觀"}
             mgmt_out = outlook_zh.get(mdna_impact.get("mgmt_outlook", ""), mdna_impact.get("mgmt_outlook", ""))
             lines.append("### MD&A 實際影響")
-            lines.append(f"{impact_desc}（管理層展望：{mgmt_out}）")
+            lines.append(f"{tone_filter(impact_desc)}（管理層展望：{mgmt_out}）")
             lines.append("")
 
         # 採購承諾（僅 found == true 時顯示）
@@ -425,18 +458,54 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     # ── 多頭論點 ──
     lines.append("## 多頭論點（Bull Case）")
     for item in insight.get("bull_case", []):
-        lines.append(f"- **{item.get('point', '')}**")
+        lines.append(f"- **{tone_filter(item.get('point', ''))}**")
         if item.get("evidence"):
-            lines.append(f"  - 論述：{item['evidence']}")
+            lines.append(f"  - 論述：{tone_filter(item['evidence'])}")
     lines.append("")
 
     # ── 空頭論點 ──
     lines.append("## 空頭論點（Bear Case）")
     for item in insight.get("bear_case", []):
-        lines.append(f"- **{item.get('point', '')}**")
+        lines.append(f"- **{tone_filter(item.get('point', ''))}**")
         if item.get("evidence"):
-            lines.append(f"  - 論述：{item['evidence']}")
+            lines.append(f"  - 論述：{tone_filter(item['evidence'])}")
     lines.append("")
+
+    # ── 風險清單 ──
+    risk_result = results.get("risk", {})
+    risks = risk_result.get("risks", [])
+    if risks and not risk_result.get("insufficient_data", False):
+        lines.append("## 風險清單")
+        lines.append("")
+
+        # 排序：high → medium → low
+        sorted_risks = sorted(
+            risks,
+            key=lambda x: {"high": 0, "medium": 1, "low": 2}.get(x.get("importance"), 2)
+        )
+        for r in sorted_risks:
+            icon = {"high": "●", "medium": "○", "low": "·"}.get(r.get("importance"), "·")
+            title = r.get("title", "")
+            desc = tone_filter(r.get("description", ""))
+            lines.append(f"{icon} **{title}**")
+            lines.append(f"  {desc}")
+            lines.append("")
+
+        # top_3 子段
+        top_3 = risk_result.get("top_3", [])
+        if top_3:
+            lines.append("### 前三大風險")
+            for i, t in enumerate(top_3, 1):
+                t_title = t.get("title", "")
+                t_rationale = tone_filter(t.get("rationale", ""))
+                lines.append(f"{i}. **{t_title}**：{t_rationale}")
+            lines.append("")
+
+        # delta_summary
+        delta = risk_result.get("delta_summary")
+        if delta:
+            lines.append(f"_{tone_filter(delta)}_")
+            lines.append("")
 
     # ── 評價趨勢判斷 ──
     if rerate and "error" not in rerate:
@@ -521,21 +590,21 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     # ── 財務趨勢摘要 ──
     if fin.get("trend_summary"):
         lines.append("### 趨勢摘要")
-        lines.append(fin["trend_summary"])
+        lines.append(tone_filter(fin["trend_summary"]))
         lines.append("")
 
     if fin.get("quality_flags"):
         lines.append("### 品質警示")
         for flag in fin["quality_flags"]:
-            lines.append(f"- {flag}")
+            lines.append(f"- {tone_filter(flag)}")
         lines.append("")
 
     if fin.get("anomalies"):
         lines.append("### 異常值")
         for a in fin["anomalies"]:
             lines.append(
-                f"- **{a.get('year', '')} {a.get('metric', '')}**："
-                f"{a.get('note', '')}"
+                f"- **{a.get('year', '')} {tone_filter(a.get('metric', ''))}**："
+                f"{tone_filter(a.get('note', ''))}"
             )
         lines.append("")
 
@@ -550,12 +619,12 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
                 sev = severity_zh.get(sig.get("severity", ""), sig.get("severity", ""))
                 vs = sig.get("vs_prior_quarter")
                 vs_str = vs_prior_zh.get(vs, "—") if vs else "—"
-                summary = sig.get("summary_zh") or sig.get("quote", "")
+                summary = tone_filter(sig.get("summary_zh") or sig.get("quote", ""))
                 lines.append(
                     f'- [{sev}] **{summary}** — {sig.get("market", "")}（vs 上季：{vs_str}）'
                 )
                 if sig.get("summary_zh") and sig.get("quote"):
-                    lines.append(f'  > "{sig["quote"]}"')
+                    lines.append(f'  > "{tone_filter(sig["quote"])}"')
         else:
             lines.append("> 本季 MD&A 無明顯競爭壓力新增揭露。")
         lines.append("")
@@ -573,7 +642,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     lines.append(f"| 整體方向 | {overall} |")
     lines.append("")
     if comparator.get("mgmt_credibility_reason"):
-        lines.append(f"> {comparator['mgmt_credibility_reason']}")
+        lines.append(f"> {tone_filter(comparator['mgmt_credibility_reason'])}")
         lines.append("")
 
     # ── 不尋常操作 ──
@@ -584,7 +653,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         lines.append("> 未發現不尋常操作，財務處理符合一般揭露規範。")
     else:
         if uo.get("summary"):
-            lines.append(uo["summary"])
+            lines.append(tone_filter(uo["summary"]))
             lines.append("")
         for item in unusual_items:
             cls_zh = {"industry_norm": "行業常態", "company_specific": "公司特殊",
@@ -592,12 +661,12 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             inv_zh = {"positive": "正面", "neutral": "中性", "negative": "負面"}.get(
                 item.get("investor_interpretation", ""), "")
             lines.append(f"### {item.get('name', '')}")
-            lines.append(f"- 分類：{cls_zh}（{item.get('classification_rationale', '')}）")
-            lines.append(f"- 描述：{item.get('description', '')}")
+            lines.append(f"- 分類：{cls_zh}（{tone_filter(item.get('classification_rationale', ''))}）")
+            lines.append(f"- 描述：{tone_filter(item.get('description', ''))}")
             if item.get("source_quote"):
                 lines.append(f"- 原文：*{item['source_quote']}*")
-            lines.append(f"- 財務影響：{item.get('financial_impact', '')}")
-            lines.append(f"- 投資者解讀：**{inv_zh}** — {item.get('investor_note', '')}")
+            lines.append(f"- 財務影響：{tone_filter(item.get('financial_impact', ''))}")
+            lines.append(f"- 投資者解讀：**{inv_zh}** — {tone_filter(item.get('investor_note', ''))}")
             lines.append("")
     lines.append("")
 
@@ -608,9 +677,9 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             dims = ", ".join(cc.get("dimensions", []))
             direction = cc.get("direction", "")
             tag = {"positive": "正面", "negative": "負面", "neutral": "中性"}.get(direction, direction)
-            lines.append(f"- **[{tag}]**（{dims}）{cc.get('finding', '')}")
+            lines.append(f"- **[{tag}]**（{dims}）{tone_filter(cc.get('finding', ''))}")
             if cc.get("implication"):
-                lines.append(f"  - 影響：{cc['implication']}")
+                lines.append(f"  - 影響：{tone_filter(cc['implication'])}")
         lines.append("")
 
     # ── 術語表（僅 high importance）──
