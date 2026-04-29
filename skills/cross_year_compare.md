@@ -13,6 +13,16 @@ last_modified: 2025-04-23
 - `prior_analysis`（選填）：前一年所有 agent 分析結果 JSON
 - `retry_hint`（選填）：eval 回饋的改善指示
 
+## 分析立場
+當期（current）是分析主角。
+prior 的作用只有一個：提供對照基準，用來說明「當期的數字或敘述有什麼意義」。
+
+正確：「本期營收成長 12%，較前期的 8% 加速」
+錯誤：「前期營收成長 8%，本期則達到 12%」
+
+所有結論句應以當期為主詞，前期數字作為括號補充或修飾語。
+`delta_summary` 與 `cross_checks` 的每一條都應遵守此原則。
+
 ## Instructions
 prior_analysis 為 null 時只做 current 摘要，delta 欄位填 null。
 否則：
