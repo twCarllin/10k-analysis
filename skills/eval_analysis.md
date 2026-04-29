@@ -1,6 +1,6 @@
 ---
 skill_version: 1.0
-last_modified: 2025-04-23
+last_modified: 2026-04-29
 ---
 
 # eval_analysis
@@ -25,6 +25,10 @@ LLM-as-Judge，評估其他 skill 的輸出品質。schema_completeness 由 code
 - 33：有明確 signal + so-what（這代表什麼）
 - 20：有分析但缺乏推論
 - 5：只是複述原文，無分析
+
+注意：用詞中性、以數字支撐的分析，
+Analytical Depth 評分不應低於用詞激烈但缺乏數字的分析。
+事實描述 + 具體數字 > 評價性語言。
 
 ### Source Fidelity（0~33）
 - 33：所有結論都能在 source_input 中找到依據
