@@ -8,6 +8,7 @@
     "risk_analysis": 8192,
     "mdna_analysis": 8192,
     "cross_year_compare": 8192,
-    "insight_synthesis": 8192
+    "insight_synthesis": 8192,
+    "transcript_analysis": 8192
   }
 }

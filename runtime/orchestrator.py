@@ -1,5 +1,9 @@
+import asyncio
 import json
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+logger = logging.getLogger(__name__)
 
 from agent_runner import run_agent
 from eval_runner import eval_all, get_failed_tasks
@@ -125,6 +129,129 @@ def _collect_footnotes_summary(results) -> dict:
     return summary
 
 
+def _run_transcript_scrape(ticker, quarter, year, state, skip=False, dry_run=False):
+    """Scrape earnings call transcript and persist to state via steps dict.
+
+    Returns Transcript object or None (soft failure).
+    Hard failures (config error, invalid input) propagate.
+
+    Note: This function uses asyncio.run() and must be called from a synchronous context.
+    Calling from an async context (e.g. Jupyter, async test frameworks) will raise RuntimeError.
+    """
+    step_key = "phase0.transcript_scrape"
+
+    if skip:
+        logger.info(f"[transcript] --skip-transcript flag set, skipping for {ticker}")
+        state.mark_done(step_key, None)
+        return None
+
+    if dry_run:
+        logger.info(f"[transcript] dry-run mode, skipping scrape for {ticker}")
+        state.mark_done(step_key, None)
+        return None
+
+    if state.is_done(step_key):
+        cached = state.get_result(step_key)
+        if cached is None:
+            logger.info(f"[transcript] cached None (previous run skipped/failed), reusing")
+            return None
+        # cached is a dict (model_dump), reconstruct Transcript object
+        from transcript_scraper import Transcript
+        result = Transcript.model_validate(cached)
+        logger.info(f"[transcript] {ticker} loaded from checkpoint ({len(result.raw_text)} chars)")
+        return result
+
+    state.mark_running(step_key)
+
+    try:
+        from transcript_scraper import scrape_transcript
+        # async → sync bridge
+        result = asyncio.run(
+            scrape_transcript(ticker, quarter=quarter, year=str(year),
+                              skip_on_failure=True)
+        )
+        if result is None:
+            logger.warning(
+                f"[transcript] {ticker} {quarter} {year} not available "
+                "(soft failure — placeholder will be shown in report)"
+            )
+            state.mark_done(step_key, None)
+            return None
+
+        logger.info(
+            f"[transcript] {ticker} {quarter} {year} scraped: "
+            f"{len(result.raw_text)} chars, {len(result.participants)} participants"
+        )
+        state.mark_done(step_key, result.model_dump())
+        return result
+    except Exception as exc:
+        # Hard failure (auth wall not in soft list, programming bugs, etc.)
+        logger.error(f"[transcript] hard failure: {exc}")
+        # Do not mark_done; leave step in running state so resume will reset to pending
+        raise
+
+
+def _run_transcript_analysis(transcript_obj, state, hint=""):
+    """Run transcript_analysis skill on the scraped Transcript object.
+
+    Args:
+        transcript_obj: Transcript or None from phase 0
+        state: PipelineState
+        hint: optional hint string for LLM
+
+    Returns:
+        dict (skill output) or None (if transcript_obj is None or cached None)
+    """
+    step_key = "phase_t.transcript_analysis"
+
+    # cache resume
+    if state.is_done(step_key):
+        cached = state.get_result(step_key)
+        logger.info("[transcript_analysis] loaded from checkpoint")
+        return cached
+
+    # transcript not available → skip
+    if transcript_obj is None:
+        logger.info("[transcript_analysis] no transcript available, skipping")
+        state.mark_done(step_key, None)
+        return None
+
+    state.mark_running(step_key)
+
+    # Build inputs: include sections + metadata, EXCLUDE raw_text (too large)
+    transcript_dict = transcript_obj.model_dump()
+    transcript_dict.pop("raw_text", None)  # save tokens — sections are sufficient
+
+    inputs = {
+        "transcript": json.dumps(transcript_dict, ensure_ascii=False, indent=2),
+    }
+    if hint:
+        inputs["retry_hint"] = hint
+
+    # log input size for diagnostics
+    input_size = len(inputs["transcript"])
+    logger.info(
+        f"[transcript_analysis] input size: {input_size} chars (~{input_size // 4} tokens)"
+    )
+
+    try:
+        result = run_agent(
+            agent_name="analyst_agent",
+            skill_name="transcript_analysis",
+            inputs=inputs,
+            task_label=step_key,
+        )
+        state.mark_done(step_key, result)
+        return result
+    except (RuntimeError, TimeoutError, OSError, ValueError) as exc:
+        logger.error(f"[transcript_analysis] failed: {exc}")
+        # Soft failure: transcript_analysis does not block the main pipeline.
+        # B5 report_writer renders a placeholder when it receives None.
+        logger.warning("[transcript_analysis] returning None due to error (soft fail)")
+        state.mark_done(step_key, None)  # mark done with None to skip on resume
+        return None
+
+
 def _run_financial(sections, footnotes_summary, state, step_key, hint=""):
     cached = state.get_result(step_key)
     if cached is not None:
@@ -171,7 +298,9 @@ def _run_supply_chain(sections, state, step_key, hint=""):
 
 
 def run_pipeline(ticker, sections, prior_sections=None, state=None,
-                 filing_type="10-K", quarter=None):
+                 filing_type="10-K", quarter=None,
+                 transcript_quarter=None, transcript_year=None, skip_transcript=False,
+                 dry_run: bool = False):
     if state is None:
         state = PipelineState(ticker, sections.get("_year", 0),
                               prior_sections.get("_year") if prior_sections else None,
@@ -221,6 +350,17 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
     # Skip fn_pension if content is too short (immaterial)
     if len(sections.get("fn_pension", "")) < 500:
         phase1_tasks = [t for t in phase1_tasks if t["task_id"] != "fn_pension"]
+
+    # Phase 0: transcript scrape (before phase1, soft failure does not block pipeline)
+    transcript_obj = None
+    try:
+        transcript_obj = _run_transcript_scrape(
+            ticker, transcript_quarter, transcript_year, state,
+            skip=skip_transcript, dry_run=dry_run
+        )
+    finally:
+        # Always set _transcript_obj (None on hard failure) so B4 can safely read it
+        state._transcript_obj = transcript_obj
 
     # Phase 1: all agents in parallel (+ supply_chain for 10-K and Q1)
     task_names = " / ".join(t["task_id"] for t in phase1_tasks if not t["task_id"].startswith("fn_"))
@@ -447,6 +587,18 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
             )
             results["supply_chain"] = sc
 
+    # Phase T: transcript analysis (runs after eval loop to avoid eval_all picking it up)
+    print("\n[Phase T - Transcript Analysis]")
+    results["transcript_analysis"] = _run_transcript_analysis(
+        transcript_obj=getattr(state, "_transcript_obj", None),
+        state=state,
+        hint="",
+    )
+    if results["transcript_analysis"] is None:
+        print("    - transcript_analysis skipped (no transcript)")
+    else:
+        print("    ✓ transcript_analysis")
+
     # Prior year analysis
     prior_results = None
     if prior_sections:
@@ -564,6 +716,7 @@ def run_pipeline(ticker, sections, prior_sections=None, state=None,
         filing_type=filing_type, quarter=quarter,
         xbrl_metrics=xbrl_metrics_raw,
         prior_year=prior_sections.get("_year") if prior_sections else None,
+        transcript_result=results.get("transcript_analysis"),
     )
 
     print("  [State] Pipeline 完成（state 保留供 --only 使用）")

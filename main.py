@@ -138,6 +138,12 @@ def main():
                    help="SEC 申報類型（預設 10-K）")
     p.add_argument("--quarter", default=None, choices=["Q1", "Q2", "Q3"],
                    help="10-Q 季度（10-Q 時必填）")
+    p.add_argument("--skip-transcript", action="store_true",
+                   help="Skip earnings call transcript scraping")
+    p.add_argument("--transcript-quarter", choices=["Q1", "Q2", "Q3", "Q4"], default=None,
+                   help="Quarter for transcript scraping (Q1-Q4; Q4 for 10-K annual). Default: derived from --quarter or Q4 for 10-K")
+    p.add_argument("--transcript-year", type=int, default=None,
+                   help="Year for transcript (default: --year)")
     args = p.parse_args()
     ticker = args.ticker.upper()
     filing_type = args.filing_type
@@ -211,8 +217,18 @@ def main():
                                     filing_type=prior_ft, quarter=prior_q)
     prior_sections["xbrl_data"] = xbrl_json
 
+    # auto-derive transcript quarter / year
+    transcript_quarter = args.transcript_quarter
+    if transcript_quarter is None:
+        transcript_quarter = quarter or "Q4"  # 10-Q uses sanitized quarter; 10-K defaults Q4
+    transcript_year = args.transcript_year or args.year
+
     run_pipeline(ticker, sections, prior_sections, state=state,
-                 filing_type=filing_type, quarter=quarter)
+                 filing_type=filing_type, quarter=quarter,
+                 transcript_quarter=transcript_quarter,
+                 transcript_year=transcript_year,
+                 skip_transcript=args.skip_transcript,
+                 dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
