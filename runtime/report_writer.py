@@ -89,6 +89,21 @@ def tone_filter(text):
     return text
 
 
+def _escape_md_cell(text: str) -> str:
+    """Escape markdown table cell content: pipes become \\|, newlines become space."""
+    if not text:
+        return ""
+    return str(text).replace("|", "\\|").replace("\n", " ").replace("\r", " ")
+
+
+def _format_blockquote(text: str) -> str:
+    """Multi-line text → markdown blockquote (each line prefixed with > )."""
+    if not text:
+        return ""
+    lines = str(text).strip().split("\n")
+    return "\n".join(f"> {line}" if line else ">" for line in lines)
+
+
 def _fmt_val(val, is_pct=False):
     """Format a number for display."""
     if val is None:
@@ -283,9 +298,307 @@ def _build_quarterly_chart(quarterly: list[dict], out_dir: Path) -> str | None:
     return chart_name
 
 
+def render_forward_guidance(transcript_result) -> str:
+    """Render forward guidance section from transcript_result dict."""
+    fg = (transcript_result or {}).get("forward_guidance") or {}
+
+    parts = []
+
+    # Hard guidance table
+    hard = fg.get("hard_guidance") or []
+    if hard:
+        parts.append("### 硬性指引（Hard Guidance）")
+        parts.append("| 指標 | 數值 | 期間 | 方向 | 原文 |")
+        parts.append("|------|------|------|------|------|")
+        for h in hard:
+            metric = _escape_md_cell(h.get("metric", ""))
+            value = _escape_md_cell(h.get("value", "—"))
+            period = _escape_md_cell(h.get("period", "—"))
+            direction = _escape_md_cell(h.get("direction", "—"))
+            # verbatim is preserved as-is (English original quote, sell-side convention).
+            # Other LLM-generated description text passes through tone_filter at save_report level.
+            verbatim = _escape_md_cell(h.get("verbatim", ""))
+            parts.append(f"| {metric} | {value} | {period} | {direction} | {verbatim} |")
+        parts.append("")
+    else:
+        parts.append("（本季無硬性指引）")
+        parts.append("")
+
+    # Soft guidance list
+    soft = fg.get("soft_guidance") or []
+    if soft:
+        parts.append("### 軟性指引（Soft Guidance）")
+        for s in soft:
+            if isinstance(s, dict):
+                area = tone_filter(s.get("area", ""))
+                direction = s.get("direction", "")
+                detail = tone_filter(s.get("detail", ""))
+                confidence = s.get("confidence", "")
+                meta = " / ".join(x for x in [direction, confidence] if x)
+                meta_str = f"（{meta}）" if meta else ""
+                parts.append(f"- **{area}**{meta_str}：{detail}")
+            else:
+                parts.append(f"- {tone_filter(str(s))}")
+        parts.append("")
+
+    # Guidance changes comparison table
+    changes = fg.get("guidance_changes") or []
+    if changes:
+        parts.append("### 指引變化")
+        parts.append("| 指標 | 前次 | 本次 | 變化 |")
+        parts.append("|------|------|------|------|")
+        for c in changes:
+            metric = _escape_md_cell(c.get("metric", ""))
+            previous = _escape_md_cell(c.get("previous", "—"))
+            current = _escape_md_cell(c.get("current", "—"))
+            change = _escape_md_cell(tone_filter(c.get("change", "—")))
+            parts.append(f"| {metric} | {previous} | {current} | {change} |")
+        parts.append("")
+
+    # Implied signals
+    implied = fg.get("implied_signals") or []
+    if implied:
+        parts.append("### 隱含訊號")
+        for sig in implied:
+            parts.append(f"- {tone_filter(sig)}")
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+def render_market_concerns(transcript_result) -> str:
+    """Render market concerns section from transcript_result dict."""
+    concerns = (transcript_result or {}).get("market_concerns") or []
+
+    if not concerns:
+        return "（本季無市場關注議題記錄）\n"
+
+    parts = []
+    for c in concerns:
+        topic = tone_filter(str(c.get("topic", "")).replace("\n", " ").replace("\r", " "))
+        freq = c.get("frequency", "")
+        mgmt_resp = tone_filter(c.get("management_response", ""))
+        verbatim = c.get("verbatim_response", "")
+        evasion = c.get("evasion_signal")
+
+        freq_str = f"被問 {freq} 次" if freq else ""
+        heading = f"### {topic}"
+        if freq_str:
+            heading += f"（{freq_str}）"
+        parts.append(heading)
+        parts.append("")
+        if mgmt_resp:
+            parts.append(f"**管理層回應**：{mgmt_resp}")
+            parts.append("")
+        if verbatim:
+            parts.append(_format_blockquote(verbatim))
+            parts.append("")
+        if evasion:
+            parts.append(f"迴避訊號：{tone_filter(str(evasion))}")
+            parts.append("")
+
+    return "\n".join(parts)
+
+
+def render_transcript_highlights(transcript_result) -> str:
+    """Render earnings call highlights from structured_summary, sentiment, partnerships."""
+    tr = transcript_result or {}
+    parts = []
+
+    # ── structured_summary ──
+    ss = tr.get("structured_summary") or {}
+    if ss:
+        headline = ss.get("headline", "")
+        if headline:
+            parts.append(f"### {tone_filter(headline)}")
+            parts.append("")
+
+        # Financial highlights table (schema: metric / reported / consensus / beat_miss / yoy_change / driver)
+        fin_highlights = ss.get("financial_highlights") or []
+        if fin_highlights:
+            parts.append("#### 財務亮點")
+            parts.append("| 指標 | 實際 | 預期 | 結果 | YoY | 驅動因子 |")
+            parts.append("|------|------|------|------|------|----------|")
+            for fh in fin_highlights:
+                metric = _escape_md_cell(fh.get("metric", ""))
+                reported = _escape_md_cell(fh.get("reported", "—"))
+                consensus = _escape_md_cell(fh.get("consensus", "—"))
+                beat_miss = _escape_md_cell(fh.get("beat_miss", ""))
+                yoy = _escape_md_cell(fh.get("yoy_change", ""))
+                driver = _escape_md_cell(tone_filter(fh.get("driver", "")))
+                parts.append(f"| {metric} | {reported} | {consensus} | {beat_miss} | {yoy} | {driver} |")
+            parts.append("")
+
+        # Segment performance table (schema: segment / direction / detail)
+        seg_perf = ss.get("segment_performance") or []
+        if seg_perf:
+            parts.append("#### 業務部門表現")
+            parts.append("| 部門 | 方向 | 描述 |")
+            parts.append("|------|------|------|")
+            for sp in seg_perf:
+                segment = _escape_md_cell(sp.get("segment", ""))
+                direction = _escape_md_cell(sp.get("direction", ""))
+                detail = _escape_md_cell(tone_filter(sp.get("detail", "")))
+                parts.append(f"| {segment} | {direction} | {detail} |")
+            parts.append("")
+
+        # Operational highlights
+        op_highlights = ss.get("operational_highlights") or []
+        if op_highlights:
+            parts.append("#### 營運亮點")
+            for oh in op_highlights:
+                parts.append(f"- {tone_filter(oh)}")
+            parts.append("")
+
+        # Operational challenges
+        op_challenges = ss.get("challenges") or []
+        if op_challenges:
+            parts.append("#### 挑戰")
+            for oc in op_challenges:
+                parts.append(f"- {tone_filter(oc)}")
+            parts.append("")
+
+        # Capital allocation
+        cap_alloc = ss.get("capital_allocation") or {}
+        if cap_alloc:
+            parts.append("#### 資本配置")
+            for k, v in cap_alloc.items():
+                parts.append(f"- **{k}**：{tone_filter(str(v))}")
+            parts.append("")
+
+    # ── sentiment ──
+    sent = tr.get("sentiment") or {}
+    if sent:
+        parts.append("### 管理層語氣分析")
+        overall_tone = sent.get("overall_tone", "")
+        confidence = sent.get("confidence_level")
+        tone_gap = tone_filter(sent.get("tone_gap", ""))
+        alignment = tone_filter(sent.get("ceo_cfo_alignment", ""))
+
+        if overall_tone:
+            parts.append(f"**整體語氣**：{tone_filter(overall_tone)}")
+        if confidence is not None:
+            parts.append(f"**信心程度**：{confidence * 100:.0f}%")
+        if tone_gap:
+            parts.append(f"**語氣落差**：{tone_gap}")
+        if alignment:
+            parts.append(f"**CEO/CFO 一致性**：{alignment}")
+        parts.append("")
+
+        evasive = sent.get("evasive_topics") or []
+        if evasive:
+            parts.append("**迴避主題**：")
+            for et in evasive:
+                if isinstance(et, dict):
+                    topic = tone_filter(et.get("topic", ""))
+                    signal = tone_filter(et.get("signal", ""))
+                    parts.append(f"- **{topic}**：{signal}" if signal else f"- {topic}")
+                else:
+                    parts.append(f"- {tone_filter(str(et))}")
+            parts.append("")
+
+        lang_shifts = sent.get("language_shifts") or []
+        if lang_shifts:
+            parts.append("**語言轉變**：")
+            for ls in lang_shifts:
+                if isinstance(ls, dict):
+                    topic = tone_filter(ls.get("topic", ""))
+                    prev = ls.get("previous", "")
+                    curr = ls.get("current", "")
+                    interp = tone_filter(ls.get("interpretation", ""))
+                    line = f"- **{topic}**："
+                    if prev or curr:
+                        line += f"`{prev}` → `{curr}`"
+                    if interp:
+                        line += f"（{interp}）" if (prev or curr) else interp
+                    parts.append(line)
+                else:
+                    parts.append(f"- {tone_filter(str(ls))}")
+            parts.append("")
+
+    # ── partnerships_and_strategy ──
+    ps = tr.get("partnerships_and_strategy") or {}
+    if ps:
+        parts.append("### 夥伴關係與策略")
+
+        new_partnerships = ps.get("new_partnerships") or []
+        if new_partnerships:
+            parts.append("**新夥伴關係**：")
+            for np in new_partnerships:
+                if isinstance(np, dict):
+                    partner = tone_filter(np.get("partner", ""))
+                    nature = np.get("nature", "")
+                    detail = tone_filter(np.get("detail", ""))
+                    scale = np.get("scale", "")
+                    impact = tone_filter(np.get("revenue_impact", ""))
+                    suffix_bits = [b for b in [nature, scale, impact] if b]
+                    suffix = f"（{' / '.join(suffix_bits)}）" if suffix_bits else ""
+                    parts.append(f"- **{partner}**{suffix}：{detail}")
+                else:
+                    parts.append(f"- {tone_filter(str(np))}")
+            parts.append("")
+
+        existing_updates = ps.get("existing_updates") or []
+        if existing_updates:
+            parts.append("**既有夥伴更新**：")
+            for eu in existing_updates:
+                if isinstance(eu, dict):
+                    partner = tone_filter(eu.get("partner", ""))
+                    status = eu.get("status", "")
+                    detail = tone_filter(eu.get("detail", ""))
+                    status_str = f"（{status}）" if status else ""
+                    parts.append(f"- **{partner}**{status_str}：{detail}")
+                else:
+                    parts.append(f"- {tone_filter(str(eu))}")
+            parts.append("")
+
+        strategic_shifts = ps.get("strategic_shifts") or []
+        if strategic_shifts:
+            parts.append("**策略轉變**：")
+            for ss_item in strategic_shifts:
+                if isinstance(ss_item, dict):
+                    area = tone_filter(ss_item.get("area", ""))
+                    desc = tone_filter(ss_item.get("description", ""))
+                    impl = tone_filter(ss_item.get("implications", ""))
+                    line = f"- **{area}**：{desc}"
+                    if impl:
+                        line += f"（{impl}）"
+                    parts.append(line)
+                else:
+                    parts.append(f"- {tone_filter(str(ss_item))}")
+            parts.append("")
+
+        competitive_dynamics = ps.get("competitive_dynamics") or []
+        if competitive_dynamics:
+            parts.append("**競爭動態**：")
+            for cd in competitive_dynamics:
+                parts.append(f"- {tone_filter(cd)}")
+            parts.append("")
+
+        supply_chain = ps.get("supply_chain") or []
+        if supply_chain:
+            parts.append("**供應鏈**：")
+            for sc_item in supply_chain:
+                parts.append(f"- {tone_filter(sc_item)}")
+            parts.append("")
+
+    if not parts:
+        return "（本季 Earnings Call 摘要資料不完整）\n"
+
+    return "\n".join(parts)
+
+
+def render_transcript_unavailable(section_title: str = "Earnings Call 資料") -> str:
+    """Placeholder text for one transcript section when data unavailable."""
+    return (
+        f"## {section_title}\n\n"
+        f"*本季 transcript 未能取得，可能尚未發布或來源暫不可用。*\n\n"
+    )
+
+
 def save_report(ticker, results, eval_results, synthesis, quarterly=None,
                 filing_type="10-K", quarter=None, xbrl_metrics=None,
-                prior_year=None) -> Path:
+                prior_year=None, transcript_result=None) -> Path:
     out_dir = BASE_DIR / "data" / "output"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -308,6 +621,83 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
 
     # ── Rerate signal (rendered later, after bear case) ──
     rerate = results.get("rerate_signal", {})
+
+    # ── Transcript 三節（最前：Forward Guidance / Market Concerns / Earnings Call Highlights）──
+    if transcript_result is None:
+        for section in ["Forward Guidance", "Market Concerns", "Earnings Call Highlights"]:
+            lines.append(render_transcript_unavailable(section))
+    else:
+        lines.append("## Forward Guidance")
+        lines.append(render_forward_guidance(transcript_result))
+        lines.append("## Market Concerns")
+        lines.append(render_market_concerns(transcript_result))
+        lines.append("## Earnings Call Highlights")
+        lines.append(render_transcript_highlights(transcript_result))
+
+    # ── 分隔線：以下章節切換到 10-Q/10-K 申報文件（GAAP）──
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append(
+        f"> **以下章節來自 {filing_type} 申報文件**"
+        f"（含 prior 期 10-K 對照）· 財務數字採用 GAAP 會計準則"
+    )
+    lines.append("")
+
+    # ── 財務數據（10-Q/10-K, GAAP）──
+    fin = results.get("financial", {})
+    lines.append("## 財務數據")
+    # Extract current year from metrics for column labeling
+    _all_yrs = set()
+    for _rows in fin.get("metrics", {}).values():
+        if isinstance(_rows, list):
+            for _r in _rows:
+                if _r.get("val") is not None:
+                    _all_yrs.add(_r["year"])
+    _cur_year = max(_all_yrs) if _all_yrs else None
+    lines.extend(_build_financial_tables(fin, filing_type=filing_type,
+                                         quarter=quarter, current_year=_cur_year,
+                                         xbrl_metrics=xbrl_metrics))
+
+    # ── 季度趨勢 ──
+    if quarterly:
+        chart_name = _build_quarterly_chart(quarterly or [], out_dir)
+        lines.append("### 季度趨勢")
+        if chart_name:
+            lines.append(f"![季度趨勢]({chart_name})")
+            lines.append("")
+        # Quarterly data table
+        if len(quarterly) >= 2:
+            lines.append("| 季度 | 營收 | 營收 YoY | 營業利益率 | 淨利率 |")
+            lines.append("|------|-----:|------:|------:|------:|")
+            for q in quarterly:
+                rev_q = _fmt_val(q.get("revenue")) if q.get("revenue") else "—"
+                rev_yoy = f"{q['rev_growth_yoy']:+.1f}%" if q.get("rev_growth_yoy") is not None else "—"
+                op_m = f"{q['op_margin']:.1f}%" if q.get("op_margin") is not None else "—"
+                ni_m = f"{q['net_margin']:.1f}%" if q.get("net_margin") is not None else "—"
+                lines.append(f"| {q.get('quarter', '')} | {rev_q} | {rev_yoy} | {op_m} | {ni_m} |")
+            lines.append("")
+
+    # ── 財務趨勢摘要 ──
+    if fin.get("trend_summary"):
+        lines.append("### 趨勢摘要")
+        lines.append(tone_filter(fin["trend_summary"]))
+        lines.append("")
+
+    if fin.get("quality_flags"):
+        lines.append("### 品質警示")
+        for flag in fin["quality_flags"]:
+            lines.append(f"- {tone_filter(flag)}")
+        lines.append("")
+
+    if fin.get("anomalies"):
+        lines.append("### 異常值")
+        for a in fin["anomalies"]:
+            lines.append(
+                f"- **{a.get('year', '')} {tone_filter(a.get('metric', ''))}**："
+                f"{tone_filter(a.get('note', ''))}"
+            )
+        lines.append("")
 
     # ── 公司定位 ──
     biz = results.get("business", {})
@@ -334,7 +724,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         lines.append("| 市場 | 競爭對手 |")
         lines.append("|------|---------|")
         for market, names in market_to_names.items():
-            lines.append(f"| {market} | {'、'.join(names)} |")
+            lines.append(f"| {_escape_md_cell(market)} | {_escape_md_cell('、'.join(names))} |")
         lines.append("")
         position_zh = {"leader": "領先", "challenger": "挑戰者", "niche": "利基", "follower": "跟隨"}
         pos = position_zh.get(comp.get("market_position", ""), comp.get("market_position", ""))
@@ -367,7 +757,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
         trend_zh = {"growing": "成長", "stable": "穩定", "declining": "下滑"}
         for em in end_markets:
             t = trend_zh.get(em.get("trend", ""), em.get("trend", ""))
-            lines.append(f"| {em.get('market', '')} | {t} |")
+            lines.append(f"| {_escape_md_cell(em.get('market', ''))} | {t} |")
         lines.append("")
 
     # ── 供應鏈分析 ──
@@ -391,7 +781,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
             conc_zh = {"high": "高", "medium": "中", "low": "低"}
             for rm in raw_materials:
                 conc = conc_zh.get(rm.get("source_concentration", ""), rm.get("source_concentration", ""))
-                lines.append(f"| {rm.get('material', '')} | {rm.get('usage', '')} | {conc} | {rm.get('geographic_risk', '')} |")
+                lines.append(f"| {_escape_md_cell(rm.get('material', ''))} | {_escape_md_cell(rm.get('usage', ''))} | {conc} | {_escape_md_cell(rm.get('geographic_risk', ''))} |")
             lines.append("")
 
         # 主要風險
@@ -558,61 +948,6 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
                 lines.append(f"- {tone_filter(item)}")
         lines.append("")
 
-    # ── 財務數據 ──
-    fin = results.get("financial", {})
-    lines.append("## 財務數據")
-    # Extract current year from metrics for column labeling
-    _all_yrs = set()
-    for _rows in fin.get("metrics", {}).values():
-        if isinstance(_rows, list):
-            for _r in _rows:
-                if _r.get("val") is not None:
-                    _all_yrs.add(_r["year"])
-    _cur_year = max(_all_yrs) if _all_yrs else None
-    lines.extend(_build_financial_tables(fin, filing_type=filing_type,
-                                         quarter=quarter, current_year=_cur_year,
-                                         xbrl_metrics=xbrl_metrics))
-
-    # ── 季度趨勢 ──
-    if quarterly:
-        chart_name = _build_quarterly_chart(quarterly or [], out_dir)
-        lines.append("### 季度趨勢")
-        if chart_name:
-            lines.append(f"![季度趨勢]({chart_name})")
-            lines.append("")
-        # Quarterly data table
-        if len(quarterly) >= 2:
-            lines.append("| 季度 | 營收 | 營收 YoY | 營業利益率 | 淨利率 |")
-            lines.append("|------|-----:|------:|------:|------:|")
-            for q in quarterly:
-                rev_q = _fmt_val(q.get("revenue")) if q.get("revenue") else "—"
-                rev_yoy = f"{q['rev_growth_yoy']:+.1f}%" if q.get("rev_growth_yoy") is not None else "—"
-                op_m = f"{q['op_margin']:.1f}%" if q.get("op_margin") is not None else "—"
-                ni_m = f"{q['net_margin']:.1f}%" if q.get("net_margin") is not None else "—"
-                lines.append(f"| {q.get('quarter', '')} | {rev_q} | {rev_yoy} | {op_m} | {ni_m} |")
-            lines.append("")
-
-    # ── 財務趨勢摘要 ──
-    if fin.get("trend_summary"):
-        lines.append("### 趨勢摘要")
-        lines.append(tone_filter(fin["trend_summary"]))
-        lines.append("")
-
-    if fin.get("quality_flags"):
-        lines.append("### 品質警示")
-        for flag in fin["quality_flags"]:
-            lines.append(f"- {tone_filter(flag)}")
-        lines.append("")
-
-    if fin.get("anomalies"):
-        lines.append("### 異常值")
-        for a in fin["anomalies"]:
-            lines.append(
-                f"- **{a.get('year', '')} {tone_filter(a.get('metric', ''))}**："
-                f"{tone_filter(a.get('note', ''))}"
-            )
-        lines.append("")
-
     # ── 競爭壓力（即時訊號，10-Q 全季）──
     if filing_type == "10-Q":
         lines.append("## 競爭壓力（即時訊號）")
@@ -642,9 +977,9 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     lines.append("")
     lines.append("| 維度 | 評估 |")
     lines.append("|------|------|")
-    lines.append(f"| 管理層可信度 | {mgmt_cred} |")
-    lines.append(f"| 品質趨勢 | {qual_trend} |")
-    lines.append(f"| 整體方向 | {overall} |")
+    lines.append(f"| 管理層可信度 | {_escape_md_cell(str(mgmt_cred))} |")
+    lines.append(f"| 品質趨勢 | {_escape_md_cell(str(qual_trend))} |")
+    lines.append(f"| 整體方向 | {_escape_md_cell(str(overall))} |")
     lines.append("")
     if comparator.get("mgmt_credibility_reason"):
         lines.append(f"> {tone_filter(comparator['mgmt_credibility_reason'])}")
@@ -698,7 +1033,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
                   "regulatory": "法規"}
         for t in high_terms:
             cat = cat_zh.get(t.get("category", ""), t.get("category", ""))
-            lines.append(f"| {t.get('term', '')} | {cat} | {tone_filter(t.get('explanation', ''))} |")
+            lines.append(f"| {_escape_md_cell(t.get('term', ''))} | {cat} | {_escape_md_cell(tone_filter(t.get('explanation', '')))} |")
         lines.append("")
 
     # ── 低信心任務 ──
