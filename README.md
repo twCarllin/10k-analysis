@@ -1,6 +1,6 @@
 # 10-K Multi-Agent Investment Research Pipeline
 
-從 SEC EDGAR 10-K/10-Q 文件自動萃取投資 insight，使用 multi-agent + skill 架構。
+從 SEC EDGAR 10-K/10-Q 文件自動萃取投資 insight，使用 multi-agent + skill 架構。Earnings call transcript 透過 [Stagehand](https://github.com/browserbase/stagehand) 從 Yahoo Finance 抓取（LOCAL 模式，本機 Chromium，不需 Browserbase 帳號）。
 
 輸入 ticker + 年份，輸出繁體中文 Markdown + PDF 報告，包含 **Earnings Call Transcript 分析**（Forward Guidance / Market Concerns / Earnings Call Highlights）、Bull/Bear case、關鍵追蹤指標、財務數據表格與季度趨勢圖。
 
