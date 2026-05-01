@@ -93,20 +93,30 @@ mdna_analysis 新增 `momentum` 欄位，追蹤前後期敘事語言的變化軌
 ## Quick Start
 
 ```bash
-# 1. 建立環境
+# 1. Python 環境
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 brew install pango  # PDF 生成需要
 
-# 2. 設定 API Key
+# 2. Node 環境（transcript 抓取用，首次 clone 需要）
+#    需要 Node ≥ 20.19 或 ≥ 22.12（Stagehand v3 engines 要求）
+cd runtime/transcript_scraper/node
+npm install
+npx playwright install chromium
+cd ../../..
+
+# 3. 設定 API Key
 cp config.example.json config.json
 # 編輯 config.json 填入 anthropic_api_key
 
-# 3. 執行（10-K 年報，自動比對前一年）
+# 4. 執行（10-K 年報，自動比對前一年）
 python main.py HWM 2025
 
-# 執行（10-Q 季報，自動比對前期）
+# 執行（10-Q 季報，自動比對前期 + 抓 earnings call transcript）
 python main.py HWM 2025 --filing-type 10-Q --quarter Q1
+
+# 不抓 transcript（純 10-Q/10-K 分析）
+python main.py HWM 2025 --filing-type 10-Q --quarter Q1 --skip-transcript
 ```
 
 ## 設定檔
