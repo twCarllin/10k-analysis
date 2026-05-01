@@ -3,3 +3,9 @@ markitdown[pdf]>=0.1.5
 anthropic>=0.40.0
 requests>=2.32.0
 beautifulsoup4>=4.12.0
+pydantic>=2.0
+tenacity>=8.0
+
+# dev-only: testing
+pytest>=7.0
+pytest-asyncio>=0.23
