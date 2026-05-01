@@ -2,9 +2,41 @@
 
 從 SEC EDGAR 10-K/10-Q 文件自動萃取投資 insight，使用 multi-agent + skill 架構。
 
-輸入 ticker + 年份，輸出繁體中文 Markdown + PDF 報告，包含 Bull/Bear case、關鍵追蹤指標、財務數據表格與季度趨勢圖。
+輸入 ticker + 年份，輸出繁體中文 Markdown + PDF 報告，包含 **Earnings Call Transcript 分析**（Forward Guidance / Market Concerns / Earnings Call Highlights）、Bull/Bear case、關鍵追蹤指標、財務數據表格與季度趨勢圖。
 
 輸出結果請參考 INTC_20260425_183226_report.pdf
+
+## Python Version
+3.13.12
+
+## 最新變更（2026-05-01）
+
+### Earnings Call Transcript 抓取與分析（transcript_analysis）
+新增 transcript 抓取 + 分析模組，整合進主 pipeline：
+- **抓取**：從 Yahoo Finance 抓取指定 ticker / quarter / year 的 earnings call transcript
+  - Node `@browserbasehq/stagehand` LOCAL 模式（本機 Chromium，不需 Browserbase 帳號）
+  - Python wrapper 透過 subprocess + JSON over stdout 接入主 pipeline
+  - 支援 skip-on-failure（軟失敗回 None，不中斷 pipeline）+ checkpoint resume
+- **分析**：`transcript_analysis` skill 產出 5 大區塊
+  - `structured_summary`（headline + financial_highlights + segment_performance + capital_allocation）
+  - `market_concerns`（top 3-5 分析師高頻議題 + 管理層回應 + verbatim 引用 + 迴避訊號）
+  - `sentiment`（整體語氣 + 信心程度 + prepared/Q&A 落差 + CEO/CFO 一致性）
+  - `forward_guidance`（硬指引表格 + 軟指引 + 指引變化對比 + 隱含訊號）
+  - `partnerships_and_strategy`（新合作 / 既有更新 / 策略轉向 / 競爭動態 / 供應鏈）
+- **CLI flags**：
+  - `--skip-transcript`：跳過 transcript 抓取
+  - `--transcript-quarter Q1|Q2|Q3|Q4`：指定季度（預設依 `--quarter` 推；10-K 預設 Q4）
+  - `--transcript-year YYYY`：指定年度（預設依 `--year`）
+
+### 報告章節重排與 GAAP 來源標注
+- **transcript 三節置頂**（Forward Guidance / Market Concerns / Earnings Call Highlights），呈現管理層前瞻陳述
+- **分隔線 + 標注**：「以下章節來自 10-Q / 10-K 申報文件 · 財務數字採用 GAAP 會計準則」
+- **設計動機**：earnings call 是非 GAAP 前瞻陳述，10-Q/10-K 是 GAAP 歷史申報，兩者明確分區，讀者一眼分清資料性質
+- 標注的 filing_type 自動依 `--filing-type` 切換（10-Q 或 10-K）
+
+### Markdown render injection 防護
+- 新增 `_escape_md_cell` / `_format_blockquote` helpers
+- 所有 LLM 輸出進入 markdown table cell / blockquote 前統一 escape `|` 與換行符，避免破壞 PDF 表格
 
 ## 最新變更（2026-04-28）
 
@@ -209,23 +241,32 @@ python main.py HWM 2025 --dry-run
 
 ## 報告結構
 
-1. 公司定位
-2. Competitor Landscape（10-K / Q1，Q1 標註 baseline 來源）
-3. 成長敘事 + 終端市場組合表
-4. 供應鏈分析（10-K + Q1，6 子段：整體 / 原物料 / 主要風險 / 跨期變化 / MD&A 實際影響 / 採購承諾）
-5. 整體信心
-6. 多頭論點（Bull Case）
-7. 空頭論點（Bear Case）
-8. **評價趨勢判斷**（🟢🟡🔴 紅綠燈 + 論述）
-9. 關鍵追蹤指標（未來兩季）
-10. 10K 洞察（Information Edge）
-11. 財務數據（指標表格 + 季度趨勢折線圖 + 資本配置）
-12. 趨勢摘要 + 品質警示 + 異常值
-13. 競爭壓力（即時訊號）（Q2/Q3 10-Q）
-14. 跨年度分析
-15. 不尋常操作
-16. 交叉驗證
-17. 附錄：關鍵術語
+### 第一部分：Earnings Call（前瞻、非 GAAP，來自管理層自述）
+1. **Forward Guidance**（硬指引表格 + 軟指引列表 + 指引變化對比 + 隱含訊號）
+2. **Market Concerns**（top 3-5 分析師高頻議題 + 管理層回應 + verbatim 引用 + 迴避訊號）
+3. **Earnings Call Highlights**（structured_summary + sentiment + partnerships）
+
+> *若該季 transcript 未能取得，三節改顯示 placeholder「無 earnings call 資料」。*
+
+`─── 以下章節來自 10-Q / 10-K 申報文件 · 財務數字採用 GAAP 會計準則 ───`
+
+### 第二部分：10-Q / 10-K 申報文件分析（歷史、GAAP）
+4. **財務數據**（指標表格 + 季度趨勢折線圖 + 資本配置 + 趨勢摘要 + 品質警示 + 異常值）
+5. 公司定位
+6. Competitor Landscape（10-K / Q1，Q1 標註 baseline 來源）
+7. 成長敘事 + 終端市場組合表
+8. 供應鏈分析（10-K + Q1，6 子段：整體 / 原物料 / 主要風險 / 跨期變化 / MD&A 實際影響 / 採購承諾）
+9. 整體信心
+10. 多頭論點（Bull Case）
+11. 空頭論點（Bear Case）
+12. **評價趨勢判斷**（🟢🟡🔴 紅綠燈 + 論述）
+13. 關鍵追蹤指標（未來兩季）
+14. 10K 洞察（Information Edge）
+15. 競爭壓力（即時訊號）（Q2/Q3 10-Q）
+16. 跨年度分析
+17. 不尋常操作
+18. 交叉驗證
+19. 附錄：關鍵術語
 
 ## Checkpoint / Resume
 
