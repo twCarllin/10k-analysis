@@ -16,3 +16,5 @@ specs
 task/
 retro/
 subagents_record/
+runtime/transcript_scraper/node/node_modules/
+runtime/transcript_scraper/node/.pnpm-store/
