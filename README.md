@@ -9,83 +9,11 @@
 ## Python Version
 3.13.12
 
-## 最新變更（2026-05-01）
+## Changelog
 
-### Earnings Call Transcript 抓取與分析（transcript_analysis）
-新增 transcript 抓取 + 分析模組，整合進主 pipeline：
-- **抓取**：從 Yahoo Finance 抓取指定 ticker / quarter / year 的 earnings call transcript
-  - Node `@browserbasehq/stagehand` LOCAL 模式（本機 Chromium，不需 Browserbase 帳號）
-  - Python wrapper 透過 subprocess + JSON over stdout 接入主 pipeline
-  - 支援 skip-on-failure（軟失敗回 None，不中斷 pipeline）+ checkpoint resume
-- **分析**：`transcript_analysis` skill 產出 5 大區塊
-  - `structured_summary`（headline + financial_highlights + segment_performance + capital_allocation）
-  - `market_concerns`（top 3-5 分析師高頻議題 + 管理層回應 + verbatim 引用 + 迴避訊號）
-  - `sentiment`（整體語氣 + 信心程度 + prepared/Q&A 落差 + CEO/CFO 一致性）
-  - `forward_guidance`（硬指引表格 + 軟指引 + 指引變化對比 + 隱含訊號）
-  - `partnerships_and_strategy`（新合作 / 既有更新 / 策略轉向 / 競爭動態 / 供應鏈）
-- **CLI flags**：
-  - `--skip-transcript`：跳過 transcript 抓取
-  - `--transcript-quarter Q1|Q2|Q3|Q4`：指定季度（預設依 `--quarter` 推；10-K 預設 Q4）
-  - `--transcript-year YYYY`：指定年度（預設依 `--year`）
-
-### 報告章節重排與 GAAP 來源標注
-- **transcript 三節置頂**（Forward Guidance / Market Concerns / Earnings Call Highlights），呈現管理層前瞻陳述
-- **分隔線 + 標注**：「以下章節來自 10-Q / 10-K 申報文件 · 財務數字採用 GAAP 會計準則」
-- **設計動機**：earnings call 是非 GAAP 前瞻陳述，10-Q/10-K 是 GAAP 歷史申報，兩者明確分區，讀者一眼分清資料性質
-- 標注的 filing_type 自動依 `--filing-type` 切換（10-Q 或 10-K）
-
-### Markdown render injection 防護
-- 新增 `_escape_md_cell` / `_format_blockquote` helpers
-- 所有 LLM 輸出進入 markdown table cell / blockquote 前統一 escape `|` 與換行符，避免破壞 PDF 表格
-
-## 最新變更（2026-04-28）
-
-### 供應鏈分析（supply_chain_analysis）
-新增獨立 skill，從多個 section 系統性萃取供應鏈資訊：
-- 來源：Item 1 Business（原物料、單一來源風險）+ Item 1A Risk Factors（地緣 / 集中風險）+ Item 7 MD&A（實際財務影響）+ Item 8 Footnotes（採購承諾）
-- 分類六大類別：concentration / geopolitical / price / shortage / logistics / regulatory
-- 跨年比較產出 improvements / deteriorations 訊號
-- 10-K + 10-Q Q1 跑、Q2/Q3 skip（Q2/Q3 通常只一句「No material changes」）
-- 獨立模組，**不接** rerate / cross_year / insight_synthesis，只在 report 自有「## 供應鏈分析」段落呈現
-
-### 競爭對手識別（competitor_mapping）
-新增獨立 skill，從 Item 1 Business 抽取結構化競爭資訊：
-- named_competitors（清單 + ticker + 受競爭市場）
-- market_position（leader / challenger / niche / follower）+ evidence quote
-- disclosure_quality（high / medium / low + rationale）
-- yoy 變化標記（new / removed / unchanged）
-- Q1 baseline 模式：Q1 10-Q 沿用去年 10-K 為基準（標題顯示「（基準：YYYY 10-K）」）；Q2/Q3 skip
-
-## 最新變更（2025-04-25）
-
-### CLI 自動推算前期
-- 不再需要手動輸入 `prior_year`，系統自動推算：
-  - 10-K → 自動比對前一年 10-K
-  - 10-Q Q1 → 自動比對前一年 10-K（看年度承諾是否開始兌現）
-  - 10-Q Q2/Q3 → 自動比對前一季（追蹤敘事演進）
-- 新增 `--prior-year` flag 可手動覆蓋
-
-### 評價趨勢判斷（3 條件獨立判斷）
-新增「評價趨勢判斷」區塊，以紅綠燈號呈現三個維度：
-
-| 燈號 | 意義 |
-|------|------|
-| 🟢 | 條件成立 |
-| 🟡 | 尚未成立但趨勢正在成長（emerging） |
-| 🔴 | 條件不成立 |
-
-三個維度：
-- **營收結構在變**：高毛利部門營收佔比是否持續上升（來源：segment_trend）
-- **營收品質在變**：利潤率與現金流趨勢是否向好（來源：three_statement_cross）
-- **敘事在變**：管理層語言是否從計畫期轉向成果期（來源：mdna_analysis）
-
-每個條件由獨立 agent 判斷，互不影響，避免模型因整體面好壞而產生一致性偏差。各條件附帶繁體中文論述，引用具體數字佐證。
-
-### 敘事動能追蹤（Narrative Momentum）
-mdna_analysis 新增 `momentum` 欄位，追蹤前後期敘事語言的變化軌跡：
-- `early_delta` / `mature_delta`：早期/成熟語言數量的前後期差異
-- `direction`：accelerating（成長）/ stable / decelerating（退縮）
-- Q1 與 10-K 比、Q2+ 與前一季比，quarter-over-quarter 追蹤敘事演進
+- **2026-05-01** — 新增 earnings call transcript 抓取（Stagehand LOCAL 模式 + Yahoo Finance）與 `transcript_analysis` skill（forward guidance / market concerns / sentiment / partnerships）。報告章節重排：transcript 三節置頂，與 10-Q/10-K GAAP 段落以分隔線標注區分。Markdown table/blockquote 加 escape 防 injection。
+- **2026-04-28** — 新增 `supply_chain_analysis`（六分類 + 跨期 improvements/deteriorations，10-K + Q1 跑）與 `competitor_mapping`（清單 + 市場定位 + 揭露品質 + yoy 變化，Q1 沿用去年 10-K baseline）skill。
+- **2025-04-25** — CLI 自動推算 prior year（10-K / Q1 → 去年同 filing；Q2+ → 前一季）。新增「評價趨勢判斷」🟢🟡🔴 紅綠燈（結構 / 品質 / 敘事三條件獨立判斷）。`mdna_analysis` 加 `momentum` 欄位追蹤敘事動能（accelerating / stable / decelerating）。
 
 ## To Do
 - 利用程式和 eval 降低對模型的依賴程度
@@ -124,7 +52,6 @@ python main.py HWM 2025 --filing-type 10-Q --quarter Q1 --skip-transcript
 ```json
 {
   "anthropic_api_key": "sk-ant-...",
-  "llama_cloud_api_key": "",
   "model": "claude-sonnet-4-5",
   "max_tokens": 4096,
   "max_tokens_by_skill": {
@@ -316,11 +243,19 @@ tenk/
 │   ├── pipeline_state.py            # per-agent checkpoint/resume
 │   ├── eval_runner.py               # hard rule + schema + LLM eval
 │   ├── data_fetcher.py              # EDGAR HTM + XBRL
-│   ├── doc_converter.py             # LlamaParse / markitdown
+│   ├── doc_converter.py             # iXBRL strip + BeautifulSoup / markitdown fallback
 │   ├── section_splitter.py          # TOC-guided + LLM fallback + footnotes 切割
 │   ├── report_writer.py             # 繁中 MD + PDF + 折線圖
 │   ├── report.css                   # PDF 樣式
-│   └── fonts/                       # Noto Sans TC（PDF 中文字型）
+│   ├── fonts/                       # Noto Sans TC（PDF 中文字型）
+│   └── transcript_scraper/          # earnings call transcript 模組
+│       ├── scraper.py               # Python wrapper（subprocess + JSON over stdout）
+│       ├── parser.py                # transcript 結構化解析
+│       ├── models.py                # transcript dataclass
+│       └── node/                    # Stagehand LOCAL 模式 side car
+│           ├── src/scrape.ts        # Yahoo Finance 抓取腳本
+│           ├── package.json         # @browserbasehq/stagehand + zod
+│           └── tsconfig.json
 └── data/
     ├── cache/                       # HTM / MD / XBRL / pipeline state
     └── output/                      # 報告 + JSON + context log

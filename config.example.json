@@ -1,6 +1,5 @@
 {
   "anthropic_api_key": "sk-ant-...",
-  "llama_cloud_api_key": "",
   "edgar_user_agent": "10k-research your-name@example.com",
   "model": "claude-sonnet-4-5",
   "max_tokens": 4096,
