@@ -4,12 +4,21 @@ jp_ixbrl_parser.py — iXBRL / XBRL instance parser for EDINET 有価証券報�
 Extracts the 5-year summary of business results (主要な経営指標等の推移) from
 a yuho ZIP file downloaded via jp_data_fetcher.download_filing().
 
+Also splits the narrative chapters (業績 / リスク / MD&A / 戦略 / R&D) from
+the honbun iXBRL HTM files, and normalises Japanese text.
+
 Public API:
     find_xbrl_instance(zip_path: Path) -> Path
     extract_five_year_summary(zip_path: Path) -> dict
+    find_ixbrl_htm(zip_path: Path, pattern: str = "*honbun*_ixbrl.htm") -> list[Path]
+    split_filing_by_ixbrl(zip_path: Path) -> dict[str, str]
+    split_risk_section(text: str) -> list[dict]
+    normalize_jp(text: str) -> str
 """
 
 import logging
+import re
+import unicodedata
 import zipfile
 from collections import Counter
 from datetime import datetime, timezone
@@ -413,6 +422,176 @@ def _pick_best_per_date(
         best_ctx = min(ctx_ids, key=lambda x: (len(x), x))
         result[best_ctx] = facts[best_ctx]
     return result
+
+
+# ── TA4: Narrative chapter mapping ───────────────────────────────────────────
+
+ELEMENT_TO_CHAPTER: dict[str, str] = {
+    "jpcrp_cor:DescriptionOfBusinessTextBlock": "business",
+    "jpcrp_cor:BusinessRisksTextBlock": "risk",
+    "jpcrp_cor:ManagementAnalysisOfFinancialPositionOperatingResultsAndCashFlowsTextBlock": "mda",
+    "jpcrp_cor:MattersRelatedToGoingConcernAssumptionTextBlock": "going_concern",
+    "jpcrp_cor:BusinessPolicyBusinessEnvironmentIssuesToAddressEtcTextBlock": "strategy",
+    "jpcrp_cor:ResearchAndDevelopmentActivitiesTextBlock": "rd",
+}
+
+_CHAPTER_ELEMENT_SET = set(ELEMENT_TO_CHAPTER.keys())
+
+# ── Patterns for split_risk_section ──────────────────────────────────────────
+
+_RISK_ITEM_PATTERNS = re.compile(
+    r"^[(（]?\d+[)）]"       # Pattern A: (1) / （1）
+    r"|^[①-⑳㉑-㉚⑴-⑽]"     # Pattern A: ① ② … ㉑ … ⑴ …
+    r"|^[・•]"               # Pattern B: bullet
+    r"|^\d+[．\.]\s"         # Pattern C: 1.  2.  … (requires space after dot)
+)
+
+
+# ── TA4 public functions ──────────────────────────────────────────────────────
+
+def find_ixbrl_htm(zip_path: Path, pattern: str = "*honbun*_ixbrl.htm") -> list[Path]:
+    """Return a sorted list of honbun iXBRL HTM paths from the extraction cache.
+
+    Reuses the directory already extracted by find_xbrl_instance (TA3).
+    If the directory does not yet exist, extracts the full ZIP first.
+
+    Args:
+        zip_path: Path to the downloaded yuho ZIP.
+        pattern:  glob pattern used to filter files; default "*honbun*_ixbrl.htm".
+
+    Returns:
+        List of Paths sorted by filename (ascending).
+    """
+    if not pattern.endswith(".htm"):
+        raise ValueError(f"pattern must end with .htm; got {pattern!r}")
+
+    doc_id = zip_path.stem
+    extract_dir = EXTRACTED_DIR / doc_id
+
+    if not extract_dir.exists():
+        # Safety: extract everything if TA3 hasn't run yet
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(zip_path, metadata_encoding="cp932") as zf:
+            for info in zf.infolist():
+                _safe_extract_member(zf, info, extract_dir)
+        log.info("find_ixbrl_htm: extracted %s → %s", zip_path.name, extract_dir)
+
+    htm_files = sorted(extract_dir.rglob(pattern), key=lambda p: p.name)
+    log.debug("find_ixbrl_htm: found %d HTM(s) in %s", len(htm_files), extract_dir)
+    return htm_files
+
+
+def split_filing_by_ixbrl(zip_path: Path) -> dict[str, str]:
+    """Parse honbun iXBRL HTM files and extract narrative chapter text.
+
+    For each chapter key in ELEMENT_TO_CHAPTER, finds the matching
+    ix:nonNumeric element (matched via the 'name' attribute) and extracts
+    its plain text.  If a chapter appears in multiple HTM files (unusual),
+    the longest extracted text wins.
+
+    Args:
+        zip_path: Path to the downloaded yuho ZIP.
+
+    Returns:
+        Dict mapping chapter_key → normalised text.
+        Only keys that were found are included.
+    """
+    htm_files = find_ixbrl_htm(zip_path)
+    chapters: dict[str, str] = {}
+
+    for htm_path in htm_files:
+        html_bytes = htm_path.read_bytes()
+        soup = BeautifulSoup(html_bytes, features="lxml")
+
+        # bs4 with lxml HTML parser lower-cases namespace tags (ix:nonnumeric),
+        # but the 'name' attribute value is preserved verbatim.
+        tags = soup.find_all(attrs={"name": lambda n: n in _CHAPTER_ELEMENT_SET})
+
+        for tag in tags:
+            elem_name = tag.get("name", "")
+            chapter_key = ELEMENT_TO_CHAPTER.get(elem_name)
+            if chapter_key is None:
+                continue
+            text = normalize_jp(tag.get_text(separator="\n", strip=True))
+            # Keep longest if chapter appears more than once (defensive)
+            if chapter_key not in chapters or len(text) > len(chapters[chapter_key]):
+                chapters[chapter_key] = text
+
+    log.info(
+        "split_filing_by_ixbrl: %s → chapters: %s",
+        zip_path.stem,
+        sorted(chapters.keys()),
+    )
+    return chapters
+
+
+def split_risk_section(text: str) -> list[dict]:
+    """Split a risk chapter string into individual risk items.
+
+    Each item is identified by a line matching one of three patterns:
+      A) Leading numbered list marker: (1) / （1） / ①
+      B) Bullet marker: ・ / •
+      C) Numeric heading: 1.  2.  …
+
+    Returns:
+        List of dicts with keys "title" and "body".
+        If no item markers are found, returns a single item with title="" and
+        body equal to the full text.
+    """
+    lines = text.splitlines()
+    # Collect (line_index, line_text) for lines that start a new item
+    item_starts: list[int] = []
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped and _RISK_ITEM_PATTERNS.match(stripped):
+            item_starts.append(i)
+
+    if not item_starts:
+        return [{"title": "", "body": text}]
+
+    items: list[dict] = []
+    # Sentinel: add len(lines) as a final boundary
+    boundaries = item_starts + [len(lines)]
+    for idx, start in enumerate(item_starts):
+        end = boundaries[idx + 1]
+        chunk_lines = [l.strip() for l in lines[start:end] if l.strip()]
+        if not chunk_lines:
+            continue
+        # First non-empty line is the title if it's reasonably short
+        first_line = chunk_lines[0]
+        if len(first_line) < 80:
+            title = first_line
+            body = "\n".join(chunk_lines[1:])
+        else:
+            title = ""
+            body = "\n".join(chunk_lines)
+        items.append({"title": title, "body": body})
+
+    return items
+
+
+def normalize_jp(text: str) -> str:
+    """NFKC-normalise Japanese text and collapse redundant whitespace.
+
+    Effects:
+    - Full-width ASCII digits/letters → half-width (ＴＯＷＡ → TOWA)
+    - Half-width katakana → full-width (ｶﾀｶﾅ → カタカナ)
+    - Ligatures / compatibility characters expanded
+    - Runs of spaces/tabs within a paragraph collapsed to one space
+    - Blank lines collapsed: more than two consecutive newlines → two
+    - Leading/trailing whitespace stripped
+    """
+    # NFKC handles full→half and half-kana→full in one pass
+    text = unicodedata.normalize("NFKC", text)
+    # Collapse runs of horizontal whitespace (space, tab, ideographic space)
+    text = re.sub(r"[ \t　]+", " ", text)
+    # Strip trailing whitespace from each line
+    text = re.sub(r"[ \t　]+$", "", text, flags=re.MULTILINE)
+    # Normalise line endings
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    # Collapse more than 2 consecutive newlines (preserve paragraph breaks)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 def _compute_unit_scale(decimals_list: list[int]) -> int:
