@@ -95,7 +95,7 @@ python main.py HWM 2025 --dry-run
                            │
               ┌────────────┼────────────┐
               ▼            ▼            ▼
-         data_fetcher  doc_converter  section_splitter
+      sec_data_fetcher doc_converter  section_splitter
          (EDGAR API)   (markitdown)   (TOC-guided + LLM fallback)
               │            │            │
               └────────────┼────────────┘
@@ -242,7 +242,7 @@ tenk/
 │   ├── orchestrator.py              # 多階段執行 + eval loop + checkpoint
 │   ├── pipeline_state.py            # per-agent checkpoint/resume
 │   ├── eval_runner.py               # hard rule + schema + LLM eval
-│   ├── data_fetcher.py              # EDGAR HTM + XBRL
+│   ├── sec_data_fetcher.py          # EDGAR HTM + XBRL
 │   ├── doc_converter.py             # iXBRL strip + BeautifulSoup / markitdown fallback
 │   ├── section_splitter.py          # TOC-guided + LLM fallback + footnotes 切割
 │   ├── report_writer.py             # 繁中 MD + PDF + 折線圖
