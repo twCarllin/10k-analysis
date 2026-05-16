@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent / "runtime"))
 
-from data_fetcher import download_filing, get_xbrl_facts, extract_key_metrics, extract_quarterly_metrics
+from sec_data_fetcher import download_filing, get_xbrl_facts, extract_key_metrics, extract_quarterly_metrics
 from doc_converter import convert_to_markdown
 from section_splitter import (
     split_sections,

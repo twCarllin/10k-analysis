@@ -1,6 +1,7 @@
 {
   "anthropic_api_key": "sk-ant-...",
   "edgar_user_agent": "10k-research your-name@example.com",
+  "edinet_api_key": "your-edinet-api-key",
   "model": "claude-sonnet-4-5",
   "max_tokens": 4096,
   "max_tokens_by_skill": {
