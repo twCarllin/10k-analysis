@@ -6,6 +6,8 @@ pydantic>=2.0
 tenacity>=8.0
 duckdb>=1.0
 pyarrow>=15.0
+pandas>=2.0
+openpyxl>=3.1
 
 # dev-only: testing
 pytest>=7.0
