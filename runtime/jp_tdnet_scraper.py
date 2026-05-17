@@ -345,6 +345,32 @@ def find_tdnet_local(
 
 # ── Public: PDF download ──────────────────────────────────────────────────────
 
+MAX_PDF_TEXT = 12000
+
+
+def parse_tdnet_pdf(pdf_path: Path) -> str:
+    """Extract text content from a TDNET PDF using markitdown.
+
+    Returns plain text (mostly Japanese). No OCR — assumes the PDF is
+    text-based, which is true for 決算短信 / 業績予想 / share buyback notices.
+
+    Graceful failure: raises if len(text.strip()) < 200 (image or encrypted PDF).
+    Truncates to MAX_PDF_TEXT (12000 chars) to fit LLM context.
+    """
+    from markitdown import MarkItDown
+
+    result = MarkItDown().convert(str(pdf_path))
+    text = result.text_content or ""
+    if len(text.strip()) < 200:
+        raise ValueError(
+            f"parse_tdnet_pdf: extracted text too short ({len(text.strip())} chars) "
+            f"— likely image-based or encrypted PDF: {pdf_path}"
+        )
+    if len(text) > MAX_PDF_TEXT:
+        text = text[:MAX_PDF_TEXT] + "\n\n[…後續內容已截斷…]"
+    return text
+
+
 def download_tdnet_pdf(pdf_url: str, out_dir: Path | None = None) -> Path:
     """Download a TDNET PDF.  Idempotent: returns existing path without re-download.
 

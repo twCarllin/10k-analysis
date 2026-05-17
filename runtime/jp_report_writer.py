@@ -442,11 +442,17 @@ def _render_recent_events(event_skill_results: list[dict]) -> str:
             event_summary = result.get("event_summary", "")
             materiality = result.get("materiality", "")
             credit_impact = result.get("credit_impact", "")
+            key_metrics = result.get("key_metrics") or {}
+            forward_guidance = result.get("forward_guidance")
+            pdf_extracted = result.get("pdf_extracted", False)
 
-            parts.append(
+            header = (
                 f"### {submitted_at}  {doc_id}  "
                 f"[TDNET/{_escape_md_cell(str(category))}]"
             )
+            if pdf_extracted:
+                header += "  [PDF 已解析]"
+            parts.append(header)
             if title:
                 parts.append(f"**標題**：{_escape_md_cell(tone_filter(str(title)))}")
                 parts.append("")
@@ -460,6 +466,28 @@ def _render_recent_events(event_skill_results: list[dict]) -> str:
                 if credit_impact:
                     row_parts.append(f"**信用影響**：{credit_impact}")
                 parts.append("  ".join(row_parts))
+                parts.append("")
+            # key_metrics table (render when at least one value is non-null)
+            km_labels = [
+                ("revenue", "營收"),
+                ("operating_income", "營業利益"),
+                ("net_income", "淨利"),
+                ("yoy_pct", "YoY"),
+                ("annual_forecast", "通期預想"),
+            ]
+            km_rows = [
+                (label, _escape_md_cell(str(key_metrics[k])))
+                for k, label in km_labels
+                if key_metrics.get(k) is not None
+            ]
+            if km_rows:
+                parts.append("| 項目 | 數值 |")
+                parts.append("|---|---|")
+                for label, val in km_rows:
+                    parts.append(f"| {label} | {val} |")
+                parts.append("")
+            if forward_guidance:
+                parts.append(f"**業績展望**：{tone_filter(str(forward_guidance))}")
                 parts.append("")
             continue
 
@@ -688,6 +716,7 @@ def save_jp_report(
                 "five_year": five_year,
                 "skill_results": skill_results,
                 "eval_results": eval_results or {},
+                "recent_events": recent_events or [],
             },
             ensure_ascii=False,
             indent=2,
