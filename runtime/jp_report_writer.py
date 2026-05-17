@@ -510,6 +510,20 @@ def _render_recent_events(event_skill_results: list[dict]) -> str:
                 for label, val in km_rows:
                     parts.append(f"| {label} | {val} |")
                 parts.append("")
+            segment_notes = result.get("segment_notes") or []
+            if segment_notes:
+                parts.append("**Segment 別業績**")
+                for seg in segment_notes:
+                    if isinstance(seg, dict):
+                        name = seg.get("name", "")
+                        perf = seg.get("performance", "")
+                        if name and perf:
+                            parts.append(f"- **{tone_filter(str(name))}**：{tone_filter(str(perf))}")
+                        elif name:
+                            parts.append(f"- {tone_filter(str(name))}")
+                    else:
+                        parts.append(f"- {tone_filter(str(seg))}")
+                parts.append("")
             if forward_guidance:
                 parts.append(f"**業績展望**：{tone_filter(str(forward_guidance))}")
                 parts.append("")
