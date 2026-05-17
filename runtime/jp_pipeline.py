@@ -464,12 +464,26 @@ def run_jp_pipeline(
         for hit in tdnet_hits:
             disc_id = hit["disclosure_id"]
             try:
-                _, tdnet_result = _run_skill("jp_tdnet_event", {
+                from jp_tdnet_scraper import download_tdnet_pdf, parse_tdnet_pdf
+
+                skill_input = {
                     "title": hit.get("title", ""),
                     "category": hit.get("category", "other"),
                     "company_name": hit.get("company_name", ""),
                     "is_amendment": hit.get("is_amendment", False),
-                })
+                }
+                # Auto-download and parse PDF if url is available
+                pdf_url = hit.get("pdf_url")
+                if pdf_url:
+                    try:
+                        pdf_path = download_tdnet_pdf(pdf_url)
+                        pdf_text = parse_tdnet_pdf(pdf_path)
+                        skill_input["pdf_text"] = pdf_text
+                        print(f"  [pdf] parsed {len(pdf_text)} chars for {disc_id}")
+                    except Exception as exc:
+                        log.warning("parse PDF for %s failed: %s", disc_id, exc)
+
+                _, tdnet_result = _run_skill("jp_tdnet_event", skill_input)
                 event_skill_results.append({
                     "doc_id": disc_id,
                     "submitted_at": str(hit.get("disclosure_date", "")),

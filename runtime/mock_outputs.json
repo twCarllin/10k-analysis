@@ -2,63 +2,171 @@
   "business_analysis": {
     "company_positioning": "Howmet Aerospace 自我定位為全球領先的先進工程解決方案供應商，專注航太與運輸市場。",
     "growth_narrative": "AI 驅動的資料中心建設加速電力需求，帶動燃氣渦輪市場成長。",
-    "end_market_mix": [{"market": "商用航太", "pct": "52%", "trend": "growing"}],
-    "business_segments": [{"name": "Engine Products", "description": "航太引擎零件", "revenue_weight": "high"}],
-    "revenue_drivers": ["商用航太需求成長", "國防航太訂單"],
+    "end_market_mix": [
+      {
+        "market": "商用航太",
+        "pct": "52%",
+        "trend": "growing"
+      }
+    ],
+    "business_segments": [
+      {
+        "name": "Engine Products",
+        "description": "航太引擎零件",
+        "revenue_weight": "high"
+      }
+    ],
+    "revenue_drivers": [
+      "商用航太需求成長",
+      "國防航太訂單"
+    ],
     "customer_concentration": "RTX 與 GE Aerospace 各佔約 10%",
-    "geographic_mix": ["北美 71%", "歐洲 23%", "亞洲 6%"],
+    "geographic_mix": [
+      "北美 71%",
+      "歐洲 23%",
+      "亞洲 6%"
+    ],
     "competitive_moat_delta": "專利組合持續擴大",
     "new_or_exited": [],
     "insufficient_data": false
   },
   "risk_analysis": {
-    "risks": [{"title": "客戶集中風險", "description": "主要客戶波音產量下降，可能影響營收與獲利能力", "category": "operational", "importance": "high"}],
-    "top_3": [{"title": "客戶集中風險", "rationale": "佔營收 25% 且需求下降"}, {"title": "原物料成本", "rationale": "鈦合金供應集中且地緣風險升高"}, {"title": "地緣政治", "rationale": "出口管制可能擴大"}],
+    "risks": [
+      {
+        "title": "客戶集中風險",
+        "description": "主要客戶波音產量下降，可能影響營收與獲利能力",
+        "category": "operational",
+        "importance": "high"
+      }
+    ],
+    "top_3": [
+      {
+        "title": "客戶集中風險",
+        "rationale": "佔營收 25% 且需求下降"
+      },
+      {
+        "title": "原物料成本",
+        "rationale": "鈦合金供應集中且地緣風險升高"
+      },
+      {
+        "title": "地緣政治",
+        "rationale": "出口管制可能擴大"
+      }
+    ],
     "delta_summary": "風險輪廓較前期，措辭強度上升",
     "insufficient_data": false
   },
   "mdna_analysis": {
-    "performance_drivers": {"positive": ["航太復甦"], "negative": ["成本上升"]},
+    "performance_drivers": {
+      "positive": [
+        "航太復甦"
+      ],
+      "negative": [
+        "成本上升"
+      ]
+    },
     "non_gaap_changes": "",
     "mgmt_tone": "optimistic",
     "mgmt_tone_evidence": "管理層預期持續成長",
-    "promises_fulfilled": ["營收成長達成"],
+    "promises_fulfilled": [
+      "營收成長達成"
+    ],
     "promises_broken": [],
-    "narrative_shift": {"early_stage_language": [], "mature_stage_language": [], "shift_description": "", "momentum": {"early_delta": null, "mature_delta": null, "direction": null}},
+    "narrative_shift": {
+      "early_stage_language": [],
+      "mature_stage_language": [],
+      "shift_description": "",
+      "momentum": {
+        "early_delta": null,
+        "mature_delta": null,
+        "direction": null
+      }
+    },
     "silence_analysis": [],
     "competitive_pressure_signals": [],
     "insufficient_data": false
   },
   "footnotes_revenue": {
-    "revenue_recognition": {"policy": "控制權移轉時認列", "timing": "point-in-time", "changed": false, "change_detail": ""},
+    "revenue_recognition": {
+      "policy": "控制權移轉時認列",
+      "timing": "point-in-time",
+      "changed": false,
+      "change_detail": ""
+    },
     "new_standards": [],
     "other_policy_changes": [],
     "insufficient_data": false
   },
   "footnotes_segment": {
-    "segments": [{"name": "Engine Products", "revenue": "$4.2B", "profit": "$1.1B", "asset_pct": "40%"}],
+    "segments": [
+      {
+        "name": "Engine Products",
+        "revenue": "$4.2B",
+        "profit": "$1.1B",
+        "asset_pct": "40%"
+      }
+    ],
     "segment_redefined": false,
-    "geographic_mix": ["北美 71%"],
-    "major_customers": ["RTX", "GE"],
-    "restructuring": {"total_charge": "$15M", "nature": "人員精簡", "expected_completion": "2025"},
+    "geographic_mix": [
+      "北美 71%"
+    ],
+    "major_customers": [
+      "RTX",
+      "GE"
+    ],
+    "restructuring": {
+      "total_charge": "$15M",
+      "nature": "人員精簡",
+      "expected_completion": "2025"
+    },
     "insufficient_data": false
   },
   "footnotes_receivables": {
-    "securitization": {"facility_size": "$250M", "drawn_amount": "$250M", "unsold_collateral": "$201M"},
+    "securitization": {
+      "facility_size": "$250M",
+      "drawn_amount": "$250M",
+      "unsold_collateral": "$201M"
+    },
     "customer_receivables_sold": "$712M",
-    "debt_structure": [{"type": "長期債務", "amount": "$3.05B", "maturity": "2027-2031", "rate": "5.1%"}],
+    "debt_structure": [
+      {
+        "type": "長期債務",
+        "amount": "$3.05B",
+        "maturity": "2027-2031",
+        "rate": "5.1%"
+      }
+    ],
     "covenants": "符合",
-    "credit_facility": {"size": "$1B", "drawn": "$0"},
+    "credit_facility": {
+      "size": "$1B",
+      "drawn": "$0"
+    },
     "off_balance_sheet_impact": "現金流美化約$119M",
     "insufficient_data": false
   },
   "footnotes_assets": {
-    "inventory": {"method": "LIFO", "lifo_reserve": "$280M", "lifo_reserve_change": "+$44M"},
-    "ppe": {"capex": "$454M", "depreciation_method": "直線法"},
+    "inventory": {
+      "method": "LIFO",
+      "lifo_reserve": "$280M",
+      "lifo_reserve_change": "+$44M"
+    },
+    "ppe": {
+      "capex": "$454M",
+      "depreciation_method": "直線法"
+    },
     "goodwill": {
       "total": "$4,010M",
-      "by_unit": [{"unit": "Engineered Structures", "amount": "$303M"}],
-      "impairment_test": {"discount_rate": "10%", "growth_rate": "3%", "cushion": ">60%"},
+      "by_unit": [
+        {
+          "unit": "Engineered Structures",
+          "amount": "$303M"
+        }
+      ],
+      "impairment_test": {
+        "discount_rate": "10%",
+        "growth_rate": "3%",
+        "cushion": ">60%"
+      },
       "cumulative_impairment": "$725M"
     },
     "intangibles_amortization": "$45M",
@@ -66,42 +174,100 @@
     "insufficient_data": false
   },
   "footnotes_risk": {
-    "contingencies": [{"description": "法國稅務爭議", "amount": "€19M", "likelihood": "probable"}],
-    "environmental": {"reserve": "$19M", "sites_count": "30+", "current_portion": "$10M"},
+    "contingencies": [
+      {
+        "description": "法國稅務爭議",
+        "amount": "€19M",
+        "likelihood": "probable"
+      }
+    ],
+    "environmental": {
+      "reserve": "$19M",
+      "sites_count": "30+",
+      "current_portion": "$10M"
+    },
     "commitments": [],
-    "leases": {"operating_total": "$120M", "finance_total": "$15M"},
+    "leases": {
+      "operating_total": "$120M",
+      "finance_total": "$15M"
+    },
     "subsequent_events": [],
     "insufficient_data": false
   },
   "footnotes_pension": {
-    "funded_status": {"pbo": "$2.1B", "plan_assets": "$1.5B", "deficit": "$610M"},
-    "assumptions": {"discount_rate": "5.2%", "return_on_assets": "6.5%", "salary_growth": "3%"},
+    "funded_status": {
+      "pbo": "$2.1B",
+      "plan_assets": "$1.5B",
+      "deficit": "$610M"
+    },
+    "assumptions": {
+      "discount_rate": "5.2%",
+      "return_on_assets": "6.5%",
+      "salary_growth": "3%"
+    },
     "unrecognized_losses": "$956M",
-    "asset_allocation": [{"category": "股票", "pct": "40%"}],
+    "asset_allocation": [
+      {
+        "category": "股票",
+        "pct": "40%"
+      }
+    ],
     "expected_contributions": "$50M",
     "net_periodic_cost": "$30M",
     "insufficient_data": false
   },
   "footnotes_compensation": {
-    "sbc": {"expense": "$63M", "to_revenue_pct": "0.85%", "unrecognized": "$80M", "vest_period": "3 years"},
-    "buyback": {"shares": "8.4M", "amount": "$500M"},
-    "eps": {"basic": "$2.50", "diluted": "$2.48", "dilution_sources": "RSU/PSU"},
+    "sbc": {
+      "expense": "$63M",
+      "to_revenue_pct": "0.85%",
+      "unrecognized": "$80M",
+      "vest_period": "3 years"
+    },
+    "buyback": {
+      "shares": "8.4M",
+      "amount": "$500M"
+    },
+    "eps": {
+      "basic": "$2.50",
+      "diluted": "$2.48",
+      "dilution_sources": "RSU/PSU"
+    },
     "aoci_components": [],
     "insufficient_data": false
   },
   "footnotes_tax": {
     "effective_rate": "16.5%",
     "statutory_vs_effective": "法定21% vs 有效16.5%",
-    "major_adjustments": ["R&D抵減$44M"],
-    "deferred_tax": {"assets": "$500M", "liabilities": "$300M", "valuation_allowance": "$50M", "va_change": "-$5M"},
-    "uncertain_tax_positions": {"amount": "$19M", "change": "-$7M"},
+    "major_adjustments": [
+      "R&D抵減$44M"
+    ],
+    "deferred_tax": {
+      "assets": "$500M",
+      "liabilities": "$300M",
+      "valuation_allowance": "$50M",
+      "va_change": "-$5M"
+    },
+    "uncertain_tax_positions": {
+      "amount": "$19M",
+      "change": "-$7M"
+    },
     "tax_disputes": [],
-    "tax_credits": ["R&D $44M"],
+    "tax_credits": [
+      "R&D $44M"
+    ],
     "insufficient_data": false
   },
   "competitor_mapping": {
     "named_competitors": [
-      {"name": "Mock Corp", "ticker": "MOCK", "markets": ["aerospace"], "yoy_status": "unchanged", "note": ""}
+      {
+        "name": "Mock Corp",
+        "ticker": "MOCK",
+        "markets": [
+          "aerospace"
+        ],
+        "yoy_status": "unchanged",
+        "note": ""
+      }
     ],
     "market_position": "challenger",
     "market_position_evidence": "We are the second-largest supplier in...",
@@ -114,7 +280,11 @@
   "governance_analysis": {
     "audit_opinion": "unqualified",
     "internal_control_issues": [],
-    "exec_compensation": {"structure": "基本薪+績效獎金+股權", "performance_linked_pct": "60%", "kpi_alignment": "aligned"},
+    "exec_compensation": {
+      "structure": "基本薪+績效獎金+股權",
+      "performance_linked_pct": "60%",
+      "kpi_alignment": "aligned"
+    },
     "major_shareholders": [],
     "board_independence_pct": "80%",
     "related_party_item13": [],
@@ -123,13 +293,43 @@
   },
   "financial_analysis": {
     "metrics": {
-      "Revenue": [{"year": 2024, "val": 8250000000, "yoy_pct": 11.1}],
-      "GrossMargin_pct": [{"year": 2024, "val": 35.2}],
-      "OperatingMargin_pct": [{"year": 2024, "val": 24.8}],
-      "FCF_conversion": [{"year": 2024, "val": 0.95}],
-      "CapEx_to_Revenue": [{"year": 2024, "val": 5.5}]
+      "Revenue": [
+        {
+          "year": 2024,
+          "val": 8250000000,
+          "yoy_pct": 11.1
+        }
+      ],
+      "GrossMargin_pct": [
+        {
+          "year": 2024,
+          "val": 35.2
+        }
+      ],
+      "OperatingMargin_pct": [
+        {
+          "year": 2024,
+          "val": 24.8
+        }
+      ],
+      "FCF_conversion": [
+        {
+          "year": 2024,
+          "val": 0.95
+        }
+      ],
+      "CapEx_to_Revenue": [
+        {
+          "year": 2024,
+          "val": 5.5
+        }
+      ]
     },
-    "capital_allocation_order": ["CapEx", "債務償還", "股份回購"],
+    "capital_allocation_order": [
+      "CapEx",
+      "債務償還",
+      "股份回購"
+    ],
     "anomalies": [],
     "quality_flags": [],
     "trend_summary": "營收持續成長，利潤率擴張",
@@ -137,14 +337,28 @@
   },
   "eval_analysis": {
     "skill_name": "",
-    "scores": {"content_richness": 28, "analytical_depth": 27, "source_fidelity": 26},
+    "scores": {
+      "content_richness": 28,
+      "analytical_depth": 27,
+      "source_fidelity": 26
+    },
     "llm_subtotal": 81,
     "weakest_dimension": "source_fidelity",
     "retry_hint": "",
     "insufficient_data": false
   },
   "cross_year_compare": {
-    "cross_checks": [{"dimensions": ["business", "financial"], "finding": "營收成長一致", "implication": "趨勢穩定", "direction": "positive"}],
+    "cross_checks": [
+      {
+        "dimensions": [
+          "business",
+          "financial"
+        ],
+        "finding": "營收成長一致",
+        "implication": "趨勢穩定",
+        "direction": "positive"
+      }
+    ],
     "mgmt_credibility": "medium",
     "mgmt_credibility_reason": "部分承諾兌現",
     "quality_trend": "stable",
@@ -152,32 +366,82 @@
     "insufficient_data": false
   },
   "insight_synthesis": {
-    "bull_case": [{"point": "營運槓桿效益顯現", "evidence": "利潤率擴張 670bps"}],
-    "bear_case": [{"point": "客戶集中風險", "evidence": "波音產量下降影響"}],
-    "key_monitorables": ["波音交機量", "應收帳款證券化動用率"],
-    "information_edge": [{"signal": "法國稅務爭議實質解決", "source": "footnotes_tax 揭露估計負債大幅下調"}],
+    "bull_case": [
+      {
+        "point": "營運槓桿效益顯現",
+        "evidence": "利潤率擴張 670bps"
+      }
+    ],
+    "bear_case": [
+      {
+        "point": "客戶集中風險",
+        "evidence": "波音產量下降影響"
+      }
+    ],
+    "key_monitorables": [
+      "波音交機量",
+      "應收帳款證券化動用率"
+    ],
+    "information_edge": [
+      {
+        "signal": "法國稅務爭議實質解決",
+        "source": "footnotes_tax 揭露估計負債大幅下調"
+      }
+    ],
     "confidence": "medium",
     "confidence_reason": "財務數據完整但治理資訊不足",
     "low_confidence_tasks": [],
     "insufficient_data": false
   },
   "section_splitter": {
-    "item_anchors": {"item1": "mock anchor"},
+    "item_anchors": {
+      "item1": "mock anchor"
+    },
     "insufficient_data": false
   },
   "terms_glossary": {
-    "terms": [{"term": "AR Securitization", "category": "financial", "explanation": "應收帳款證券化", "importance": "high"}],
+    "terms": [
+      {
+        "term": "AR Securitization",
+        "category": "financial",
+        "explanation": "應收帳款證券化",
+        "importance": "high"
+      }
+    ],
     "high_importance_count": 1,
-    "category_counts": {"financial": 1, "industry": 0, "company_defined": 0, "regulatory": 0},
+    "category_counts": {
+      "financial": 1,
+      "industry": 0,
+      "company_defined": 0,
+      "regulatory": 0
+    },
     "insufficient_data": false
   },
   "unusual_operations": {
-    "unusual_items": [{"name": "應收帳款證券化", "description": "將應收帳款出售給 SPE", "source_quote": "securitization facility $250M", "classification": "hybrid", "classification_rationale": "航太製造業普遍採用", "financial_impact": "應收帳款低估", "investor_interpretation": "negative", "investor_note": "需將 off-balance sheet 金額加回"}],
+    "unusual_items": [
+      {
+        "name": "應收帳款證券化",
+        "description": "將應收帳款出售給 SPE",
+        "source_quote": "securitization facility $250M",
+        "classification": "hybrid",
+        "classification_rationale": "航太製造業普遍採用",
+        "financial_impact": "應收帳款低估",
+        "investor_interpretation": "negative",
+        "investor_note": "需將 off-balance sheet 金額加回"
+      }
+    ],
     "summary": "共識別 1 個不尋常操作",
     "insufficient_data": false
   },
   "completeness_check": {
-    "scores": {"business_coverage": 9, "risk_coverage": 8, "financial_coverage": 9, "quality_signal": 8, "forward_looking": 8, "consistency": 8},
+    "scores": {
+      "business_coverage": 9,
+      "risk_coverage": 8,
+      "financial_coverage": 9,
+      "quality_signal": 8,
+      "forward_looking": 8,
+      "consistency": 8
+    },
     "total": 50,
     "critical_gaps": [],
     "low_confidence_task_count": 0,
@@ -188,17 +452,50 @@
   },
   "supply_chain_analysis": {
     "raw_materials": [
-      {"material": "Titanium alloy", "usage": "fan blades / structural components", "source_concentration": "high", "geographic_risk": "Russia/China exposure", "notes": "diversification ongoing"}
+      {
+        "material": "Titanium alloy",
+        "usage": "fan blades / structural components",
+        "source_concentration": "high",
+        "geographic_risk": "Russia/China exposure",
+        "notes": "diversification ongoing"
+      }
     ],
     "named_suppliers": [
-      {"name": "Mock Titanium Co.", "material_or_service": "titanium ingot", "single_source": false, "yoy_status": "existing"}
+      {
+        "name": "Mock Titanium Co.",
+        "material_or_service": "titanium ingot",
+        "single_source": false,
+        "yoy_status": "existing"
+      }
     ],
     "supply_chain_risks": [
-      {"title": "原物料地緣政治集中", "summary": "鈦合金主要來源國地緣政治風險升高", "category": "geopolitical", "yoy_status": "escalated", "mdna_realized": false}
+      {
+        "title": "原物料地緣政治集中",
+        "summary": "鈦合金主要來源國地緣政治風險升高",
+        "category": "geopolitical",
+        "yoy_status": "escalated",
+        "mdna_realized": false
+      }
     ],
-    "mdna_impact": {"financial_impact_mentioned": true, "impact_description": "Supply chain inflation increased COGS by approximately $XX million", "mgmt_outlook": "neutral"},
-    "purchase_commitments": {"found": true, "total_commitment_description": "Mock long-term supply agreement", "take_or_pay_noted": false, "commitment_to_revenue_pct": ""},
-    "yoy_changes": {"improvements": ["新增第二供應商開發中"], "deteriorations": ["地緣風險揭露語氣升級 may→has"]},
+    "mdna_impact": {
+      "financial_impact_mentioned": true,
+      "impact_description": "Supply chain inflation increased COGS by approximately $XX million",
+      "mgmt_outlook": "neutral"
+    },
+    "purchase_commitments": {
+      "found": true,
+      "total_commitment_description": "Mock long-term supply agreement",
+      "take_or_pay_noted": false,
+      "commitment_to_revenue_pct": ""
+    },
+    "yoy_changes": {
+      "improvements": [
+        "新增第二供應商開發中"
+      ],
+      "deteriorations": [
+        "地緣風險揭露語氣升級 may→has"
+      ]
+    },
     "overall_risk_level": "medium",
     "trend": "stable",
     "rerating_relevance": "neutral",
@@ -207,31 +504,78 @@
   },
   "jp_business_analysis": {
     "company_positioning": "模擬公司定位：半導體後製程設備製造商",
-    "business_segments": [{"name": "模擬事業部", "description": "模擬設備製造", "revenue_weight": "high"}],
-    "end_market_mix": [{"market": "半導體", "pct": "100%", "trend": "growing"}],
-    "geographic_mix": ["日本 60%", "亞洲 30%", "其他 10%"],
+    "business_segments": [
+      {
+        "name": "模擬事業部",
+        "description": "模擬設備製造",
+        "revenue_weight": "high"
+      }
+    ],
+    "end_market_mix": [
+      {
+        "market": "半導體",
+        "pct": "100%",
+        "trend": "growing"
+      }
+    ],
+    "geographic_mix": [
+      "日本 60%",
+      "亞洲 30%",
+      "其他 10%"
+    ],
     "subsidiaries": [],
     "insufficient_data": false
   },
   "jp_risk_analysis": {
     "risks": [
-      {"title": "模擬風險：客戶集中", "description": "主要客戶集中於少數半導體廠商", "category": "operational", "importance": "high"},
-      {"title": "模擬風險：匯率波動", "description": "日圓匯率波動影響海外收入", "category": "financial", "importance": "medium"},
-      {"title": "模擬風險：地緣政治", "description": "半導體出口管制風險升高", "category": "macro", "importance": "medium"}
+      {
+        "title": "模擬風險：客戶集中",
+        "description": "主要客戶集中於少數半導體廠商",
+        "category": "operational",
+        "importance": "high"
+      },
+      {
+        "title": "模擬風險：匯率波動",
+        "description": "日圓匯率波動影響海外收入",
+        "category": "financial",
+        "importance": "medium"
+      },
+      {
+        "title": "模擬風險：地緣政治",
+        "description": "半導體出口管制風險升高",
+        "category": "macro",
+        "importance": "medium"
+      }
     ],
     "top_3": [
-      {"title": "客戶集中", "rationale": "前三大客戶佔營收逾五成"},
-      {"title": "匯率波動", "rationale": "日圓升值將壓縮出口利潤"},
-      {"title": "地緣政治", "rationale": "出口管制範圍持續擴大"}
+      {
+        "title": "客戶集中",
+        "rationale": "前三大客戶佔營收逾五成"
+      },
+      {
+        "title": "匯率波動",
+        "rationale": "日圓升值將壓縮出口利潤"
+      },
+      {
+        "title": "地緣政治",
+        "rationale": "出口管制範圍持續擴大"
+      }
     ],
     "delta_summary": null,
     "insufficient_data": false
   },
   "jp_mdna_analysis": {
-    "drivers": [{"factor": "模擬驅動因子：設備需求增加", "direction": "positive"}],
+    "drivers": [
+      {
+        "factor": "模擬驅動因子：設備需求增加",
+        "direction": "positive"
+      }
+    ],
     "mgmt_outlook": "neutral",
     "commitment_strength": "medium",
-    "forward_signals": ["持續擴大產能"],
+    "forward_signals": [
+      "持續擴大產能"
+    ],
     "insufficient_data": false
   },
   "jp_going_concern": {
@@ -244,16 +588,30 @@
   },
   "jp_strategy": {
     "vision": "模擬願景：成為全球半導體設備領先廠商",
-    "mid_term_targets": [{"kpi": "營收", "target_value": null, "deadline": null}],
-    "current_challenges": ["模擬課題：技術研發投入"],
-    "action_items": ["擴大研發預算"],
+    "mid_term_targets": [
+      {
+        "kpi": "營收",
+        "target_value": null,
+        "deadline": null
+      }
+    ],
+    "current_challenges": [
+      "模擬課題：技術研發投入"
+    ],
+    "action_items": [
+      "擴大研發預算"
+    ],
     "measurability": "qualitative",
     "insufficient_data": false
   },
   "jp_rd_analysis": {
-    "themes": ["封裝設備技術"],
+    "themes": [
+      "封裝設備技術"
+    ],
     "rd_expense_pct": null,
-    "key_projects": ["模擬研發項目：新型封裝設備"],
+    "key_projects": [
+      "模擬研發項目：新型封裝設備"
+    ],
     "partnerships": [],
     "patents": [],
     "insufficient_data": false
@@ -280,7 +638,10 @@
     "event_summary": "模擬：公司召開定時股東大會，決議選任取締役及報酬調整事項",
     "materiality": "low",
     "credit_impact": "neutral",
-    "key_terms": {"決議日": "模擬日期", "議案數": "2"},
+    "key_terms": {
+      "決議日": "模擬日期",
+      "議案數": "2"
+    },
     "verbatim_quote": "定時株主総会において、決議事項が決議されました",
     "insufficient_data": false
   },
@@ -289,7 +650,24 @@
     "materiality": "high",
     "credit_impact": "neutral",
     "is_amendment": false,
-    "event_summary": "本公告為年度決算短信，為投資人每年最重要的財務揭露事件，需後續讀取 PDF 確認具體業績。",
+    "event_summary": "本公告為年度決算短信，揭露全年財務結果，為投資人最重要的觀察指標之一。",
+    "key_metrics": {
+      "revenue": "52,345 百万円",
+      "operating_income": "6,789 百万円",
+      "net_income": "4,567 百万円",
+      "yoy_pct": "+12.3%",
+      "annual_forecast": "売上高 55,000 百万円（前回予想より 500 百万円増額）"
+    },
+    "forward_guidance": "管理層表示下期將持續成長，以「引き続き取り組んでまいります」語氣承諾推進各項施策。",
+    "segment_notes": [
+      {
+        "name": "半導體封裝設備",
+        "performance": "売上高增長 15%，受惠於先進封裝需求擴大"
+      }
+    ],
+    "key_terms": {},
+    "verbatim_quote": null,
+    "pdf_extracted": true,
     "insufficient_data": false
   },
   "jp_earnings_call": {
@@ -297,7 +675,9 @@
     "forward_guidance": {
       "summary": "管理層表示將持續投入研發以因應市場需求成長，並維持穩定的獲利能力。",
       "commitment_strength": "medium",
-      "key_statements": ["来期も成長軌道を維持すべく取り組んでまいります。"]
+      "key_statements": [
+        "来期も成長軌道を維持すべく取り組んでまいります。"
+      ]
     },
     "qa_signals": [
       {
@@ -310,8 +690,14 @@
     ],
     "evasion_signals": [],
     "top_concerns": [
-      {"question_theme": "半導體景氣循環風險", "summary": "分析師關注半導體資本支出週期是否可能收縮"},
-      {"question_theme": "來期營收 guidance", "summary": "詢問具體數字但管理層未明確承諾"}
+      {
+        "question_theme": "半導體景氣循環風險",
+        "summary": "分析師關注半導體資本支出週期是否可能收縮"
+      },
+      {
+        "question_theme": "來期營收 guidance",
+        "summary": "詢問具體數字但管理層未明確承諾"
+      }
     ],
     "tone_vs_prior": null,
     "insufficient_data": false
