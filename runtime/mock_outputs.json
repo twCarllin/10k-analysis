@@ -266,5 +266,22 @@
     "return_metrics": "模擬：ROE 維持穩定",
     "overall_health": "stable",
     "insufficient_data": false
+  },
+  "jp_semi_annual_summary": {
+    "current_half_performance": "模擬：上半期業績符合預期，主要受設備需求帶動",
+    "vs_prior_half": "模擬：較前期同期營收略增，利潤率持平",
+    "vs_full_year_forecast_progress": "模擬：全年預算執行進度 52%，進度符合",
+    "forecast_revision": null,
+    "mgmt_outlook_change": "模擬：與上次有報相比，管理層語氣持平",
+    "insufficient_data": false
+  },
+  "jp_extraordinary_event": {
+    "event_category": "shareholder_resolution",
+    "event_summary": "模擬：公司召開定時股東大會，決議選任取締役及報酬調整事項",
+    "materiality": "low",
+    "credit_impact": "neutral",
+    "key_terms": {"決議日": "模擬日期", "議案數": "2"},
+    "verbatim_quote": "定時株主総会において、決議事項が決議されました",
+    "insufficient_data": false
   }
 }
