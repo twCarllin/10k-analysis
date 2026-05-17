@@ -554,6 +554,7 @@ def save_jp_report(
     skill_results: dict[str, dict],
     eval_results: dict | None = None,
     recent_events: list[dict] | None = None,
+    fiscal_quarter: str = "Q4",
 ) -> Path:
     """Render and save the JP investment research report.
 
@@ -565,16 +566,27 @@ def save_jp_report(
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
+    # Derive fiscal year label from fiscal_year_end (e.g. "2025-03-31" → "2025")
+    fy_label = fiscal_year_end[:4] if fiscal_year_end else ""
+
     # Reconstruct chapters dict for appendix (from five_year warnings & skill data)
     # The chapters are not passed here; we use skill_results to detect which existed.
     # For appendix, we note we don't have raw text here — we skip if not available.
     chapters_available: dict[str, str] = {}
 
+    # Section 2 placeholder when yuho not yet published
+    no_edinet = not doc_id
+
     lines = [
-        f"# {company_name_ja}（{ticker}）投資研究報告",
+        f"# {company_name_ja}（{ticker}）投資研究報告 — FY{fy_label} {fiscal_quarter}",
         "",
         f"> 公司名稱: {company_name_ja}（証券コード: {ticker}、EDINET: {edinet_code}）",
-        f"> 期間: 有価証券報告書（FY{fiscal_year_end}，doc_id: {doc_id}）",
+        f"> 期間: FY{fy_label} {fiscal_quarter}（period_end: {fiscal_year_end}）",
+        *(
+            [f"> 有報 doc_id: {doc_id}"]
+            if doc_id else
+            ["> 有報: 尚未提交（EDINET 無對應文件）"]
+        ),
         f"> 產出時間: {now_str}",
         "",
     ]
@@ -588,19 +600,24 @@ def save_jp_report(
     # ── Section 2: 財務數據（5 年表）─────────────────────────────────────────
     lines.append("## 2. 財務數據（5 年表）")
     lines.append("")
-    lines.append(_render_financial_table(five_year))
-    fin_skill = skill_results.get("jp_financial_analysis", {})
-    if not fin_skill.get("insufficient_data"):
-        parts = []
-        for key in ["revenue_trend", "profitability_trend", "balance_sheet_quality",
-                    "cash_generation", "return_metrics"]:
-            val = fin_skill.get(key)
-            if val:
-                parts.append(f"- **{key.replace('_', ' ').title()}**：{tone_filter(_safe_render(val))}")
-        if parts:
-            lines.append("### 財務趨勢分析")
-            lines.extend(parts)
-            lines.append("")
+    if no_edinet:
+        lines.append(f"> 有報尚未提交（FY{fy_label} {fiscal_quarter} 對應之有報未見於 EDINET）。"
+                     "財務數據待有報發布後更新。")
+        lines.append("")
+    else:
+        lines.append(_render_financial_table(five_year))
+        fin_skill = skill_results.get("jp_financial_analysis", {})
+        if not fin_skill.get("insufficient_data"):
+            parts = []
+            for key in ["revenue_trend", "profitability_trend", "balance_sheet_quality",
+                        "cash_generation", "return_metrics"]:
+                val = fin_skill.get(key)
+                if val:
+                    parts.append(f"- **{key.replace('_', ' ').title()}**：{tone_filter(_safe_render(val))}")
+            if parts:
+                lines.append("### 財務趨勢分析")
+                lines.extend(parts)
+                lines.append("")
 
     # ── Section 3: 風險敘事重點 ───────────────────────────────────────────────
     lines.append("## 3. 風險敘事重點（事業等のリスク）")
