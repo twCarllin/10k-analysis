@@ -1,0 +1,577 @@
+"""
+jp_report_writer.py — Render jp pipeline results into Markdown + PDF.
+
+Public API:
+    save_jp_report(...) -> Path   # returns markdown path
+"""
+
+import json
+from datetime import datetime
+from pathlib import Path
+
+import markdown
+from weasyprint import HTML
+
+# Import shared helpers from existing report_writer (do not copy-paste)
+from report_writer import (
+    _build_pdf_css,
+    tone_filter,
+    _escape_md_cell,
+    _format_blockquote,
+)
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# ── Formatting helpers ────────────────────────────────────────────────────────
+
+def _fmt_jpy(value) -> str:
+    """Format a JPY value in 億円 if >= 1e9, else 百万円."""
+    if value is None:
+        return "—"
+    v = float(value)
+    if abs(v) >= 1e12:
+        return f"¥{v / 1e12:,.2f}兆"
+    if abs(v) >= 1e8:
+        return f"¥{v / 1e8:,.1f}億"
+    if abs(v) >= 1e6:
+        return f"¥{v / 1e6:,.0f}百万"
+    return f"¥{v:,.0f}"
+
+
+def _fmt_ratio(value) -> str:
+    if value is None:
+        return "—"
+    return f"{float(value):.2f}"
+
+
+def _fmt_pct(value) -> str:
+    if value is None:
+        return "—"
+    return f"{float(value):.1f}%"
+
+
+def _fmt_employees(value) -> str:
+    if value is None:
+        return "—"
+    return f"{int(value):,}"
+
+
+def _safe_render(v, indent: int = 0) -> str:
+    """Render LLM value (scalar / dict / list) as markdown-friendly text."""
+    if v is None or v == "":
+        return "（未提供）"
+    if isinstance(v, dict):
+        lines = []
+        for k, val in v.items():
+            if isinstance(val, (dict, list)):
+                lines.append(f"{'  ' * indent}- **{k}**:")
+                lines.append(_safe_render(val, indent + 1))
+            else:
+                lines.append(f"{'  ' * indent}- **{k}**: {val}")
+        return "\n".join(lines)
+    if isinstance(v, list):
+        return "\n".join(_safe_render(item, indent) for item in v)
+    return str(v)
+
+
+# ── Section renderers ─────────────────────────────────────────────────────────
+
+def _render_business(result: dict) -> str:
+    """Render Section 1: 公司概況."""
+    if result.get("insufficient_data"):
+        return "> 資料不足，無法分析。\n"
+
+    parts = []
+
+    positioning = result.get("company_positioning")
+    if positioning:
+        parts.append(f"{tone_filter(_safe_render(positioning))}\n")
+
+    segments = result.get("business_segments") or []
+    if segments:
+        parts.append("### 事業部門")
+        parts.append("| 部門 | 描述 | 收入比重 |")
+        parts.append("|------|------|--------|")
+        for seg in segments:
+            name = _escape_md_cell(tone_filter(str(seg.get("name", ""))))
+            desc = _escape_md_cell(tone_filter(str(seg.get("description", ""))))
+            weight = _escape_md_cell(str(seg.get("revenue_weight", "")))
+            parts.append(f"| {name} | {desc} | {weight} |")
+        parts.append("")
+
+    end_mix = result.get("end_market_mix") or []
+    if end_mix:
+        parts.append("### 終端市場")
+        for m in end_mix:
+            mkt = tone_filter(str(m.get("market", "")))
+            pct = str(m.get("pct", ""))
+            trend = str(m.get("trend", ""))
+            line = f"- **{_escape_md_cell(mkt)}**"
+            if pct:
+                line += f"：{pct}"
+            if trend:
+                line += f"（趨勢：{trend}）"
+            parts.append(line)
+        parts.append("")
+
+    geo_mix = result.get("geographic_mix") or []
+    if geo_mix:
+        parts.append("### 地域分布")
+        for g in geo_mix:
+            parts.append(f"- {tone_filter(str(g))}")
+        parts.append("")
+
+    subsidiaries = result.get("subsidiaries") or []
+    if subsidiaries:
+        parts.append("### 連結子会社")
+        for s in subsidiaries:
+            if isinstance(s, dict):
+                name = s.get("name", "")
+                role = s.get("role", "")
+                parts.append(f"- **{tone_filter(str(name))}**：{tone_filter(str(role))}")
+            else:
+                parts.append(f"- {tone_filter(str(s))}")
+        parts.append("")
+
+    return "\n".join(parts) if parts else "> 無相關資料。\n"
+
+
+def _render_financial_table(five_year: dict) -> str:
+    """Render Section 2: 財務數據（5 年表）."""
+    summary = five_year.get("five_year_summary", {})
+    if not summary:
+        return "> 5 年財務 summary 未能抽取。\n"
+
+    # Collect all fiscal years across all metrics
+    all_years: set[str] = set()
+    for vals in summary.values():
+        if isinstance(vals, dict):
+            all_years.update(vals.keys())
+    years = sorted(all_years)
+
+    if not years:
+        return "> 無年度資料。\n"
+
+    parts = []
+    currency = five_year.get("currency", "JPY")
+    std = five_year.get("accounting_standard", "JGAAP")
+    parts.append(f"> 貨幣單位：{currency}  會計準則：{std}")
+    parts.append("")
+
+    # Main metrics table (money metrics)
+    money_metrics = [
+        ("淨銷售額", "net_sales", _fmt_jpy),
+        ("普通利益", "ordinary_income", _fmt_jpy),
+        ("淨利益", "net_income", _fmt_jpy),
+        ("綜合利益", "comprehensive_income", _fmt_jpy),
+        ("純資產", "net_assets", _fmt_jpy),
+        ("總資產", "total_assets", _fmt_jpy),
+        ("營業現金流", "operating_cash_flow", _fmt_jpy),
+    ]
+
+    ratio_metrics = [
+        ("每股純益（円）", "eps_yen", _fmt_ratio),
+        ("每股純資產（円）", "bps_yen", _fmt_ratio),
+        ("ROE (%)", "roe_pct", _fmt_pct),
+        ("PER (倍)", "per", _fmt_ratio),
+        ("自己資本比率 (%)", "equity_ratio_pct", _fmt_pct),
+        ("員工人數", "employees", _fmt_employees),
+    ]
+
+    # Build year headers (show only last 4 digits of date for brevity)
+    year_labels = [y[:4] for y in years]
+    header = "| 指標 | " + " | ".join(year_labels) + " |"
+    sep = "|------|" + "|".join("------:" for _ in years) + "|"
+
+    parts.append("### 主要財務指標推移")
+    parts.append(header)
+    parts.append(sep)
+
+    for label, key, fmt_fn in money_metrics:
+        vals = summary.get(key, {})
+        cells = [fmt_fn(vals.get(y)) for y in years]
+        parts.append(f"| {label} | " + " | ".join(cells) + " |")
+
+    parts.append(header)
+    parts.append(sep)
+
+    for label, key, fmt_fn in ratio_metrics:
+        vals = summary.get(key, {})
+        cells = [fmt_fn(vals.get(y)) for y in years]
+        parts.append(f"| {label} | " + " | ".join(cells) + " |")
+
+    parts.append("")
+    return "\n".join(parts)
+
+
+def _render_risk(result: dict) -> str:
+    """Render Section 3: 風險敘事重點."""
+    if result.get("insufficient_data"):
+        return "> 資料不足，無法分析。\n"
+
+    parts = []
+
+    top3 = result.get("top_3") or []
+    if top3:
+        parts.append("### 前三大風險")
+        for i, item in enumerate(top3, 1):
+            title = tone_filter(str(item.get("title", "")))
+            rationale = tone_filter(str(item.get("rationale", "")))
+            parts.append(f"{i}. **{_escape_md_cell(title)}**：{_escape_md_cell(rationale)}")
+        parts.append("")
+
+    risks = result.get("risks") or []
+    if risks:
+        parts.append("### 全部風險條目")
+        parts.append("| 風險名稱 | 類別 | 重要性 | 描述 |")
+        parts.append("|---------|------|--------|------|")
+        for r in risks:
+            title = _escape_md_cell(tone_filter(str(r.get("title", ""))))
+            category = _escape_md_cell(str(r.get("category", "")))
+            importance = _escape_md_cell(str(r.get("importance", "")))
+            desc = _escape_md_cell(tone_filter(str(r.get("description", ""))))
+            parts.append(f"| {title} | {category} | {importance} | {desc} |")
+        parts.append("")
+
+    delta = result.get("delta_summary")
+    if delta:
+        parts.append("### 年度變化")
+        parts.append(tone_filter(str(delta)))
+        parts.append("")
+
+    return "\n".join(parts) if parts else "> 無相關資料。\n"
+
+
+def _render_mdna(result: dict) -> str:
+    """Render Section 4: 管理層分析 (MD&A)."""
+    if result.get("insufficient_data"):
+        return "> 資料不足，無法分析。\n"
+
+    parts = []
+
+    drivers = result.get("drivers") or []
+    if drivers:
+        parts.append("### 業績驅動因子")
+        for d in drivers:
+            if isinstance(d, dict):
+                factor = tone_filter(str(d.get("factor", "")))
+                direction = str(d.get("direction", ""))
+                parts.append(f"- **{_escape_md_cell(factor)}**（{direction}）")
+            else:
+                parts.append(f"- {tone_filter(str(d))}")
+        parts.append("")
+
+    outlook = result.get("mgmt_outlook")
+    commitment = result.get("commitment_strength")
+    if outlook or commitment:
+        parts.append("### 管理層展望")
+        if outlook:
+            parts.append(f"**語氣**：{outlook}")
+        if commitment:
+            parts.append(f"**承諾強度**：{commitment}")
+        parts.append("")
+
+    signals = result.get("forward_signals") or []
+    if signals:
+        parts.append("### 前瞻訊號")
+        for s in signals:
+            parts.append(f"- {tone_filter(str(s))}")
+        parts.append("")
+
+    return "\n".join(parts) if parts else "> 無相關資料。\n"
+
+
+def _render_strategy(result: dict) -> str:
+    """Render Section 5: 經營方針."""
+    if result.get("insufficient_data"):
+        return "> 資料不足，無法分析。\n"
+
+    parts = []
+
+    vision = result.get("vision")
+    if vision:
+        parts.append(f"**願景**：{tone_filter(str(vision))}\n")
+
+    targets = result.get("mid_term_targets") or []
+    if targets:
+        parts.append("### 中長期目標")
+        parts.append("| KPI | 目標值 | 期限 |")
+        parts.append("|-----|--------|------|")
+        for t in targets:
+            kpi = _escape_md_cell(tone_filter(str(t.get("kpi", ""))))
+            target_val = _escape_md_cell(str(t.get("target_value") or "—"))
+            deadline = _escape_md_cell(str(t.get("deadline") or "—"))
+            parts.append(f"| {kpi} | {target_val} | {deadline} |")
+        parts.append("")
+
+    challenges = result.get("current_challenges") or []
+    if challenges:
+        parts.append("### 對處すべき課題")
+        for c in challenges:
+            parts.append(f"- {tone_filter(str(c))}")
+        parts.append("")
+
+    action_items = result.get("action_items") or []
+    if action_items:
+        parts.append("### 具體行動計畫")
+        for a in action_items:
+            parts.append(f"- {tone_filter(str(a))}")
+        parts.append("")
+
+    return "\n".join(parts) if parts else "> 無相關資料。\n"
+
+
+def _render_rd(result: dict) -> str:
+    """Render Section 6: 研發與策略."""
+    if result.get("insufficient_data"):
+        return "> 資料不足，無法分析。\n"
+
+    parts = []
+
+    themes = result.get("themes") or []
+    if themes:
+        parts.append("### 研發主題")
+        for t in themes:
+            parts.append(f"- {tone_filter(str(t))}")
+        parts.append("")
+
+    rd_pct = result.get("rd_expense_pct")
+    if rd_pct is not None:
+        parts.append(f"**研究開発費占比**：{rd_pct}\n")
+
+    projects = result.get("key_projects") or []
+    if projects:
+        parts.append("### 重要研究項目")
+        for p in projects:
+            if isinstance(p, dict):
+                name = p.get("name") or p.get("title") or ""
+                desc = p.get("description") or p.get("detail") or ""
+                line = f"**{tone_filter(str(name))}**：{tone_filter(str(desc))}" if name else tone_filter(str(desc))
+                parts.append(f"- {line}")
+            else:
+                parts.append(f"- {tone_filter(str(p))}")
+        parts.append("")
+
+    partnerships = result.get("partnerships") or []
+    if partnerships:
+        parts.append("### 產業合作")
+        for p in partnerships:
+            if isinstance(p, dict):
+                name = p.get("name") or p.get("partner") or ""
+                desc = p.get("description") or p.get("detail") or ""
+                line = f"**{tone_filter(str(name))}**：{tone_filter(str(desc))}" if name else tone_filter(str(desc))
+                parts.append(f"- {line}")
+            else:
+                parts.append(f"- {tone_filter(str(p))}")
+        parts.append("")
+
+    return "\n".join(parts) if parts else "> 無相關資料。\n"
+
+
+def _render_going_concern(result: dict) -> str:
+    """Render Section 7: 持續經營疑義."""
+    if result.get("insufficient_data") or not result.get("has_disclosure"):
+        return "> 公司未揭露重大持續經營疑義。\n"
+
+    parts = []
+    level = result.get("concern_level", "none")
+    parts.append(f"**疑義程度**：{level}\n")
+
+    triggers = result.get("triggers") or []
+    if triggers:
+        parts.append("### 觸發因素")
+        for t in triggers:
+            parts.append(f"- {tone_filter(str(t))}")
+        parts.append("")
+
+    plan = result.get("remediation_plan")
+    if plan:
+        parts.append("### 對策")
+        parts.append(tone_filter(str(plan)))
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+def _render_credit_observations(skill_results: dict) -> str:
+    """Render Section 8: 信用觀察點 (synthesized from skills 1-7)."""
+    parts = []
+
+    # Derive key observations from risk + financial + going_concern
+    risk = skill_results.get("jp_risk_analysis", {})
+    fin = skill_results.get("jp_financial_analysis", {})
+    concern = skill_results.get("jp_going_concern", {})
+    mdna = skill_results.get("jp_mdna_analysis", {})
+
+    # Risk highlights
+    top3 = risk.get("top_3") or []
+    if top3 and not risk.get("insufficient_data"):
+        parts.append("### 主要風險")
+        for item in top3:
+            title = tone_filter(str(item.get("title", "")))
+            parts.append(f"- {_escape_md_cell(title)}")
+        parts.append("")
+
+    # Financial health
+    overall_health = fin.get("overall_health")
+    if overall_health and not fin.get("insufficient_data"):
+        parts.append(f"**財務體質**：{overall_health}\n")
+
+    # Going concern
+    if not concern.get("insufficient_data") and concern.get("has_disclosure"):
+        level = concern.get("concern_level", "none")
+        parts.append(f"**持續經營疑義**：{level}\n")
+    else:
+        parts.append("**持續經營疑義**：無重大疑義揭露\n")
+
+    # Management outlook
+    outlook = mdna.get("mgmt_outlook")
+    if outlook and not mdna.get("insufficient_data"):
+        parts.append(f"**管理層展望**：{outlook}\n")
+
+    # Revenue trend
+    rev_trend = fin.get("revenue_trend")
+    if rev_trend and not fin.get("insufficient_data"):
+        parts.append(f"**營收趨勢**：{tone_filter(_safe_render(rev_trend))}\n")
+
+    return "\n".join(parts) if parts else "> 綜合觀察資料不足。\n"
+
+
+# ── Main save function ────────────────────────────────────────────────────────
+
+def save_jp_report(
+    ticker: str,
+    edinet_code: str,
+    company_name_ja: str,
+    fiscal_year_end: str,
+    doc_id: str,
+    five_year: dict,
+    skill_results: dict[str, dict],
+    eval_results: dict | None = None,
+) -> Path:
+    """Render and save the JP investment research report.
+
+    Returns the Path of the Markdown file.
+    """
+    out_dir = BASE_DIR / "data" / "output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    # Reconstruct chapters dict for appendix (from five_year warnings & skill data)
+    # The chapters are not passed here; we use skill_results to detect which existed.
+    # For appendix, we note we don't have raw text here — we skip if not available.
+    chapters_available: dict[str, str] = {}
+
+    lines = [
+        f"# {company_name_ja}（{ticker}）投資研究報告",
+        "",
+        f"> 公司名稱: {company_name_ja}（証券コード: {ticker}、EDINET: {edinet_code}）",
+        f"> 期間: 有価証券報告書（FY{fiscal_year_end}，doc_id: {doc_id}）",
+        f"> 產出時間: {now_str}",
+        "",
+    ]
+
+    # ── Section 1: 公司概況 ────────────────────────────────────────────────────
+    lines.append("## 1. 公司概況（事業の内容）")
+    lines.append("")
+    biz = skill_results.get("jp_business_analysis", {})
+    lines.append(_render_business(biz))
+
+    # ── Section 2: 財務數據（5 年表）─────────────────────────────────────────
+    lines.append("## 2. 財務數據（5 年表）")
+    lines.append("")
+    lines.append(_render_financial_table(five_year))
+    fin_skill = skill_results.get("jp_financial_analysis", {})
+    if not fin_skill.get("insufficient_data"):
+        parts = []
+        for key in ["revenue_trend", "profitability_trend", "balance_sheet_quality",
+                    "cash_generation", "return_metrics"]:
+            val = fin_skill.get(key)
+            if val:
+                parts.append(f"- **{key.replace('_', ' ').title()}**：{tone_filter(_safe_render(val))}")
+        if parts:
+            lines.append("### 財務趨勢分析")
+            lines.extend(parts)
+            lines.append("")
+
+    # ── Section 3: 風險敘事重點 ───────────────────────────────────────────────
+    lines.append("## 3. 風險敘事重點（事業等のリスク）")
+    lines.append("")
+    lines.append(_render_risk(skill_results.get("jp_risk_analysis", {})))
+
+    # ── Section 4: 管理層分析 (MD&A) ──────────────────────────────────────────
+    lines.append("## 4. 管理層分析 (MD&A)")
+    lines.append("")
+    lines.append(_render_mdna(skill_results.get("jp_mdna_analysis", {})))
+
+    # ── Section 5: 經營方針 ────────────────────────────────────────────────────
+    lines.append("## 5. 經營方針")
+    lines.append("")
+    lines.append(_render_strategy(skill_results.get("jp_strategy", {})))
+
+    # ── Section 6: 研發與策略 ─────────────────────────────────────────────────
+    lines.append("## 6. 研發與策略")
+    lines.append("")
+    lines.append(_render_rd(skill_results.get("jp_rd_analysis", {})))
+
+    # ── Section 7: 持續經營疑義 ───────────────────────────────────────────────
+    lines.append("## 7. 持續經營疑義")
+    lines.append("")
+    lines.append(_render_going_concern(skill_results.get("jp_going_concern", {})))
+
+    # ── Section 8: 信用觀察點 ─────────────────────────────────────────────────
+    lines.append("## 8. 信用觀察點")
+    lines.append("")
+    lines.append(_render_credit_observations(skill_results))
+
+    # ── Appendix ──────────────────────────────────────────────────────────────
+    lines.append("## 附錄：原文引用對照")
+    lines.append("")
+    lines.append("（各 skill 分析依據日文有報原文；以下為各章節首段摘錄）")
+    lines.append("")
+    # We don't have raw chapters here; leave a placeholder note
+    lines.append("*原文詳見 EDINET 有報 ZIP 內 iXBRL HTM 檔案。*")
+    lines.append("")
+
+    md_text = "\n".join(lines)
+
+    # ── Save Markdown ──────────────────────────────────────────────────────────
+    report_md = out_dir / f"{ticker}_{ts}_jp_report.md"
+    report_md.write_text(md_text, encoding="utf-8")
+
+    # ── Save PDF ───────────────────────────────────────────────────────────────
+    report_pdf = out_dir / f"{ticker}_{ts}_jp_report.pdf"
+    pdf_css = _build_pdf_css()
+    html_body = markdown.markdown(md_text, extensions=["tables"])
+    html_full = (
+        f'<html><head><meta charset="utf-8">'
+        f'<style>{pdf_css}</style></head>'
+        f'<body>{html_body}</body></html>'
+    )
+    HTML(string=html_full, base_url=str(out_dir)).write_pdf(str(report_pdf))
+
+    # ── Save raw JSON ──────────────────────────────────────────────────────────
+    json_path = out_dir / f"{ticker}_{ts}_raw.json"
+    json_path.write_text(
+        json.dumps(
+            {
+                "five_year": five_year,
+                "skill_results": skill_results,
+                "eval_results": eval_results or {},
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    print(f"\n{'='*50}")
+    print(f"  報告 (MD)：{report_md}")
+    print(f"  報告 (PDF)：{report_pdf}")
+    print(f"  原始 JSON：{json_path}")
+    print(f"{'='*50}")
+
+    return report_md

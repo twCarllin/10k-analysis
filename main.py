@@ -123,7 +123,11 @@ def build_sections(ticker, year, file_path=None, filing_type="10-K",
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("ticker")
-    p.add_argument("year", type=int)
+    p.add_argument("year", nargs="?", type=int, default=None)
+    p.add_argument("--market", default="sec", choices=["sec", "jp"],
+                   help="Market: sec (US SEC) or jp (EDINET Japanese). Default: sec")
+    p.add_argument("--years", type=int, default=3,
+                   help="JP pipeline: number of years of filings to consider. Default: 3")
     p.add_argument("--prior-year", type=int, default=None,
                    help="手動覆蓋前期年份（預設自動推算）")
     p.add_argument("--file", default=None)
@@ -160,6 +164,20 @@ def main():
         from agent_runner import set_dry_run
         set_dry_run(True)
         print("  [Mode] dry-run — 不發 API，使用 mock 結果")
+
+    # JP market branch
+    if args.market == "jp":
+        from jp_pipeline import run_jp_pipeline
+        run_jp_pipeline(
+            ticker=ticker,
+            years=args.years,
+            dry_run=args.dry_run,
+        )
+        return
+
+    # SEC branch: year is required
+    if args.year is None:
+        p.error("year is required for --market sec")
 
     # Determine prior period
     prior_year, prior_ft, prior_q = _determine_prior(
