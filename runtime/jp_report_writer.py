@@ -418,6 +418,63 @@ def _render_going_concern(result: dict) -> str:
     return "\n".join(parts)
 
 
+def _render_tdnet_financial_highlights(events: list[dict]) -> str:
+    """Render financial highlights from the most recent TDNET earnings_flash.
+
+    Used as a substitute for Section 2 (5-year table) when no yuho is
+    available — 決算短信 only carries current period + prior + annual
+    forecast, not a full 5-year history.
+    """
+    # Filter by the disclosure's deterministic `category` field
+    # (from classify_tdnet_title), not the LLM-generated event_category
+    # which may return Japanese strings like "決算短信".
+    flashes = [
+        e for e in events
+        if e.get("doc_type") == "tdnet" and e.get("category") == "earnings_flash"
+    ]
+    if not flashes:
+        return "> 無 EDINET 有報且無 TDNET 決算短信揭露；財務數據待文件發布後更新。\n"
+
+    # Most recent flash (events are already sorted by date desc upstream)
+    flash = flashes[0]
+    result = flash.get("skill_result", {})
+    sub_date = flash.get("submitted_at", "")[:10]
+
+    parts = [
+        f"> 來源：TDNET 決算短信 ({sub_date})；5 年表待 EDINET 有報發布後補上。",
+        "",
+    ]
+
+    km = result.get("key_metrics") or {}
+    label_map = [
+        ("revenue", "營收"),
+        ("operating_income", "營業利益"),
+        ("net_income", "淨利"),
+        ("yoy_pct", "YoY"),
+        ("annual_forecast", "通期予想"),
+    ]
+    km_rows = [(label, str(km[k])) for k, label in label_map if km.get(k) is not None]
+    if km_rows:
+        parts.append("| 項目 | 數值 |")
+        parts.append("|---|---|")
+        for label, val in km_rows:
+            parts.append(f"| {label} | {_escape_md_cell(val)} |")
+        parts.append("")
+
+    segs = result.get("segment_notes") or []
+    if segs:
+        parts.append("**Segment 別業績**")
+        for seg in segs:
+            if isinstance(seg, dict):
+                name = seg.get("name", "")
+                perf = seg.get("performance", "")
+                if name and perf:
+                    parts.append(f"- **{tone_filter(str(name))}**：{tone_filter(str(perf))}")
+        parts.append("")
+
+    return "\n".join(parts)
+
+
 def _render_recent_events(event_skill_results: list[dict]) -> str:
     """Render Section 8: 近期重大事件（過去 12 個月）.
 
@@ -658,10 +715,16 @@ def save_jp_report(
     ]
 
     # When no EDINET filing (e.g. yuho not yet published), skip the seven
-    # narrative sections entirely — they would only print "資料不足"
-    # placeholders. Jump straight to recent events.
+    # narrative sections, but keep financial data — pull current-period
+    # numbers from any TDNET earnings_flash extracted via PDF.
     if no_edinet:
-        lines.append("## 1. 近期重大事件（過去 12 個月）")
+        # ── Section 1: 財務速報（from TDNET earnings_flash if available）──
+        lines.append("## 1. 財務速報")
+        lines.append("")
+        lines.append(_render_tdnet_financial_highlights(recent_events or []))
+
+        # ── Section 2: 近期重大事件 ───────────────────────────────────────
+        lines.append("## 2. 近期重大事件（過去 12 個月）")
         lines.append("")
         lines.append(_render_recent_events(recent_events or []))
     else:
