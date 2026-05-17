@@ -643,20 +643,23 @@ def save_jp_report(
         "",
     ]
 
-    # ── Section 1: 公司概況 ────────────────────────────────────────────────────
-    lines.append("## 1. 公司概況（事業の内容）")
-    lines.append("")
-    biz = skill_results.get("jp_business_analysis", {})
-    lines.append(_render_business(biz))
-
-    # ── Section 2: 財務數據（5 年表）─────────────────────────────────────────
-    lines.append("## 2. 財務數據（5 年表）")
-    lines.append("")
+    # When no EDINET filing (e.g. yuho not yet published), skip the seven
+    # narrative sections entirely — they would only print "資料不足"
+    # placeholders. Jump straight to recent events.
     if no_edinet:
-        lines.append(f"> 有報尚未提交（FY{fy_label} {fiscal_quarter} 對應之有報未見於 EDINET）。"
-                     "財務數據待有報發布後更新。")
+        lines.append("## 1. 近期重大事件（過去 12 個月）")
         lines.append("")
+        lines.append(_render_recent_events(recent_events or []))
     else:
+        # ── Section 1: 公司概況 ───────────────────────────────────────────────
+        lines.append("## 1. 公司概況（事業の内容）")
+        lines.append("")
+        biz = skill_results.get("jp_business_analysis", {})
+        lines.append(_render_business(biz))
+
+        # ── Section 2: 財務數據（5 年表）───────────────────────────────────
+        lines.append("## 2. 財務數據（5 年表）")
+        lines.append("")
         lines.append(_render_financial_table(five_year))
         fin_skill = skill_results.get("jp_financial_analysis", {})
         if not fin_skill.get("insufficient_data"):
@@ -671,40 +674,40 @@ def save_jp_report(
                 lines.extend(parts)
                 lines.append("")
 
-    # ── Section 3: 風險敘事重點 ───────────────────────────────────────────────
-    lines.append("## 3. 風險敘事重點（事業等のリスク）")
-    lines.append("")
-    lines.append(_render_risk(skill_results.get("jp_risk_analysis", {})))
+        # ── Section 3: 風險敘事重點 ───────────────────────────────────────────
+        lines.append("## 3. 風險敘事重點（事業等のリスク）")
+        lines.append("")
+        lines.append(_render_risk(skill_results.get("jp_risk_analysis", {})))
 
-    # ── Section 4: 管理層分析 (MD&A) ──────────────────────────────────────────
-    lines.append("## 4. 管理層分析 (MD&A)")
-    lines.append("")
-    lines.append(_render_mdna(skill_results.get("jp_mdna_analysis", {})))
+        # ── Section 4: 管理層分析 (MD&A) ──────────────────────────────────────
+        lines.append("## 4. 管理層分析 (MD&A)")
+        lines.append("")
+        lines.append(_render_mdna(skill_results.get("jp_mdna_analysis", {})))
 
-    # ── Section 5: 經營方針 ────────────────────────────────────────────────────
-    lines.append("## 5. 經營方針")
-    lines.append("")
-    lines.append(_render_strategy(skill_results.get("jp_strategy", {})))
+        # ── Section 5: 經營方針 ────────────────────────────────────────────────
+        lines.append("## 5. 經營方針")
+        lines.append("")
+        lines.append(_render_strategy(skill_results.get("jp_strategy", {})))
 
-    # ── Section 6: 研發與策略 ─────────────────────────────────────────────────
-    lines.append("## 6. 研發與策略")
-    lines.append("")
-    lines.append(_render_rd(skill_results.get("jp_rd_analysis", {})))
+        # ── Section 6: 研發與策略 ─────────────────────────────────────────────
+        lines.append("## 6. 研發與策略")
+        lines.append("")
+        lines.append(_render_rd(skill_results.get("jp_rd_analysis", {})))
 
-    # ── Section 7: 持續經營疑義 ───────────────────────────────────────────────
-    lines.append("## 7. 持續經營疑義")
-    lines.append("")
-    lines.append(_render_going_concern(skill_results.get("jp_going_concern", {})))
+        # ── Section 7: 持續經營疑義 ───────────────────────────────────────────
+        lines.append("## 7. 持續經營疑義")
+        lines.append("")
+        lines.append(_render_going_concern(skill_results.get("jp_going_concern", {})))
 
-    # ── Section 8: 近期重大事件（過去 12 個月）────────────────────────────────
-    lines.append("## 8. 近期重大事件（過去 12 個月）")
-    lines.append("")
-    lines.append(_render_recent_events(recent_events or []))
+        # ── Section 8: 近期重大事件（過去 12 個月）────────────────────────────
+        lines.append("## 8. 近期重大事件（過去 12 個月）")
+        lines.append("")
+        lines.append(_render_recent_events(recent_events or []))
 
-    # ── Section 9: 信用觀察點 ─────────────────────────────────────────────────
-    lines.append("## 9. 信用觀察點")
-    lines.append("")
-    lines.append(_render_credit_observations(skill_results))
+        # ── Section 9: 信用觀察點 ─────────────────────────────────────────────
+        lines.append("## 9. 信用觀察點")
+        lines.append("")
+        lines.append(_render_credit_observations(skill_results))
 
     # ── Appendix ──────────────────────────────────────────────────────────────
     lines.append("## 附錄：原文引用對照")
