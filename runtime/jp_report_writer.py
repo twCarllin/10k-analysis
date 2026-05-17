@@ -23,6 +23,30 @@ from report_writer import (
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _edinet_to_jpx(edinet_code: str) -> str:
+    """Resolve EDINET code → jpx_code via ticker_map.
+
+    Used to keep rinji event reports filed under the same company subdir as
+    other JP reports. Falls back to the EDINET code itself when ticker_map
+    has no row (e.g. funds, asset managers without a 4-digit code).
+    """
+    if not edinet_code:
+        return ""
+    try:
+        import duckdb
+        from jp_data_fetcher import DB_PATH
+        if not DB_PATH.exists():
+            return edinet_code
+        with duckdb.connect(str(DB_PATH)) as con:
+            row = con.execute(
+                "SELECT jpx_code FROM ticker_map WHERE edinet_code = ?",
+                [edinet_code],
+            ).fetchone()
+        return (row[0] if row and row[0] else edinet_code)
+    except Exception:
+        return edinet_code
+
+
 # ── Formatting helpers ────────────────────────────────────────────────────────
 
 def _fmt_jpy(value) -> str:
@@ -588,7 +612,7 @@ def save_jp_report(
 
     Returns the Path of the Markdown file.
     """
-    out_dir = BASE_DIR / "data" / "output"
+    out_dir = BASE_DIR / "data" / "output" / ticker
     out_dir.mkdir(parents=True, exist_ok=True)
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -742,10 +766,13 @@ def save_jp_event_report(
     """Render and save a short event report for a single rinji filing.
 
     Output filename pattern: {edinet_code}_{doc_id}_event.md + .pdf
+    Stored under data/output/{jpx_code}/ when ticker_map resolves the
+    edinet_code, otherwise under data/output/{edinet_code}/ as a fallback.
 
     Returns the Path of the Markdown file.
     """
-    out_dir = BASE_DIR / "data" / "output"
+    company_dir = _edinet_to_jpx(edinet_code) or edinet_code or "unknown"
+    out_dir = BASE_DIR / "data" / "output" / company_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -836,15 +863,17 @@ def save_tdnet_event_report(
     """Render and save a short TDNET event report for a single disclosure.
 
     Output filename pattern: {jpx_code}_tdnet_{disclosure_id}.md + .pdf
+    Stored under data/output/{jpx_code}/ by default.
 
     Returns the Path of the Markdown file.
     """
+    disc_id = disclosure.get("disclosure_id", "unknown")
+    jpx_code = disclosure.get("jpx_code") or "unknown"
     if out_dir is None:
-        out_dir = BASE_DIR / "data" / "output"
+        out_dir = BASE_DIR / "data" / "output" / jpx_code
     Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-    disc_id = disclosure.get("disclosure_id", "unknown")
     jpx_code = disclosure.get("jpx_code", "")
     company_name = disclosure.get("company_name", "")
     title = disclosure.get("title", "")
@@ -923,10 +952,11 @@ def save_earnings_call_report(
     """Render and save a short earnings call report from a logmi transcript.
 
     Output filename pattern: {jpx_code}_{YYYYMMDD_HHMMSS}_earnings_call.md + .pdf
+    Stored under data/output/{jpx_code}/.
 
     Returns the Path of the Markdown file.
     """
-    out_dir = BASE_DIR / "data" / "output"
+    out_dir = BASE_DIR / "data" / "output" / (jpx_code or "unknown")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")

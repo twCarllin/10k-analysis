@@ -599,7 +599,7 @@ def render_transcript_unavailable(section_title: str = "Earnings Call 資料") -
 def save_report(ticker, results, eval_results, synthesis, quarterly=None,
                 filing_type="10-K", quarter=None, xbrl_metrics=None,
                 prior_year=None, transcript_result=None) -> Path:
-    out_dir = BASE_DIR / "data" / "output"
+    out_dir = BASE_DIR / "data" / "output" / ticker
     out_dir.mkdir(parents=True, exist_ok=True)
 
     insight = synthesis.get("insight", {})
