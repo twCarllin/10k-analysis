@@ -629,7 +629,7 @@ def save_jp_report(
     out_dir = BASE_DIR / "data" / "output" / ticker
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M")
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     # Derive fiscal year label from fiscal_year_end (e.g. "2025-03-31" → "2025")
@@ -976,7 +976,7 @@ def save_earnings_call_report(
     out_dir = BASE_DIR / "data" / "output" / (jpx_code or "unknown")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M")
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
     call_title = transcript.get("title", "法説会")
     call_date = transcript.get("date", "")

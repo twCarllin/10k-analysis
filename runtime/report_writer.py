@@ -605,7 +605,7 @@ def save_report(ticker, results, eval_results, synthesis, quarterly=None,
     insight = synthesis.get("insight", {})
     comparator = synthesis.get("comparator", {})
     completeness = synthesis.get("completeness", {})
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M")
 
     critical_gaps = completeness.get("critical_gaps", [])
     gap_flag = ""
