@@ -291,5 +291,29 @@
     "is_amendment": false,
     "event_summary": "本公告為年度決算短信，為投資人每年最重要的財務揭露事件，需後續讀取 PDF 確認具體業績。",
     "insufficient_data": false
+  },
+  "jp_earnings_call": {
+    "meeting_summary": "本次法說會說明當期業績達成情況，管理層強調半導體封裝設備需求持續增長，並對來期營收持正面展望。",
+    "forward_guidance": {
+      "summary": "管理層表示將持續投入研發以因應市場需求成長，並維持穩定的獲利能力。",
+      "commitment_strength": "medium",
+      "key_statements": ["来期も成長軌道を維持すべく取り組んでまいります。"]
+    },
+    "qa_signals": [
+      {
+        "question_theme": "來期業績展望",
+        "answered": true,
+        "response_strength": "medium",
+        "asker": "Unknown",
+        "note": "管理層給出方向性回應但未提供具體數字"
+      }
+    ],
+    "evasion_signals": [],
+    "top_concerns": [
+      {"question_theme": "半導體景氣循環風險", "summary": "分析師關注半導體資本支出週期是否可能收縮"},
+      {"question_theme": "來期營收 guidance", "summary": "詢問具體數字但管理層未明確承諾"}
+    ],
+    "tone_vs_prior": null,
+    "insufficient_data": false
   }
 }
