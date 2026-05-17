@@ -10,9 +10,6 @@ from datetime import datetime
 from pathlib import Path
 
 import markdown
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 from weasyprint import HTML
 
 # Import shared helpers from existing report_writer (do not copy-paste)
@@ -162,48 +159,6 @@ def _render_business(result: dict) -> str:
         parts.append("")
 
     return "\n".join(parts) if parts else "> 無相關資料。\n"
-
-
-def _build_five_year_chart(five_year: dict, out_dir: Path) -> str | None:
-    """Render 5-year financial trend as a line chart. Returns image filename or None."""
-    summary = five_year.get("five_year_summary", {})
-    if not summary:
-        return None
-
-    metric_specs = [
-        ("net_sales", "營收", "#2980b9", "o-"),
-        ("operating_income", "営業利益", "#e67e22", "s-"),
-        ("net_income", "淨利", "#27ae60", "^-"),
-    ]
-    series = {k: summary.get(k, {}) for k, *_ in metric_specs}
-    years = sorted({y for d in series.values() if isinstance(d, dict) for y in d.keys()})
-    if len(years) < 2:
-        return None
-
-    fig, ax = plt.subplots(figsize=(5.5, 3.0))
-    x = list(range(len(years)))
-    for key, label, color, style in metric_specs:
-        vals = series.get(key) or {}
-        if not isinstance(vals, dict):
-            continue
-        pts = [vals.get(y) for y in years]
-        if not any(v is not None for v in pts):
-            continue
-        scaled = [(v / 1e8 if v is not None else float("nan")) for v in pts]
-        ax.plot(x, scaled, style, color=color, linewidth=2, markersize=5, label=label)
-
-    ax.set_xticks(x)
-    ax.set_xticklabels([y[:7] for y in years], rotation=0)
-    ax.set_ylabel("億日圓")
-    ax.legend(loc="upper left", fontsize=8, framealpha=0.8)
-    ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
-
-    chart_name = "jp_five_year_trend.png"
-    chart_path = out_dir / chart_name
-    fig.savefig(str(chart_path), dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    return chart_name
 
 
 def _render_financial_table(five_year: dict) -> str:
@@ -822,10 +777,6 @@ def save_jp_report(
         # ── Section 2: 財務數據（5 年表）───────────────────────────────────
         lines.append("## 2. 財務數據（5 年表）")
         lines.append("")
-        chart_name = _build_five_year_chart(five_year, out_dir)
-        if chart_name:
-            lines.append(f"![5 年財務趨勢]({chart_name})")
-            lines.append("")
         lines.append(_render_financial_table(five_year))
         fin_skill = skill_results.get("jp_financial_analysis", {})
         if not fin_skill.get("insufficient_data"):
