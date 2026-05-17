@@ -340,7 +340,6 @@ def run_jp_pipeline(
         print("\n[Phase 3] skip (no EDINET filing)")
 
     # ── Phase 4: run 7 skills in parallel ────────────────────────────────────
-    print("\n[Phase 4] running jp skills")
     xbrl_json = json.dumps(five_year, ensure_ascii=False)
 
     def _build_inputs(skill_name: str) -> dict:
@@ -355,22 +354,31 @@ def run_jp_pipeline(
     skill_results: dict[str, dict] = {}
     active_skills = [s for s in JP_SKILLS if s not in skip_skills]
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        futures = {
-            pool.submit(_run_skill, sk, _build_inputs(sk)): sk
-            for sk in active_skills
-        }
-        for future in as_completed(futures):
-            sk = futures[future]
-            try:
-                name, result = future.result()
-                skill_results[name] = result
-                status = "error" if "error" in result else "ok"
-                print(f"  [{status}] {name}")
-            except Exception as exc:
-                log.error("Skill %s failed: %s", sk, exc)
-                skill_results[sk] = {"error": str(exc), "insufficient_data": True}
-                print(f"  [error] {sk}: {exc}")
+    if not has_edinet_filing:
+        # Without yuho/hanki, narrative chapters + five_year are empty.
+        # Skip skills entirely — feeding empty input wastes LLM tokens and
+        # the eval loop would only retry insufficient_data verdicts.
+        print("\n[Phase 4] skip skills (no EDINET filing for this quarter)")
+        for sk in active_skills:
+            skill_results[sk] = {"insufficient_data": True, "_skipped_reason": "no_edinet"}
+    else:
+        print("\n[Phase 4] running jp skills")
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            futures = {
+                pool.submit(_run_skill, sk, _build_inputs(sk)): sk
+                for sk in active_skills
+            }
+            for future in as_completed(futures):
+                sk = futures[future]
+                try:
+                    name, result = future.result()
+                    skill_results[name] = result
+                    status = "error" if "error" in result else "ok"
+                    print(f"  [{status}] {name}")
+                except Exception as exc:
+                    log.error("Skill %s failed: %s", sk, exc)
+                    skill_results[sk] = {"error": str(exc), "insufficient_data": True}
+                    print(f"  [error] {sk}: {exc}")
 
     # ── Phase 4.5: find recent events (hanki + rinji) ────────────────────────
     print("\n[Phase 4.5] find recent events (past 12 months)")
@@ -478,52 +486,55 @@ def run_jp_pipeline(
         print("  [dry-run] skip find_tdnet_local")
 
     # ── Phase 5: eval loop (max 2 retries) ────────────────────────────────────
-    print("\n[Phase 5] eval loop")
-    from eval_runner import eval_all, get_failed_tasks
+    eval_results: dict = {}
+    if not has_edinet_filing:
+        print("\n[Phase 5] skip eval (no EDINET skills ran)")
+    else:
+        print("\n[Phase 5] eval loop")
+        from eval_runner import eval_all, get_failed_tasks
 
-    # Build a sections-like dict that eval_runner can use for jp_* tasks
-    # eval_runner will default-pass jp_* since they are not in REQUIRED_KEYS / HARD_RULES
-    jp_sections = {
-        "jp_business_analysis": chapters.get("business", ""),
-        "jp_risk_analysis":     chapters.get("risk", ""),
-        "jp_mdna_analysis":     chapters.get("mda", ""),
-        "jp_going_concern":     chapters.get("going_concern", ""),
-        "jp_strategy":          chapters.get("strategy", ""),
-        "jp_rd_analysis":       chapters.get("rd", ""),
-        "jp_financial_analysis": xbrl_json,
-        # placeholders for eval_all source_map keys (it won't find them but won't crash)
-        "item1_current": "",
-        "item1a_current": "",
-        "item7_current": "",
-        "partiii_current": "",
-        "xbrl_data": xbrl_json,
-        "all_sections_md": "",
-        "item8_footnotes_md": "",
-        "item8_footnotes_current": "",
-    }
+        # Build a sections-like dict that eval_runner can use for jp_* tasks
+        # eval_runner will default-pass jp_* since they are not in REQUIRED_KEYS / HARD_RULES
+        jp_sections = {
+            "jp_business_analysis": chapters.get("business", ""),
+            "jp_risk_analysis":     chapters.get("risk", ""),
+            "jp_mdna_analysis":     chapters.get("mda", ""),
+            "jp_going_concern":     chapters.get("going_concern", ""),
+            "jp_strategy":          chapters.get("strategy", ""),
+            "jp_rd_analysis":       chapters.get("rd", ""),
+            "jp_financial_analysis": xbrl_json,
+            # placeholders for eval_all source_map keys (it won't find them but won't crash)
+            "item1_current": "",
+            "item1a_current": "",
+            "item7_current": "",
+            "partiii_current": "",
+            "xbrl_data": xbrl_json,
+            "all_sections_md": "",
+            "item8_footnotes_md": "",
+            "item8_footnotes_current": "",
+        }
 
-    MAX_RETRIES = 2
-    eval_results = {}
-    for attempt in range(MAX_RETRIES + 1):
-        eval_results = eval_all(skill_results, jp_sections)
-        failed = get_failed_tasks(eval_results)
-        if not failed:
-            print(f"  All skills passed eval (attempt {attempt + 1})")
-            break
-        if attempt < MAX_RETRIES:
-            print(f"  Retrying {len(failed)} failed skills (attempt {attempt + 2})")
-            for item in failed:
-                sk = item["task_id"]
-                if sk not in active_skills:
-                    log.debug("Skipping retry for non-jp task: %s", sk)
-                    continue
-                inputs = _build_inputs(sk)
-                if item.get("retry_hint"):
-                    inputs["retry_hint"] = item["retry_hint"]
-                _, result = _run_skill(sk, inputs)
-                skill_results[sk] = result
-        else:
-            print(f"  [WARNING] {len(failed)} skills still failing after {MAX_RETRIES} retries")
+        MAX_RETRIES = 2
+        for attempt in range(MAX_RETRIES + 1):
+            eval_results = eval_all(skill_results, jp_sections)
+            failed = get_failed_tasks(eval_results)
+            if not failed:
+                print(f"  All skills passed eval (attempt {attempt + 1})")
+                break
+            if attempt < MAX_RETRIES:
+                print(f"  Retrying {len(failed)} failed skills (attempt {attempt + 2})")
+                for item in failed:
+                    sk = item["task_id"]
+                    if sk not in active_skills:
+                        log.debug("Skipping retry for non-jp task: %s", sk)
+                        continue
+                    inputs = _build_inputs(sk)
+                    if item.get("retry_hint"):
+                        inputs["retry_hint"] = item["retry_hint"]
+                    _, result = _run_skill(sk, inputs)
+                    skill_results[sk] = result
+            else:
+                print(f"  [WARNING] {len(failed)} skills still failing after {MAX_RETRIES} retries")
 
     # ── Phase 6: save report ──────────────────────────────────────────────────
     print("\n[Phase 6] save report")
