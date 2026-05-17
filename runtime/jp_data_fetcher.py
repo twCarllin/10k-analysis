@@ -53,6 +53,33 @@ def _ensure_db_schema(con: duckdb.DuckDBPyConnection) -> None:
         CREATE INDEX IF NOT EXISTS idx_filings_edinet
         ON filings_index(edinet_code, doc_type_code, period_end)
     """)
+    _init_tdnet_schema(con)
+
+
+def _init_tdnet_schema(con: duckdb.DuckDBPyConnection) -> None:
+    """Create tdnet_index table and indexes in master.duckdb if not present."""
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS tdnet_index (
+            disclosure_id   TEXT PRIMARY KEY,
+            disclosure_date DATE NOT NULL,
+            disclosure_time TEXT NOT NULL,
+            jpx_code        TEXT NOT NULL,
+            company_name    TEXT,
+            title           TEXT NOT NULL,
+            category        TEXT,
+            pdf_url         TEXT,
+            is_amendment    BOOLEAN DEFAULT FALSE,
+            fetched_at      TIMESTAMP DEFAULT now()
+        )
+    """)
+    con.execute("""
+        CREATE INDEX IF NOT EXISTS idx_tdnet_jpx
+        ON tdnet_index(jpx_code, disclosure_date)
+    """)
+    con.execute("""
+        CREATE INDEX IF NOT EXISTS idx_tdnet_cat
+        ON tdnet_index(category, disclosure_date)
+    """)
 
 
 def _fetch_jpx_listing() -> pd.DataFrame:

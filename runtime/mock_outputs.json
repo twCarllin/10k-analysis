@@ -283,5 +283,13 @@
     "key_terms": {"決議日": "模擬日期", "議案數": "2"},
     "verbatim_quote": "定時株主総会において、決議事項が決議されました",
     "insufficient_data": false
+  },
+  "jp_tdnet_event": {
+    "event_category": "決算短信",
+    "materiality": "high",
+    "credit_impact": "neutral",
+    "is_amendment": false,
+    "event_summary": "本公告為年度決算短信，為投資人每年最重要的財務揭露事件，需後續讀取 PDF 確認具體業績。",
+    "insufficient_data": false
   }
 }
