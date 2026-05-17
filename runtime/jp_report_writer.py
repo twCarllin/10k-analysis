@@ -472,6 +472,11 @@ def _render_tdnet_financial_highlights(events: list[dict]) -> str:
                     parts.append(f"- **{tone_filter(str(name))}**：{tone_filter(str(perf))}")
         parts.append("")
 
+    forward_guidance = result.get("forward_guidance")
+    if forward_guidance:
+        parts.append(f"**業績展望（今後の見通し）**：{tone_filter(str(forward_guidance))}")
+        parts.append("")
+
     return "\n".join(parts)
 
 
