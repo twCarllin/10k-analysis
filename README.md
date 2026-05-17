@@ -1,19 +1,26 @@
-# 10-K Multi-Agent Investment Research Pipeline
+# Multi-Agent Investment Research Pipeline (US + JP)
 
-從 SEC EDGAR 10-K/10-Q 文件自動萃取投資 insight，使用 multi-agent + skill 架構。Earnings call transcript 透過 [Stagehand](https://github.com/browserbase/stagehand) 從 Yahoo Finance 抓取（LOCAL 模式，本機 Chromium，不需 Browserbase 帳號）。
+雙市場財報分析 pipeline，使用 multi-agent + skill 架構：
 
-輸入 ticker + 年份，輸出繁體中文 Markdown + PDF 報告，包含 **Earnings Call Transcript 分析**（Forward Guidance / Market Concerns / Earnings Call Highlights）、Bull/Bear case、關鍵追蹤指標、財務數據表格與季度趨勢圖。
+- **US**：SEC EDGAR 10-K / 10-Q + Yahoo Finance earnings call transcript（[Stagehand](https://github.com/browserbase/stagehand) LOCAL 模式）
+- **JP**：EDINET 有価証券報告書（yuho）/ 半期報 / 臨時報 + TDNET 適時開示（決算短信 PDF 解析）+ logmi 法說會逐字稿
 
-輸出結果請參考 INTC_20260425_183226_report.pdf
+兩條 pipeline 共用 orchestrator / eval loop / report writer 底層，互不干擾。
+
+輸出繁體中文 Markdown + PDF 報告，按公司分資料夾（`data/output/{TICKER}/`）。
+
+US 輸出範例：`INTC_20260425_183226_report.pdf`
+JP 輸出範例：`6315_20260517_1639_jp_report.pdf`（TOWA FY2026 Q4 決算短信分析）
 
 ## Python Version
 3.13.12
 
 ## Changelog
 
-- **2026-05-01** — 新增 earnings call transcript 抓取（Stagehand LOCAL 模式 + Yahoo Finance）與 `transcript_analysis` skill（forward guidance / market concerns / sentiment / partnerships）。報告章節重排：transcript 三節置頂，與 10-Q/10-K GAAP 段落以分隔線標注區分。Markdown table/blockquote 加 escape 防 injection。
-- **2026-04-28** — 新增 `supply_chain_analysis`（六分類 + 跨期 improvements/deteriorations，10-K + Q1 跑）與 `competitor_mapping`（清單 + 市場定位 + 揭露品質 + yoy 變化，Q1 沿用去年 10-K baseline）skill。
-- **2025-04-25** — CLI 自動推算 prior year（10-K / Q1 → 去年同 filing；Q2+ → 前一季）。新增「評價趨勢判斷」🟢🟡🔴 紅綠燈（結構 / 品質 / 敘事三條件獨立判斷）。`mdna_analysis` 加 `momentum` 欄位追蹤敘事動能（accelerating / stable / decelerating）。
+- **2026-05-17** — JP pipeline Phase 1A–1C：EDINET 有報 / 半期報 / 臨時報、jpcrp iXBRL 解析、7 個 jp_* narrative skill、TDNET scraper（決算短信 PDF 用 markitdown 抽 key_metrics / segment / forward_guidance）、logmi Stagehand adapter、watch / event 模式。報告按公司分子目錄。
+- **2026-05-01** — 新增 earnings call transcript 抓取（Stagehand LOCAL 模式 + Yahoo Finance）與 `transcript_analysis` skill。報告章節重排，transcript 三節置頂。
+- **2026-04-28** — 新增 `supply_chain_analysis` 與 `competitor_mapping` skill。
+- **2025-04-25** — CLI 自動推算 prior year。新增「評價趨勢判斷」🟢🟡🔴 紅綠燈。`mdna_analysis` 加 `momentum` 欄位。
 
 ## To Do
 - 利用程式和 eval 降低對模型的依賴程度
@@ -36,34 +43,67 @@ cd ../../..
 # 3. 設定 API Key
 cp config.example.json config.json
 # 編輯 config.json 填入 anthropic_api_key
+# 若要跑 JP pipeline，再填 edinet_api_key（見下方「API Key 申請」）
 
-# 4. 執行（10-K 年報，自動比對前一年）
+# 4a. 美股執行（10-K 年報，自動比對前一年）
 python main.py HWM 2025
 
-# 執行（10-Q 季報，自動比對前期 + 抓 earnings call transcript）
+# 4b. 美股 10-Q 季報（自動比對前期 + 抓 earnings call transcript）
 python main.py HWM 2025 --filing-type 10-Q --quarter Q1
 
-# 不抓 transcript（純 10-Q/10-K 分析）
-python main.py HWM 2025 --filing-type 10-Q --quarter Q1 --skip-transcript
+# 4c. 日股 yuho（FY2025 = 結束於 2025/3 的會計年度）
+python main.py 6315 2025 --market jp
+
+# 4d. 日股 FY2026 Q4 速報（yuho 未發時自動 fallback TDNET 決算短信）
+python main.py 6315 2026 --market jp --quarter Q4
 ```
+
+## API Key 申請
+
+| API | 用途 | 收費 | 申請網址 |
+|---|---|---|---|
+| **Anthropic** | LLM（兩條 pipeline 都需要） | 按 token 計費 | https://console.anthropic.com/ |
+| **EDINET（日股必填）** | 抓取日本 EDINET 有報 / 半期報 / 臨時報 metadata + ZIP | 免費 | https://api.edinet-fsa.go.jp/api/auth/index.aspx |
+| SEC EDGAR | 抓取美股 10-K / 10-Q | 免費，**無需 key**，僅需 User-Agent header | — |
+| TDNET（日股決算短信） | 從 release.tdnet.info scrape | 免費，**無需 key**，僅需 polite UA | — |
+| logmi Finance | 日股法說會逐字稿 | 免費，**無需 key**（需 Stagehand 用 Anthropic API 解析網頁） | — |
+
+**日股 EDINET API key 申請流程**（5 分鐘內可拿到）：
+
+1. 到 https://api.edinet-fsa.go.jp/api/auth/index.aspx
+2. 填入 e-mail + 用途說明（個人研究即可）
+3. 收驗證信 → 設密碼 → 取得 Subscription-Key
+4. 填進 `config.json` 的 `edinet_api_key` 欄位
+5. 驗證：
+   ```bash
+   curl "https://api.edinet-fsa.go.jp/api/v2/documents.json?date=2026-05-15&type=2&Subscription-Key=YOUR_KEY" | head -c 200
+   # 應該回傳 JSON metadata
+   ```
+
+**J-Quants API**（股價 / 財務 statements）：**本專案不使用**。財務 5 年表從 EDINET 有報內含的 iXBRL instance 自抽，不需付費。
 
 ## 設定檔
 
 ```json
 {
   "anthropic_api_key": "sk-ant-...",
+  "edgar_user_agent": "10k-research your-name@example.com",
+  "edinet_api_key": "your-edinet-api-key",
   "model": "claude-sonnet-4-5",
   "max_tokens": 4096,
   "max_tokens_by_skill": {
     "risk_analysis": 8192,
     "mdna_analysis": 8192,
     "cross_year_compare": 8192,
-    "insight_synthesis": 8192
+    "insight_synthesis": 8192,
+    "transcript_analysis": 8192
   }
 }
 ```
 
 ## CLI 用法
+
+### 美股（SEC，預設 `--market sec`）
 
 ```bash
 # 完整分析（前期自動推算）
@@ -87,6 +127,31 @@ python main.py HWM 2025 --clean
 # 不發 API，用 mock 結果測試流程
 python main.py HWM 2025 --dry-run
 ```
+
+### 日股（EDINET / TDNET / logmi，加 `--market jp`）
+
+```bash
+# yuho（年度）：python main.py <JPX_CODE> <FY_END_YEAR> --market jp
+python main.py 6315 2025 --market jp                    # FY2025/3 yuho (TOWA)
+
+# 半期報：--quarter Q2
+python main.py 6315 2025 --market jp --quarter Q2
+
+# 速報（Q1 / Q3）或 yuho 未發時的 Q4：自動 fallback TDNET 決算短信 + PDF 解析
+python main.py 6315 2026 --market jp --quarter Q4       # FY2026/3 速報（5/11 發）
+python main.py 6315 2025 --market jp --quarter Q1       # FY2025/3 Q1 速報
+
+# 單一 rinji（臨時報告書）分析
+python main.py 6315 --market jp --event-doc-id S100W8RH
+
+# TDNET watch 模式（cron-friendly，抓 watchlist 增量公告）
+python main.py --market jp --tdnet-watch 6315,7203,9984 --since-minutes 30
+
+# logmi 法說會逐字稿分析
+python main.py 6315 --market jp --analyze-call
+```
+
+**會計年度命名**：「FY2026」= 結束於 2026 年的會計年度，預設 fiscal year end = 3/31（大多數日企）。FY2026 Q1 = 2025/4–6、Q4 = 2026/1–3（年度結尾）。
 
 ## Pipeline 架構
 
@@ -256,7 +321,28 @@ tenk/
 │           ├── src/scrape.ts        # Yahoo Finance 抓取腳本
 │           ├── package.json         # @browserbasehq/stagehand + zod
 │           └── tsconfig.json
+├── runtime/
+│   ├── ...                          # 上方既有 SEC 模組
+│   ├── jp_data_fetcher.py           # EDINET API + DuckDB index + ticker map
+│   ├── jp_ixbrl_parser.py           # iXBRL 5 年表 + narrative chapter splitter
+│   ├── jp_tdnet_scraper.py          # TDNET HTML scraper + PDF parse (markitdown)
+│   ├── jp_pipeline.py               # JP orchestrator（yuho / event / watch 三 mode）
+│   ├── jp_report_writer.py          # JP 報告（重用 SEC PDF css helper）
+│   └── transcript_scraper/
+│       ├── logmi_scraper.py         # logmi.jp Stagehand wrapper
+│       ├── logmi_parser.py          # Q&A / presentation 分段
+│       └── node/src/scrape-logmi.ts # Stagehand sidecar（共用 node/）
 └── data/
-    ├── cache/                       # HTM / MD / XBRL / pipeline state
-    └── output/                      # 報告 + JSON + context log
+    ├── cache/
+    │   ├── pipeline_{ticker}_{year}.json    # SEC checkpoint
+    │   └── jp/
+    │       ├── master.duckdb        # ticker_map + filings_index + tdnet_index
+    │       ├── _scanned_dates.json  # EDINET scan checkpoint
+    │       ├── _tdnet_scanned_dates.json
+    │       ├── raw/{edinet_code}/   # EDINET ZIP
+    │       ├── extracted/{doc_id}/  # ZIP 解壓
+    │       └── tdnet/{YYYYMMDD}/    # TDNET PDF
+    └── output/
+        ├── {TICKER}/                # 按公司分（HWM, GEV, 6315, ...）
+        └── contexts/                # API call log（共用）
 ```
