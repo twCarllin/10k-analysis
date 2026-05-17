@@ -204,5 +204,67 @@
     "rerating_relevance": "neutral",
     "rerating_note": "供應鏈整體風險穩定，不構成投資判斷的重大加分或減分依據",
     "insufficient_data": false
+  },
+  "jp_business_analysis": {
+    "company_positioning": "模擬公司定位：半導體後製程設備製造商",
+    "business_segments": [{"name": "模擬事業部", "description": "模擬設備製造", "revenue_weight": "high"}],
+    "end_market_mix": [{"market": "半導體", "pct": "100%", "trend": "growing"}],
+    "geographic_mix": ["日本 60%", "亞洲 30%", "其他 10%"],
+    "subsidiaries": [],
+    "insufficient_data": false
+  },
+  "jp_risk_analysis": {
+    "risks": [
+      {"title": "模擬風險：客戶集中", "description": "主要客戶集中於少數半導體廠商", "category": "operational", "importance": "high"},
+      {"title": "模擬風險：匯率波動", "description": "日圓匯率波動影響海外收入", "category": "financial", "importance": "medium"},
+      {"title": "模擬風險：地緣政治", "description": "半導體出口管制風險升高", "category": "macro", "importance": "medium"}
+    ],
+    "top_3": [
+      {"title": "客戶集中", "rationale": "前三大客戶佔營收逾五成"},
+      {"title": "匯率波動", "rationale": "日圓升值將壓縮出口利潤"},
+      {"title": "地緣政治", "rationale": "出口管制範圍持續擴大"}
+    ],
+    "delta_summary": null,
+    "insufficient_data": false
+  },
+  "jp_mdna_analysis": {
+    "drivers": [{"factor": "模擬驅動因子：設備需求增加", "direction": "positive"}],
+    "mgmt_outlook": "neutral",
+    "commitment_strength": "medium",
+    "forward_signals": ["持續擴大產能"],
+    "insufficient_data": false
+  },
+  "jp_going_concern": {
+    "has_disclosure": false,
+    "concern_level": "none",
+    "triggers": [],
+    "remediation_plan": null,
+    "commitment_strength": null,
+    "insufficient_data": true
+  },
+  "jp_strategy": {
+    "vision": "模擬願景：成為全球半導體設備領先廠商",
+    "mid_term_targets": [{"kpi": "營收", "target_value": null, "deadline": null}],
+    "current_challenges": ["模擬課題：技術研發投入"],
+    "action_items": ["擴大研發預算"],
+    "measurability": "qualitative",
+    "insufficient_data": false
+  },
+  "jp_rd_analysis": {
+    "themes": ["封裝設備技術"],
+    "rd_expense_pct": null,
+    "key_projects": ["模擬研發項目：新型封裝設備"],
+    "partnerships": [],
+    "patents": [],
+    "insufficient_data": false
+  },
+  "jp_financial_analysis": {
+    "revenue_trend": "模擬：營收呈成長趨勢",
+    "profitability_trend": "模擬：利潤率穩定",
+    "balance_sheet_quality": "模擬：財務體質良好",
+    "cash_generation": "模擬：現金流充裕",
+    "return_metrics": "模擬：ROE 維持穩定",
+    "overall_health": "stable",
+    "insufficient_data": false
   }
 }
