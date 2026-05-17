@@ -4,8 +4,8 @@ Usage:
                  [--only TASK1,TASK2,...] [--filing-type 10-K|10-Q]
                  [--quarter Q1|Q2|Q3] [--prior-year YEAR]
 
-  python main.py <TICKER> --market jp [--years N] [--dry-run]
-  python main.py <TICKER> --market jp --tdnet-event-id <DISCLOSURE_ID>
+  python main.py <TICKER> <YEAR> --market jp [--quarter Q1|Q2|Q3|Q4] [--dry-run]
+  python main.py <TICKER> --market jp --event-doc-id <DOC_ID>
   python main.py <TICKER> --market jp --analyze-call
   python main.py --market jp --tdnet-watch <TICKER>[,TICKER,...] [--since-minutes N] [--dry-run]
 
@@ -23,9 +23,10 @@ Examples:
   python main.py HWM 2025 --filing-type 10-Q --quarter Q1  # prior=10-K 2024
   python main.py HWM 2025 --filing-type 10-Q --quarter Q2  # prior=10-Q Q1 2025
   python main.py HWM 2024 --prior-year 2022                # override prior year
-  python main.py 6315 --market jp --years 3                # JP batch mode
-  python main.py 6315 --market jp --tdnet-event-id 20260511_6315_1530  # JP TDNET event
-  python main.py 6315 --market jp --analyze-call           # JP logmi call analysis
+  python main.py 6315 2025 --market jp                     # JP Q4 (default)
+  python main.py 6315 2025 --market jp --quarter Q2        # JP hanki
+  python main.py 6315 2025 --market jp --analyze-call      # JP logmi call analysis
+  python main.py 6315 --market jp --event-doc-id S100W8RH  # event pipeline (no year needed)
   python main.py --market jp --tdnet-watch 6315,7203 --since-minutes 30  # watch mode
 """
 import sys
@@ -135,8 +136,6 @@ def main():
     p.add_argument("year", nargs="?", type=int, default=None)
     p.add_argument("--market", default="sec", choices=["sec", "jp"],
                    help="Market: sec (US SEC) or jp (EDINET Japanese). Default: sec")
-    p.add_argument("--years", type=int, default=3,
-                   help="JP pipeline: number of years of filings to consider. Default: 3")
     p.add_argument("--prior-year", type=int, default=None,
                    help="手動覆蓋前期年份（預設自動推算）")
     p.add_argument("--file", default=None)
@@ -149,8 +148,8 @@ def main():
                         "下游 eval + synthesis 自動重跑")
     p.add_argument("--filing-type", default="10-K", choices=["10-K", "10-Q"],
                    help="SEC 申報類型（預設 10-K）")
-    p.add_argument("--quarter", default=None, choices=["Q1", "Q2", "Q3"],
-                   help="10-Q 季度（10-Q 時必填）")
+    p.add_argument("--quarter", default=None, choices=["Q1", "Q2", "Q3", "Q4"],
+                   help="季度：SEC 10-Q 用 Q1/Q2/Q3；JP 用 Q1/Q2/Q3/Q4（預設 Q4）")
     p.add_argument("--skip-transcript", action="store_true",
                    help="Skip earnings call transcript scraping")
     p.add_argument("--transcript-quarter", choices=["Q1", "Q2", "Q3", "Q4"], default=None,
@@ -161,8 +160,6 @@ def main():
                    help="JP event mode: analyse a single rinji doc_id and produce a short report")
     p.add_argument("--tdnet-watch", default=None, metavar="TICKERS",
                    help="JP watch mode: comma-separated JPX codes to monitor on TDNET, e.g. 6315,7203")
-    p.add_argument("--tdnet-event-id", default=None, metavar="DISCLOSURE_ID",
-                   help="JP TDNET event mode: analyse a single TDNET disclosure_id")
     p.add_argument("--analyze-call", action="store_true",
                    help="JP logmi mode: fetch latest earnings call transcript for TICKER and analyse")
     p.add_argument("--since-minutes", type=int, default=15,
@@ -174,11 +171,17 @@ def main():
     filing_type = args.filing_type
     quarter = args.quarter
 
-    if filing_type == "10-Q" and not quarter:
-        p.error("--quarter is required when --filing-type is 10-Q")
-    if filing_type == "10-K" and quarter:
-        print("  [WARNING] --quarter is ignored for 10-K filings")
-        quarter = None
+    # SEC-specific quarter validation (skipped for JP branch)
+    if args.market != "jp":
+        if filing_type == "10-Q" and not quarter:
+            p.error("--quarter is required when --filing-type is 10-Q")
+        if filing_type == "10-Q" and quarter == "Q4":
+            p.error("--quarter Q4 is not valid for SEC 10-Q (SEC filings use Q1/Q2/Q3 only)")
+        if filing_type == "10-K" and quarter:
+            if quarter == "Q4":
+                p.error("--quarter Q4 is not valid for SEC 10-K (10-K covers the full year)")
+            print("  [WARNING] --quarter is ignored for 10-K filings")
+            quarter = None
 
     # Dry-run mode
     if args.dry_run:
@@ -205,18 +208,18 @@ def main():
         if ticker is None:
             p.error("ticker is required for JP pipeline (omit only for --tdnet-watch)")
 
-        exclusive_flags = [args.tdnet_event_id, args.analyze_call, args.event_doc_id]
+        # year is required for JP batch mode only; event-doc-id / analyze-call identify
+        # the target via doc_id / ticker and do not need a year
+        needs_year = not (args.event_doc_id or args.analyze_call)
+        if needs_year and args.year is None:
+            p.error("year is required for --market jp batch mode")
+
+        exclusive_flags = [args.analyze_call, args.event_doc_id]
         n_set = sum(1 for f in exclusive_flags if f)
         if n_set > 1:
-            p.error("--tdnet-event-id / --analyze-call / --event-doc-id are mutually exclusive")
+            p.error("--analyze-call / --event-doc-id are mutually exclusive")
 
-        if args.tdnet_event_id:
-            from jp_pipeline import run_tdnet_event_pipeline
-            run_tdnet_event_pipeline(
-                disclosure_id=args.tdnet_event_id,
-                dry_run=args.dry_run,
-            )
-        elif args.analyze_call:
+        if args.analyze_call:
             from jp_pipeline import run_logmi_call_pipeline
             run_logmi_call_pipeline(
                 jpx_code=ticker,
@@ -229,10 +232,12 @@ def main():
                 dry_run=args.dry_run,
             )
         else:
+            fiscal_quarter = args.quarter or "Q4"
             from jp_pipeline import run_jp_pipeline
             run_jp_pipeline(
                 ticker=ticker,
-                years=args.years,
+                fiscal_year=args.year,
+                fiscal_quarter=fiscal_quarter,
                 dry_run=args.dry_run,
             )
         return

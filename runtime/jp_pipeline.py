@@ -1,10 +1,10 @@
 """
 jp_pipeline.py — End-to-end pipeline for Japanese EDINET 有価証券報告書.
 
-Entry point: run_jp_pipeline(ticker, years, skip_skills, dry_run) -> Path
+Entry point: run_jp_pipeline(ticker, fiscal_year, fiscal_quarter, dry_run) -> Path
 
 Phase 0   ensure_ticker_map_fresh + ticker_to_edinet + company info
-Phase 1   find_filings_local(doc_types={"120"}) → most recent filing
+Phase 1   find_filings_local(doc_types={"120"}) → filing matching period_end
 Phase 2   download_filing → ZIP
 Phase 3   TA3 extract_five_year_summary + TA4 split_filing_by_ixbrl
 Phase 4   Run 7 jp skills via ThreadPoolExecutor (max_workers=4)
@@ -13,10 +13,12 @@ Phase 5   eval loop (max 2 retries, uses eval_runner)
 Phase 6   save_jp_report → markdown + PDF (includes recent events section)
 
 Also provides:
+    fy_quarter_period_end(year, quarter, fy_end_month=3) -> date
     find_recent_events(edinet_code, months=12) -> list[dict]
     run_jp_event_pipeline(doc_id, dry_run=False) -> Path
 """
 
+import calendar
 import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -28,6 +30,37 @@ import duckdb
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 log = logging.getLogger(__name__)
+
+
+def _last_day_of_month(year: int, month: int) -> date:
+    """Return the last calendar day of the given year/month."""
+    return date(year, month, calendar.monthrange(year, month)[1])
+
+
+def fy_quarter_period_end(
+    year: int,
+    quarter: str,
+    fy_end_month: int = 3,
+) -> date:
+    """Compute the period_end date for a JP fiscal year + quarter.
+
+    Convention: "FY{year}" means the fiscal year ENDING in calendar year `year`,
+    i.e. period_end falls in month `fy_end_month` of `year`.
+
+    Examples (fy_end_month=3, the JP default):
+      year=2026, quarter=Q4 → 2026-03-31  (year end)
+      year=2026, quarter=Q3 → 2025-12-31
+      year=2026, quarter=Q2 → 2025-09-30  (hanki end)
+      year=2026, quarter=Q1 → 2025-06-30
+    """
+    if quarter == "Q4":
+        return _last_day_of_month(year, fy_end_month)
+    q_offset = {"Q1": 3, "Q2": 6, "Q3": 9}[quarter]
+    end_month_raw = fy_end_month + q_offset
+    end_month = ((end_month_raw - 1) % 12) + 1
+    year_offset = (end_month_raw - 1) // 12
+    target_year = year - 1 + year_offset
+    return _last_day_of_month(target_year, end_month)
 
 # Skills to run (in logical order; parallelised in Phase 4)
 JP_SKILLS = [
@@ -186,22 +219,32 @@ def run_jp_event_pipeline(doc_id: str, dry_run: bool = False) -> Path:
 
 def run_jp_pipeline(
     ticker: str,
-    years: int = 3,
+    fiscal_year: int,
+    fiscal_quarter: str = "Q4",
+    fy_end_month: int = 3,
     skip_skills: list[str] | None = None,
     dry_run: bool = False,
 ) -> Path:
     """
     Run the full Japanese EDINET pipeline for *ticker* (JPX 4-digit code).
 
-    dry_run: skip LLM calls only (use mock outputs). EDINET data fetch
-    and iXBRL parsing still run — requires local cache or network access.
+    Q4: fetch yuho (doc_type=120) with period_end == fy_quarter_period_end(fiscal_year, "Q4")
+        + TDNET earnings flash → full report
+    Q2: fetch hanki (doc_type=160) with matching period_end
+        + TDNET → mid report (no 5-year table from XBRL)
+    Q1/Q3: only TDNET → short report
+
+    In each case, if the EDINET filing has not yet been submitted, the pipeline
+    falls back to TDNET-only and prints a placeholder in the report.
+
+    dry_run: skip LLM calls and TDNET auto-scan (use mock outputs).
 
     Returns the Path of the generated Markdown report.
     """
     skip_skills = set(skip_skills or [])
 
     print(f"\n{'='*50}")
-    print(f"  JP Pipeline: {ticker}  (years={years}, dry_run={dry_run})")
+    print(f"  JP Pipeline: {ticker}  FY{fiscal_year} {fiscal_quarter}  (dry_run={dry_run})")
     print(f"{'='*50}")
 
     # ── Phase 0: ticker map + edinet code ─────────────────────────────────────
@@ -219,47 +262,82 @@ def run_jp_pipeline(
     company_name_ja = company_info["company_name_ja"]
     print(f"  {ticker} → {edinet_code}  ({company_name_ja})")
 
-    # ── Phase 1: find most recent 有報 ────────────────────────────────────────
+    # ── Phase 1: find the EDINET filing matching (fiscal_year, fiscal_quarter) ──
     print("\n[Phase 1] find filings")
     from jp_data_fetcher import find_filings_local
 
-    since_date = date.today() - timedelta(days=years * 366)
-    filings = find_filings_local(edinet_code, doc_types={"120"}, since=since_date)
+    target_period_end = fy_quarter_period_end(fiscal_year, fiscal_quarter, fy_end_month)
+    print(f"  target period_end={target_period_end}  quarter={fiscal_quarter}")
 
-    if not filings:
-        raise RuntimeError(
-            f"No 有報 found for {edinet_code} ({ticker}) since {since_date}. "
-            "Run scan_date_range first to populate the local index."
-        )
+    # Q4 = 有報 (120); Q2 = 半期報 (160); Q1/Q3 = no EDINET filing
+    if fiscal_quarter == "Q4":
+        edinet_doc_types = {"120"}
+    elif fiscal_quarter == "Q2":
+        edinet_doc_types = {"160"}
+    else:
+        edinet_doc_types = set()
 
-    # filings are sorted period_end DESC; take the most recent
-    latest = filings[0]
-    doc_id = latest["doc_id"]
-    fiscal_year_end = str(latest["period_end"])
-    print(f"  Most recent filing: {doc_id}  period_end={fiscal_year_end}")
+    doc_id = ""
+    fiscal_year_end = str(target_period_end)
+    has_edinet_filing = False
+    zip_path = None
 
-    # ── Phase 2: download ZIP ─────────────────────────────────────────────────
-    print("\n[Phase 2] download filing")
+    if edinet_doc_types:
+        filings = find_filings_local(edinet_code, doc_types=edinet_doc_types,
+                                     since=target_period_end - timedelta(days=30))
+        # Filter to exact period_end match (allow ±30 days tolerance)
+        tolerance = timedelta(days=30)
+        matched = [
+            f for f in filings
+            if f.get("period_end") and
+            abs((date.fromisoformat(str(f["period_end"])[:10]) - target_period_end).days) <= 30
+        ]
+        if matched:
+            latest = matched[0]
+            doc_id = latest["doc_id"]
+            fiscal_year_end = str(latest["period_end"])[:10]
+            has_edinet_filing = True
+            print(f"  Filing found: {doc_id}  period_end={fiscal_year_end}")
+        else:
+            print(f"  [INFO] No EDINET filing found for period_end~{target_period_end}; "
+                  "will use TDNET-only path with placeholder")
+    else:
+        print(f"  [INFO] Q1/Q3 has no EDINET yuho/hanki; using TDNET-only path")
+
+    # ── Phase 2: download ZIP (only if EDINET filing found) ───────────────────
     from jp_data_fetcher import download_filing
 
-    zip_path = download_filing(doc_id)
-    print(f"  ZIP: {zip_path}")
+    if has_edinet_filing:
+        print("\n[Phase 2] download filing")
+        zip_path = download_filing(doc_id)
+        print(f"  ZIP: {zip_path}")
+    else:
+        print("\n[Phase 2] skip (no EDINET filing)")
 
     # ── Phase 3: parse XBRL + iXBRL ──────────────────────────────────────────
-    print("\n[Phase 3] extract financials + narrative chapters")
-    from jp_ixbrl_parser import extract_five_year_summary, split_filing_by_ixbrl
+    five_year: dict = {}
+    chapters: dict = {}
 
-    five_year = extract_five_year_summary(zip_path)
-    # Update fiscal_year_end from XBRL (more authoritative)
-    fiscal_year_end = five_year.get("fiscal_year_end", fiscal_year_end)
-    print(f"  fiscal_year_end={fiscal_year_end}  "
-          f"accounting_standard={five_year.get('accounting_standard')}")
-    if five_year.get("_warnings"):
-        for w in five_year["_warnings"]:
-            print(f"  [WARNING] {w}")
+    if has_edinet_filing and zip_path is not None:
+        print("\n[Phase 3] extract financials + narrative chapters")
+        from jp_ixbrl_parser import extract_five_year_summary, split_filing_by_ixbrl
 
-    chapters = split_filing_by_ixbrl(zip_path)
-    print(f"  chapters extracted: {sorted(chapters.keys())}")
+        if fiscal_quarter == "Q4":
+            five_year = extract_five_year_summary(zip_path)
+            # Update fiscal_year_end from XBRL (more authoritative)
+            fiscal_year_end = five_year.get("fiscal_year_end", fiscal_year_end)
+            print(f"  fiscal_year_end={fiscal_year_end}  "
+                  f"accounting_standard={five_year.get('accounting_standard')}")
+            if five_year.get("_warnings"):
+                for w in five_year["_warnings"]:
+                    print(f"  [WARNING] {w}")
+        else:
+            print("  [INFO] Q2 hanki: skipping 5-year XBRL extract (not in hanki)")
+
+        chapters = split_filing_by_ixbrl(zip_path)
+        print(f"  chapters extracted: {sorted(chapters.keys())}")
+    else:
+        print("\n[Phase 3] skip (no EDINET filing)")
 
     # ── Phase 4: run 7 skills in parallel ────────────────────────────────────
     print("\n[Phase 4] running jp skills")
@@ -355,11 +433,21 @@ def run_jp_pipeline(
     else:
         print("  [dry-run] skip find_recent_events")
 
-    # ── Phase 4.5b: TDNET recent disclosures (past 30 days) ─────────────────
-    print("\n[Phase 4.5b] find recent TDNET disclosures (past 30 days)")
+    # ── Phase 4.5b: TDNET recent disclosures ────────────────────────────────
+    # Auto-scan TDNET for quarter_end + 14..75 day window (skip in dry-run)
+    print("\n[Phase 4.5b] find recent TDNET disclosures")
     if not dry_run:
-        from jp_tdnet_scraper import find_tdnet_local
-        tdnet_since = date.today() - timedelta(days=30)
+        from jp_tdnet_scraper import scan_tdnet_range, find_tdnet_local
+        tdnet_scan_start = target_period_end + timedelta(days=14)
+        tdnet_scan_end = target_period_end + timedelta(days=75)
+        # Clamp to today
+        if tdnet_scan_end > date.today():
+            tdnet_scan_end = date.today()
+        if tdnet_scan_start <= tdnet_scan_end:
+            print(f"  [auto-scan] TDNET {tdnet_scan_start} ~ {tdnet_scan_end}")
+            scan_tdnet_range(tdnet_scan_start, tdnet_scan_end)
+
+        tdnet_since = target_period_end + timedelta(days=14)
         tdnet_hits = find_tdnet_local(jpx_code=ticker, since=tdnet_since)
         # Limit to 30 entries to avoid bloating Section 8
         tdnet_hits = tdnet_hits[:30]
@@ -446,6 +534,7 @@ def run_jp_pipeline(
         edinet_code=edinet_code,
         company_name_ja=company_name_ja,
         fiscal_year_end=fiscal_year_end,
+        fiscal_quarter=fiscal_quarter,
         doc_id=doc_id,
         five_year=five_year,
         skill_results=skill_results,
@@ -454,73 +543,6 @@ def run_jp_pipeline(
     )
 
     print(f"\n[State] Pipeline 完成")
-    return report_path
-
-
-def run_tdnet_event_pipeline(disclosure_id: str, dry_run: bool = False) -> "Path":
-    """Analyse a single TDNET disclosure and produce a short event report.
-
-    1. Look up disclosure metadata from local tdnet_index.
-    2. Run jp_tdnet_event skill (input: title, category, company_name).
-    3. save_tdnet_event_report -> short md + pdf.
-
-    Returns the Path of the generated Markdown report.
-    """
-    print(f"\n{'='*50}")
-    print(f"  JP TDNET Event Pipeline: {disclosure_id}  (dry_run={dry_run})")
-    print(f"{'='*50}")
-
-    if dry_run:
-        from agent_runner import set_dry_run
-        set_dry_run(True)
-
-    # Look up disclosure from local index
-    from jp_data_fetcher import DB_PATH, _init_tdnet_schema
-    disclosure: dict = {}
-    if DB_PATH.exists():
-        with duckdb.connect(str(DB_PATH)) as con:
-            _init_tdnet_schema(con)
-            row = con.execute(
-                """SELECT disclosure_id, disclosure_date, disclosure_time, jpx_code,
-                          company_name, title, category, pdf_url, is_amendment
-                   FROM tdnet_index WHERE disclosure_id = ?""",
-                [disclosure_id],
-            ).fetchone()
-            if row:
-                cols = ["disclosure_id", "disclosure_date", "disclosure_time", "jpx_code",
-                        "company_name", "title", "category", "pdf_url", "is_amendment"]
-                disclosure = dict(zip(cols, row))
-
-    if not disclosure:
-        print(f"  [WARNING] disclosure_id={disclosure_id} not found in local index; "
-              "using disclosure_id as title placeholder")
-        # Parse jpx_code from disclosure_id (format: YYYYMMDD_{jpx}_HHMM[_NN])
-        parts = disclosure_id.split("_")
-        parsed_jpx = parts[1] if len(parts) >= 2 and parts[1].isdigit() else ""
-        disclosure = {
-            "disclosure_id": disclosure_id,
-            "jpx_code": parsed_jpx,
-            "title": "",
-            "category": "unknown",
-            "company_name": "",
-        }
-
-    print(f"\n[TDNET Event Phase 1] Run jp_tdnet_event skill")
-    skill_result = _run_skill("jp_tdnet_event", {
-        "title": disclosure.get("title", ""),
-        "category": disclosure.get("category", "other"),
-        "company_name": disclosure.get("company_name", ""),
-    })[1]
-    status = "error" if "error" in skill_result else "ok"
-    print(f"  [{status}] jp_tdnet_event")
-
-    print(f"\n[TDNET Event Phase 2] save_tdnet_event_report")
-    from jp_report_writer import save_tdnet_event_report
-    report_path = save_tdnet_event_report(
-        disclosure=disclosure,
-        skill_result=skill_result,
-    )
-    print(f"\n  TDNET event report: {report_path}")
     return report_path
 
 
