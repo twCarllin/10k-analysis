@@ -355,6 +355,40 @@ def run_jp_pipeline(
     else:
         print("  [dry-run] skip find_recent_events")
 
+    # ── Phase 4.5b: TDNET recent disclosures (past 30 days) ─────────────────
+    print("\n[Phase 4.5b] find recent TDNET disclosures (past 30 days)")
+    if not dry_run:
+        from jp_tdnet_scraper import find_tdnet_local
+        tdnet_since = date.today() - timedelta(days=30)
+        tdnet_hits = find_tdnet_local(jpx_code=ticker, since=tdnet_since)
+        # Limit to 30 entries to avoid bloating Section 8
+        tdnet_hits = tdnet_hits[:30]
+        print(f"  Found {len(tdnet_hits)} TDNET disclosures in past 30 days")
+
+        for hit in tdnet_hits:
+            disc_id = hit["disclosure_id"]
+            try:
+                _, tdnet_result = _run_skill("jp_tdnet_event", {
+                    "title": hit.get("title", ""),
+                    "category": hit.get("category", "other"),
+                    "company_name": hit.get("company_name", ""),
+                    "is_amendment": hit.get("is_amendment", False),
+                })
+                event_skill_results.append({
+                    "doc_id": disc_id,
+                    "submitted_at": str(hit.get("disclosure_date", "")),
+                    "doc_type": "tdnet",
+                    "category": hit.get("category", "other"),
+                    "title": hit.get("title", ""),
+                    "skill_result": tdnet_result,
+                })
+                print(f"  [ok] jp_tdnet_event for {disc_id}")
+            except Exception as exc:
+                log.error("TDNET event analysis failed for %s: %s", disc_id, exc)
+                print(f"  [error] {disc_id}: {exc}")
+    else:
+        print("  [dry-run] skip find_tdnet_local")
+
     # ── Phase 5: eval loop (max 2 retries) ────────────────────────────────────
     print("\n[Phase 5] eval loop")
     from eval_runner import eval_all, get_failed_tasks
@@ -420,4 +454,259 @@ def run_jp_pipeline(
     )
 
     print(f"\n[State] Pipeline 完成")
+    return report_path
+
+
+def run_tdnet_event_pipeline(disclosure_id: str, dry_run: bool = False) -> "Path":
+    """Analyse a single TDNET disclosure and produce a short event report.
+
+    1. Look up disclosure metadata from local tdnet_index.
+    2. Run jp_tdnet_event skill (input: title, category, company_name).
+    3. save_tdnet_event_report -> short md + pdf.
+
+    Returns the Path of the generated Markdown report.
+    """
+    print(f"\n{'='*50}")
+    print(f"  JP TDNET Event Pipeline: {disclosure_id}  (dry_run={dry_run})")
+    print(f"{'='*50}")
+
+    if dry_run:
+        from agent_runner import set_dry_run
+        set_dry_run(True)
+
+    # Look up disclosure from local index
+    from jp_data_fetcher import DB_PATH, _init_tdnet_schema
+    disclosure: dict = {}
+    if DB_PATH.exists():
+        with duckdb.connect(str(DB_PATH)) as con:
+            _init_tdnet_schema(con)
+            row = con.execute(
+                """SELECT disclosure_id, disclosure_date, disclosure_time, jpx_code,
+                          company_name, title, category, pdf_url, is_amendment
+                   FROM tdnet_index WHERE disclosure_id = ?""",
+                [disclosure_id],
+            ).fetchone()
+            if row:
+                cols = ["disclosure_id", "disclosure_date", "disclosure_time", "jpx_code",
+                        "company_name", "title", "category", "pdf_url", "is_amendment"]
+                disclosure = dict(zip(cols, row))
+
+    if not disclosure:
+        print(f"  [WARNING] disclosure_id={disclosure_id} not found in local index; "
+              "using disclosure_id as title placeholder")
+        # Parse jpx_code from disclosure_id (format: YYYYMMDD_{jpx}_HHMM[_NN])
+        parts = disclosure_id.split("_")
+        parsed_jpx = parts[1] if len(parts) >= 2 and parts[1].isdigit() else ""
+        disclosure = {
+            "disclosure_id": disclosure_id,
+            "jpx_code": parsed_jpx,
+            "title": "",
+            "category": "unknown",
+            "company_name": "",
+        }
+
+    print(f"\n[TDNET Event Phase 1] Run jp_tdnet_event skill")
+    skill_result = _run_skill("jp_tdnet_event", {
+        "title": disclosure.get("title", ""),
+        "category": disclosure.get("category", "other"),
+        "company_name": disclosure.get("company_name", ""),
+    })[1]
+    status = "error" if "error" in skill_result else "ok"
+    print(f"  [{status}] jp_tdnet_event")
+
+    print(f"\n[TDNET Event Phase 2] save_tdnet_event_report")
+    from jp_report_writer import save_tdnet_event_report
+    report_path = save_tdnet_event_report(
+        disclosure=disclosure,
+        skill_result=skill_result,
+    )
+    print(f"\n  TDNET event report: {report_path}")
+    return report_path
+
+
+def run_tdnet_watch_pipeline(
+    watchlist: list,
+    since_minutes: int = 15,
+    dry_run: bool = False,
+) -> list:
+    """Scan TDNET for recent disclosures and produce event reports for watched tickers.
+
+    Phases:
+      1. scan_tdnet_range(today) — ensure latest page is in DB.
+      2. For each ticker in watchlist:
+           hits = find_tdnet_local(jpx_code=ticker, since_minutes window)
+           For each hit (skip if output file already exists — dedup):
+               run jp_tdnet_event skill
+               save_tdnet_event_report -> data/output/{jpx}_tdnet_{disclosure_id}.md
+
+    Returns list of Paths of generated report files.
+    """
+    from datetime import timedelta
+
+    print(f"\n{'='*50}")
+    print(f"  JP TDNET Watch Pipeline: {watchlist}  "
+          f"since_minutes={since_minutes}  dry_run={dry_run}")
+    print(f"{'='*50}")
+
+    if dry_run:
+        from agent_runner import set_dry_run
+        set_dry_run(True)
+
+    today = date.today()
+    since_dt = datetime.now() - timedelta(minutes=since_minutes)
+    since_date = since_dt.date()
+
+    # Phase 1: refresh today's TDNET index (skip in dry-run)
+    if not dry_run:
+        print(f"\n[Watch Phase 1] scan_tdnet_range({today})")
+        from jp_tdnet_scraper import scan_tdnet_range
+        scan_tdnet_range(today, today)
+    else:
+        print("\n[Watch Phase 1] [dry-run] skip scan_tdnet_range")
+
+    # Phase 2: dispatch for each ticker
+    from jp_tdnet_scraper import find_tdnet_local
+    from jp_report_writer import save_tdnet_event_report
+
+    out_dir = BASE_DIR / "data" / "output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    report_paths: list = []
+    errors: list = []
+
+    for jpx_code in watchlist:
+        print(f"\n[Watch Phase 2] ticker={jpx_code}")
+        try:
+            hits = find_tdnet_local(jpx_code=jpx_code, since=since_date)
+            # Filter to since_minutes window using disclosure_time
+            hits_in_window = []
+            for h in hits:
+                # disclosure_date + disclosure_time form the full timestamp
+                try:
+                    disc_date = str(h.get("disclosure_date", ""))[:10]
+                    disc_time = str(h.get("disclosure_time", "00:00"))
+                    disc_dt_str = f"{disc_date} {disc_time}"
+                    disc_dt = datetime.strptime(disc_dt_str, "%Y-%m-%d %H:%M")
+                    if disc_dt >= since_dt:
+                        hits_in_window.append(h)
+                except (ValueError, TypeError):
+                    # If parsing fails, include conservatively
+                    hits_in_window.append(h)
+
+            print(f"  Found {len(hits_in_window)} disclosures in last {since_minutes} min")
+
+            for hit in hits_in_window:
+                disc_id = hit["disclosure_id"]
+
+                # Dedup: skip if PDF (last step) already exists
+                out_pdf = out_dir / f"{jpx_code}_tdnet_{disc_id}.pdf"
+                if out_pdf.exists():
+                    log.debug("Watch dedup: skipping %s (report already exists)", disc_id)
+                    print(f"  [skip] {disc_id} (已處理)")
+                    continue
+
+                print(f"  Processing {disc_id}: {hit.get('title', '')[:60]}")
+                try:
+                    skill_result = _run_skill("jp_tdnet_event", {
+                        "title": hit.get("title", ""),
+                        "category": hit.get("category", "other"),
+                        "company_name": hit.get("company_name", ""),
+                        "is_amendment": hit.get("is_amendment", False),
+                    })[1]
+                    path = save_tdnet_event_report(
+                        disclosure=hit,
+                        skill_result=skill_result,
+                        out_dir=out_dir,
+                    )
+                    report_paths.append(path)
+                    print(f"  [ok] {disc_id} -> {path.name}")
+                except Exception as exc:
+                    log.error("TDNET event failed for %s: %s", disc_id, exc)
+                    errors.append((jpx_code, disc_id, str(exc)))
+                    print(f"  [error] {disc_id}: {exc}")
+
+        except Exception as exc:
+            log.error("Watch pipeline failed for %s: %s", jpx_code, exc)
+            errors.append((jpx_code, "", str(exc)))
+            print(f"  [error] ticker={jpx_code}: {exc}")
+
+    # Summary
+    print(f"\n{'='*50}")
+    print(f"  Watch完成: {len(report_paths)} 份報告")
+    if errors:
+        print(f"  失敗 {len(errors)} 件：{errors}")
+    print(f"{'='*50}")
+
+    return report_paths
+
+
+def run_logmi_call_pipeline(jpx_code: str, dry_run: bool = False) -> "Path":
+    """Fetch latest logmi earnings call transcript for jpx_code and run jp_earnings_call skill.
+
+    Phases:
+      1. Look up company_name_ja from ticker_map.
+      2. scrape_logmi_transcript(jpx_code, company_name_ja) — requires Stagehand (not run in dry-run).
+      3. parse_logmi_transcript.
+      4. Run jp_earnings_call skill.
+      5. save_earnings_call_report -> short md + pdf.
+
+    Note: Stagehand is not actually invoked in dry-run mode.
+    Returns the Path of the generated Markdown report.
+    """
+    print(f"\n{'='*50}")
+    print(f"  JP Logmi Call Pipeline: {jpx_code}  (dry_run={dry_run})")
+    print(f"{'='*50}")
+
+    if dry_run:
+        from agent_runner import set_dry_run
+        set_dry_run(True)
+
+    company_info = _get_company_info(jpx_code)
+    company_name_ja = company_info.get("company_name_ja", jpx_code)
+    print(f"  {jpx_code}  company={company_name_ja}")
+
+    if dry_run:
+        print("\n[Call Phase 1] [dry-run] skip logmi Stagehand scrape")
+        transcript_dict = {
+            "title": f"[dry-run] {company_name_ja} 決算説明会",
+            "date": date.today().isoformat(),
+            "presentation": "[dry-run] presentation placeholder",
+            "qa": [],
+        }
+    else:
+        print("\n[Call Phase 1] scrape_logmi_transcript")
+        import asyncio
+        from transcript_scraper.logmi_scraper import scrape_logmi_transcript
+        from transcript_scraper.logmi_parser import parse_logmi_transcript
+
+        raw = asyncio.run(
+            scrape_logmi_transcript(jpx_code=jpx_code, company_name_ja=company_name_ja)
+        )
+        if raw is None:
+            raise RuntimeError(f"logmi: transcript not found for {jpx_code} ({company_name_ja})")
+
+        print(f"  Scraped: {raw.get('title', '')} ({raw.get('date', '')})")
+        transcript_dict = parse_logmi_transcript(
+            raw_text=raw.get("raw_text", ""),
+            speakers=raw.get("speakers", []),
+        )
+        transcript_dict.update({
+            "title": raw.get("title", ""),
+            "date": raw.get("date", ""),
+        })
+
+    print("\n[Call Phase 2] jp_earnings_call skill")
+    skill_result = _run_skill("jp_earnings_call", {"transcript": transcript_dict})[1]
+    status = "error" if "error" in skill_result else "ok"
+    print(f"  [{status}] jp_earnings_call")
+
+    print("\n[Call Phase 3] save_earnings_call_report")
+    from jp_report_writer import save_earnings_call_report
+    report_path = save_earnings_call_report(
+        transcript=transcript_dict,
+        skill_result=skill_result,
+        jpx_code=jpx_code,
+        company_name_ja=company_name_ja,
+    )
+    print(f"\n  Earnings call report: {report_path}")
     return report_path

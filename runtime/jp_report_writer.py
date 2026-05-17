@@ -435,6 +435,34 @@ def _render_recent_events(event_skill_results: list[dict]) -> str:
             parts.append("")
             continue
 
+        if doc_type == "tdnet":
+            # TDNET disclosure rendering
+            category = item.get("category", result.get("event_category", "other"))
+            title = item.get("title", "")
+            event_summary = result.get("event_summary", "")
+            materiality = result.get("materiality", "")
+            credit_impact = result.get("credit_impact", "")
+
+            parts.append(
+                f"### {submitted_at}  {doc_id}  "
+                f"[TDNET/{_escape_md_cell(str(category))}]"
+            )
+            if title:
+                parts.append(f"**標題**：{_escape_md_cell(tone_filter(str(title)))}")
+                parts.append("")
+            if event_summary:
+                parts.append(tone_filter(str(event_summary)))
+                parts.append("")
+            if materiality or credit_impact:
+                row_parts = []
+                if materiality:
+                    row_parts.append(f"**重要性**：{materiality}")
+                if credit_impact:
+                    row_parts.append(f"**信用影響**：{credit_impact}")
+                parts.append("  ".join(row_parts))
+                parts.append("")
+            continue
+
         # Default: rinji rendering
         event_category = result.get("event_category", item.get("event_type_guess", "unknown"))
         summary = result.get("event_summary", "")
@@ -750,5 +778,203 @@ def save_jp_event_report(
 
     print(f"  Event report (MD)：{report_md}")
     print(f"  Event report (PDF)：{report_pdf}")
+
+    return report_md
+
+
+def save_tdnet_event_report(
+    disclosure: dict,
+    skill_result: dict,
+    out_dir: "Path | None" = None,
+) -> "Path":
+    """Render and save a short TDNET event report for a single disclosure.
+
+    Output filename pattern: {jpx_code}_tdnet_{disclosure_id}.md + .pdf
+
+    Returns the Path of the Markdown file.
+    """
+    if out_dir is None:
+        out_dir = BASE_DIR / "data" / "output"
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    disc_id = disclosure.get("disclosure_id", "unknown")
+    jpx_code = disclosure.get("jpx_code", "")
+    company_name = disclosure.get("company_name", "")
+    title = disclosure.get("title", "")
+    category = disclosure.get("category", "other")
+    disc_date = str(disclosure.get("disclosure_date", ""))[:10]
+    disc_time = str(disclosure.get("disclosure_time", ""))
+
+    lines = [
+        f"# TDNET 公告分析：{company_name}（{jpx_code}）",
+        "",
+        f"> 証券コード: {jpx_code}",
+        f"> 公告日時: {disc_date} {disc_time}",
+        f"> 分類: {_escape_md_cell(str(category))}",
+        f"> disclosure_id: {disc_id}",
+        f"> 産出時間: {now_str}",
+        "",
+    ]
+
+    if title:
+        lines.append(f"## 公告標題")
+        lines.append("")
+        lines.append(_escape_md_cell(tone_filter(str(title))))
+        lines.append("")
+
+    if skill_result.get("insufficient_data"):
+        lines.append("> 資料不足，無法分析此 TDNET 公告。\n")
+    else:
+        event_category = skill_result.get("event_category", category)
+        event_summary = skill_result.get("event_summary", "")
+        materiality = skill_result.get("materiality", "")
+        credit_impact = skill_result.get("credit_impact", "")
+
+        lines.append(f"## 事件類別：{_escape_md_cell(str(event_category))}")
+        lines.append("")
+        if event_summary:
+            lines.append("## 事件摘要")
+            lines.append("")
+            lines.append(tone_filter(str(event_summary)))
+            lines.append("")
+        if materiality or credit_impact:
+            lines.append("## 評估")
+            lines.append("")
+            if materiality:
+                lines.append(f"**重要性**：{materiality}")
+            if credit_impact:
+                lines.append(f"**信用影響**：{credit_impact}")
+            lines.append("")
+
+    md_text = "\n".join(lines)
+
+    report_md = Path(out_dir) / f"{jpx_code}_tdnet_{disc_id}.md"
+    report_md.write_text(md_text, encoding="utf-8")
+
+    report_pdf = Path(out_dir) / f"{jpx_code}_tdnet_{disc_id}.pdf"
+    pdf_css = _build_pdf_css()
+    html_body = markdown.markdown(md_text, extensions=["tables"])
+    html_full = (
+        f'<html><head><meta charset="utf-8">'
+        f'<style>{pdf_css}</style></head>'
+        f'<body>{html_body}</body></html>'
+    )
+    HTML(string=html_full, base_url=str(out_dir)).write_pdf(str(report_pdf))
+
+    print(f"  TDNET event report (MD)：{report_md}")
+    print(f"  TDNET event report (PDF)：{report_pdf}")
+
+    return report_md
+
+
+def save_earnings_call_report(
+    transcript: dict,
+    skill_result: dict,
+    jpx_code: str = "",
+    company_name_ja: str = "",
+) -> "Path":
+    """Render and save a short earnings call report from a logmi transcript.
+
+    Output filename pattern: {jpx_code}_{YYYYMMDD_HHMMSS}_earnings_call.md + .pdf
+
+    Returns the Path of the Markdown file.
+    """
+    out_dir = BASE_DIR / "data" / "output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    call_title = transcript.get("title", "法説会")
+    call_date = transcript.get("date", "")
+
+    lines = [
+        f"# 法說會分析：{company_name_ja}（{jpx_code}）",
+        "",
+        f"> 証券コード: {jpx_code}",
+        f"> 法說會標題: {_escape_md_cell(str(call_title))}",
+        f"> 發表日期: {call_date}",
+        f"> 産出時間: {now_str}",
+        "",
+    ]
+
+    if skill_result.get("insufficient_data"):
+        lines.append("> 資料不足，無法分析此法說會。\n")
+    else:
+        meeting_summary = skill_result.get("meeting_summary", "")
+        forward_guidance = skill_result.get("forward_guidance") or {}
+        qa_signals = skill_result.get("qa_signals") or []
+        top_concerns = skill_result.get("top_concerns") or []
+        tone_vs_prior = skill_result.get("tone_vs_prior")
+
+        if meeting_summary:
+            lines.append("## 會議摘要")
+            lines.append("")
+            lines.append(tone_filter(str(meeting_summary)))
+            lines.append("")
+
+        if forward_guidance:
+            lines.append("## 前瞻 Guidance")
+            lines.append("")
+            summary = forward_guidance.get("summary", "")
+            strength = forward_guidance.get("commitment_strength", "")
+            if summary:
+                lines.append(tone_filter(str(summary)))
+                lines.append("")
+            if strength:
+                lines.append(f"**承諾強度**：{strength}")
+                lines.append("")
+            key_stmts = forward_guidance.get("key_statements") or []
+            for s in key_stmts:
+                lines.append(f"- {tone_filter(str(s))}")
+            if key_stmts:
+                lines.append("")
+
+        if top_concerns:
+            lines.append("## 主要關切議題")
+            lines.append("")
+            lines.append("| 議題 | 摘要 |")
+            lines.append("|------|------|")
+            for c in top_concerns:
+                theme = _escape_md_cell(tone_filter(str(c.get("question_theme", ""))))
+                summ = _escape_md_cell(tone_filter(str(c.get("summary", ""))))
+                lines.append(f"| {theme} | {summ} |")
+            lines.append("")
+
+        if qa_signals:
+            lines.append("## Q&A 訊號")
+            lines.append("")
+            lines.append("| 議題 | 已回答 | 強度 |")
+            lines.append("|------|--------|------|")
+            for sig in qa_signals:
+                theme = _escape_md_cell(str(sig.get("question_theme", "")))
+                answered = "是" if sig.get("answered") else "否"
+                strength = _escape_md_cell(str(sig.get("response_strength", "")))
+                lines.append(f"| {theme} | {answered} | {strength} |")
+            lines.append("")
+
+        if tone_vs_prior:
+            lines.append("## 與前次基調對比")
+            lines.append("")
+            lines.append(tone_filter(str(tone_vs_prior)))
+            lines.append("")
+
+    md_text = "\n".join(lines)
+
+    report_md = out_dir / f"{jpx_code}_{ts}_earnings_call.md"
+    report_md.write_text(md_text, encoding="utf-8")
+
+    report_pdf = out_dir / f"{jpx_code}_{ts}_earnings_call.pdf"
+    pdf_css = _build_pdf_css()
+    html_body = markdown.markdown(md_text, extensions=["tables"])
+    html_full = (
+        f'<html><head><meta charset="utf-8">'
+        f'<style>{pdf_css}</style></head>'
+        f'<body>{html_body}</body></html>'
+    )
+    HTML(string=html_full, base_url=str(out_dir)).write_pdf(str(report_pdf))
+
+    print(f"  Earnings call report (MD)：{report_md}")
+    print(f"  Earnings call report (PDF)：{report_pdf}")
 
     return report_md

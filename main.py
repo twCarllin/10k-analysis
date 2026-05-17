@@ -4,6 +4,11 @@ Usage:
                  [--only TASK1,TASK2,...] [--filing-type 10-K|10-Q]
                  [--quarter Q1|Q2|Q3] [--prior-year YEAR]
 
+  python main.py <TICKER> --market jp [--years N] [--dry-run]
+  python main.py <TICKER> --market jp --tdnet-event-id <DISCLOSURE_ID>
+  python main.py <TICKER> --market jp --analyze-call
+  python main.py --market jp --tdnet-watch <TICKER>[,TICKER,...] [--since-minutes N] [--dry-run]
+
 Prior period is auto-determined:
   10-K        → prior = 10-K (year - 1)
   10-Q Q1     → prior = 10-K (year - 1)
@@ -18,6 +23,10 @@ Examples:
   python main.py HWM 2025 --filing-type 10-Q --quarter Q1  # prior=10-K 2024
   python main.py HWM 2025 --filing-type 10-Q --quarter Q2  # prior=10-Q Q1 2025
   python main.py HWM 2024 --prior-year 2022                # override prior year
+  python main.py 6315 --market jp --years 3                # JP batch mode
+  python main.py 6315 --market jp --tdnet-event-id 20260511_6315_1530  # JP TDNET event
+  python main.py 6315 --market jp --analyze-call           # JP logmi call analysis
+  python main.py --market jp --tdnet-watch 6315,7203 --since-minutes 30  # watch mode
 """
 import sys
 import json
@@ -122,7 +131,7 @@ def build_sections(ticker, year, file_path=None, filing_type="10-K",
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("ticker")
+    p.add_argument("ticker", nargs="?", default=None)
     p.add_argument("year", nargs="?", type=int, default=None)
     p.add_argument("--market", default="sec", choices=["sec", "jp"],
                    help="Market: sec (US SEC) or jp (EDINET Japanese). Default: sec")
@@ -150,8 +159,18 @@ def main():
                    help="Year for transcript (default: --year)")
     p.add_argument("--event-doc-id", default=None,
                    help="JP event mode: analyse a single rinji doc_id and produce a short report")
+    p.add_argument("--tdnet-watch", default=None, metavar="TICKERS",
+                   help="JP watch mode: comma-separated JPX codes to monitor on TDNET, e.g. 6315,7203")
+    p.add_argument("--tdnet-event-id", default=None, metavar="DISCLOSURE_ID",
+                   help="JP TDNET event mode: analyse a single TDNET disclosure_id")
+    p.add_argument("--analyze-call", action="store_true",
+                   help="JP logmi mode: fetch latest earnings call transcript for TICKER and analyse")
+    p.add_argument("--since-minutes", type=int, default=15,
+                   help="Watch mode: look back N minutes for new TDNET disclosures (default: 15)")
     args = p.parse_args()
-    ticker = args.ticker.upper()
+
+    # Ticker is optional for watch mode (watchlist is in --tdnet-watch flag)
+    ticker = args.ticker.upper() if args.ticker else None
     filing_type = args.filing_type
     quarter = args.quarter
 
@@ -169,7 +188,41 @@ def main():
 
     # JP market branch
     if args.market == "jp":
-        if args.event_doc_id:
+        # --tdnet-watch: watch mode, no positional ticker required
+        if args.tdnet_watch:
+            watchlist = [t.strip() for t in args.tdnet_watch.split(",") if t.strip()]
+            if not watchlist:
+                p.error("--tdnet-watch requires at least one JPX code")
+            from jp_pipeline import run_tdnet_watch_pipeline
+            run_tdnet_watch_pipeline(
+                watchlist=watchlist,
+                since_minutes=args.since_minutes,
+                dry_run=args.dry_run,
+            )
+            return
+
+        # Remaining JP modes require a ticker
+        if ticker is None:
+            p.error("ticker is required for JP pipeline (omit only for --tdnet-watch)")
+
+        exclusive_flags = [args.tdnet_event_id, args.analyze_call, args.event_doc_id]
+        n_set = sum(1 for f in exclusive_flags if f)
+        if n_set > 1:
+            p.error("--tdnet-event-id / --analyze-call / --event-doc-id are mutually exclusive")
+
+        if args.tdnet_event_id:
+            from jp_pipeline import run_tdnet_event_pipeline
+            run_tdnet_event_pipeline(
+                disclosure_id=args.tdnet_event_id,
+                dry_run=args.dry_run,
+            )
+        elif args.analyze_call:
+            from jp_pipeline import run_logmi_call_pipeline
+            run_logmi_call_pipeline(
+                jpx_code=ticker,
+                dry_run=args.dry_run,
+            )
+        elif args.event_doc_id:
             from jp_pipeline import run_jp_event_pipeline
             run_jp_event_pipeline(
                 doc_id=args.event_doc_id,
@@ -184,7 +237,9 @@ def main():
             )
         return
 
-    # SEC branch: year is required
+    # SEC branch: ticker and year are both required
+    if ticker is None:
+        p.error("ticker is required for --market sec")
     if args.year is None:
         p.error("year is required for --market sec")
 
