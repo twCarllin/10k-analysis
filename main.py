@@ -148,6 +148,8 @@ def main():
                    help="Quarter for transcript scraping (Q1-Q4; Q4 for 10-K annual). Default: derived from --quarter or Q4 for 10-K")
     p.add_argument("--transcript-year", type=int, default=None,
                    help="Year for transcript (default: --year)")
+    p.add_argument("--event-doc-id", default=None,
+                   help="JP event mode: analyse a single rinji doc_id and produce a short report")
     args = p.parse_args()
     ticker = args.ticker.upper()
     filing_type = args.filing_type
@@ -167,12 +169,19 @@ def main():
 
     # JP market branch
     if args.market == "jp":
-        from jp_pipeline import run_jp_pipeline
-        run_jp_pipeline(
-            ticker=ticker,
-            years=args.years,
-            dry_run=args.dry_run,
-        )
+        if args.event_doc_id:
+            from jp_pipeline import run_jp_event_pipeline
+            run_jp_event_pipeline(
+                doc_id=args.event_doc_id,
+                dry_run=args.dry_run,
+            )
+        else:
+            from jp_pipeline import run_jp_pipeline
+            run_jp_pipeline(
+                ticker=ticker,
+                years=args.years,
+                dry_run=args.dry_run,
+            )
         return
 
     # SEC branch: year is required

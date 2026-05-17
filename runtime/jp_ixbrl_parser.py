@@ -14,6 +14,8 @@ Public API:
     split_filing_by_ixbrl(zip_path: Path) -> dict[str, str]
     split_risk_section(text: str) -> list[dict]
     normalize_jp(text: str) -> str
+    detect_filing_type(zip_path: Path) -> str
+    extract_rinji_event(zip_path: Path) -> dict
 """
 
 import logging
@@ -23,6 +25,7 @@ import zipfile
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
 
 from bs4 import BeautifulSoup
 
@@ -437,6 +440,196 @@ ELEMENT_TO_CHAPTER: dict[str, str] = {
 
 _CHAPTER_ELEMENT_SET = set(ELEMENT_TO_CHAPTER.keys())
 
+# ── TB Phase 1B: Semi-annual report (hanki) chapter mapping ──────────────────
+# Real-world verified: hanki uses jpcrp_cor: namespace (same as yuho),
+# NOT jpcrp_sr_cor: as originally estimated in task.md.
+# Confirmed via S100TGFS.zip (E04706, form=050000, ssr-001 prefix).
+# Note: hanki XBRL actually uses the same jpcrp_cor namespace as yuho;
+# the only structural difference is that strategy / rd chapters are not
+# disclosed in semi-annual reports, so they are intentionally omitted here.
+JPCRP_SR_ELEMENT_TO_CHAPTER: dict[str, str] = {
+    "jpcrp_cor:DescriptionOfBusinessTextBlock": "business",
+    "jpcrp_cor:BusinessRisksTextBlock": "risk",
+    "jpcrp_cor:ManagementAnalysisOfFinancialPositionOperatingResultsAndCashFlowsTextBlock": "mda",
+    "jpcrp_cor:MattersRelatedToGoingConcernAssumptionTextBlock": "going_concern",
+}
+
+_SR_CHAPTER_ELEMENT_SET = set(JPCRP_SR_ELEMENT_TO_CHAPTER.keys())
+
+# ── TB Phase 1B: Rinji form_code → event type heuristic ─────────────────────
+# Based on EDINET taxonomy and real-world samples.
+# form_code 053000: 臨時報告書（株主総会決議） — shareholder resolution
+# form_code 043000: M&A / capital change
+# form_code 044000: executive change (役員異動)
+# form_code 045000: lawsuit / other
+# Real-world observed: TOWA S100W8RH has form_code=053000 (shareholder meeting)
+RINJI_FORM_CODE_TO_EVENT_TYPE: dict[str, str] = {
+    "043000": "ma_or_capital",
+    "044000": "executive_change",
+    "045000": "lawsuit_or_other",
+    "053000": "shareholder_resolution",
+}
+
+# ── TB Phase 1B: detect_filing_type cache ────────────────────────────────────
+_FILING_TYPE_CACHE: dict[str, str] = {}
+
+
+def detect_filing_type(zip_path: Path) -> Literal["yuho", "hanki", "rinji", "unknown"]:
+    """Detect the EDINET filing type from a downloaded ZIP.
+
+    Priority 1 (most reliable): honbun iXBRL HTM filename prefix in PublicDoc/:
+      - *-asr-*  → yuho (有価証券報告書, doc_type=120)
+      - *-ssr-*  → hanki (半期報告書, doc_type=160)
+      - *-esr-*  → rinji (臨時報告書, doc_type=180)
+
+    Priority 2 (fallback): schemaRef href in the XBRL instance.
+
+    Results are cached by zip_path to avoid repeated ZIP opens.
+
+    Real-world cross-checks (2026-05-17):
+      - TOWA S100W53I (yuho):  asr-001 prefix confirmed
+      - E04706 S100TGFS (hanki): ssr-001 prefix confirmed (jpcrp_cor namespace)
+      - TOWA S100W8RH (rinji):  esr-001 prefix confirmed (jpcrp-esr_cor namespace)
+    """
+    key = str(zip_path)
+    if key in _FILING_TYPE_CACHE:
+        return _FILING_TYPE_CACHE[key]  # type: ignore[return-value]
+
+    try:
+        with zipfile.ZipFile(zip_path, metadata_encoding="cp932") as zf:
+            names = zf.namelist()
+
+            # Check honbun HTM prefixes (most reliable)
+            for name in names:
+                if "PublicDoc/" in name and "_ixbrl.htm" in name and "honbun" in name:
+                    fn = name.split("/")[-1].lower()
+                    if "-asr-" in fn:
+                        result: Literal["yuho", "hanki", "rinji", "unknown"] = "yuho"
+                        break
+                    if "-ssr-" in fn:
+                        result = "hanki"
+                        break
+                    if "-esr-" in fn:
+                        result = "rinji"
+                        break
+            else:
+                # Fallback: check XBRL schemaRef href
+                result = "unknown"
+                for name in names:
+                    if name.endswith(".xbrl") and "AuditDoc" not in name and "PublicDoc/" in name:
+                        try:
+                            data = zf.read(name)
+                            text = data[:4096].decode("utf-8", errors="replace")
+                            if "-asr-" in text:
+                                result = "yuho"
+                            elif "-ssr-" in text:
+                                result = "hanki"
+                            elif "-esr-" in text:
+                                result = "rinji"
+                        except Exception:
+                            pass
+                        break
+    except Exception as exc:
+        log.warning("detect_filing_type failed for %s: %s", zip_path, exc)
+        result = "unknown"
+
+    _FILING_TYPE_CACHE[key] = result
+    log.debug("detect_filing_type %s → %s", zip_path.name, result)
+    return result  # type: ignore[return-value]
+
+
+def extract_rinji_event(zip_path: Path) -> dict:
+    """Extract event narrative from a rinji (臨時報告書) ZIP.
+
+    Reads honbun HTM(s) and collects all text from ix:nonNumeric elements
+    with a jpcrp-esr_cor: namespace prefix.
+
+    Real-world: rinji has 1 honbun HTM using jpcrp-esr_cor: namespace.
+    form_code is resolved via RINJI_FORM_CODE_TO_EVENT_TYPE (heuristic).
+
+    Returns:
+        {
+            "doc_id": str,
+            "edinet_code": str,
+            "form_code": str,          # e.g. "053000"
+            "event_type_guess": str,   # from RINJI_FORM_CODE_TO_EVENT_TYPE or "unknown"
+            "submitted_at": str,
+            "narrative": str,          # merged text from all honbun elements
+            "_warnings": list[str],
+        }
+    """
+    doc_id = zip_path.stem
+    warnings: list[str] = []
+
+    # Get filing metadata from DuckDB if available
+    form_code = ""
+    edinet_code = ""
+    submitted_at = ""
+    try:
+        import duckdb
+        from pathlib import Path as _Path
+        _BASE = _Path(__file__).resolve().parent.parent
+        _db = _BASE / "data/cache/jp/master.duckdb"
+        if _db.exists():
+            with duckdb.connect(str(_db)) as con:
+                row = con.execute(
+                    "SELECT edinet_code, form_code, submitted_at FROM filings_index WHERE doc_id = ?",
+                    [doc_id],
+                ).fetchone()
+                if row:
+                    edinet_code = row[0] or ""
+                    form_code = row[1] or ""
+                    submitted_at = str(row[2]) if row[2] else ""
+    except Exception as exc:
+        warnings.append(f"DuckDB lookup failed: {exc}")
+
+    event_type_guess = RINJI_FORM_CODE_TO_EVENT_TYPE.get(form_code, "unknown")
+    if not form_code:
+        warnings.append("form_code not found in local index")
+
+    # Extract narrative from honbun HTM files
+    narrative_parts: list[str] = []
+
+    try:
+        # Reuse extraction cache if available
+        doc_dir = EXTRACTED_DIR / doc_id
+        if not doc_dir.exists():
+            doc_dir.mkdir(parents=True, exist_ok=True)
+            with zipfile.ZipFile(zip_path, metadata_encoding="cp932") as zf:
+                for info in zf.infolist():
+                    if "AuditDoc" not in info.filename:
+                        _safe_extract_member(zf, info, doc_dir)
+
+        htm_files = sorted(doc_dir.rglob("*honbun*_ixbrl.htm"), key=lambda p: p.name)
+        if not htm_files:
+            warnings.append("No honbun iXBRL HTM found in rinji ZIP")
+        else:
+            for htm_path in htm_files:
+                html_bytes = htm_path.read_bytes()
+                soup = BeautifulSoup(html_bytes, features="lxml")
+                # Rinji uses jpcrp-esr_cor: namespace elements
+                # bs4 with lxml HTML parser normalises tag names but preserves 'name' attr
+                for tag in soup.find_all(attrs={"name": True}):
+                    name_attr = tag.get("name", "")
+                    if name_attr.startswith("jpcrp-esr_cor:"):
+                        text = normalize_jp(tag.get_text(separator="\n", strip=True))
+                        if text:
+                            narrative_parts.append(text)
+    except Exception as exc:
+        warnings.append(f"HTM extraction failed: {exc}")
+
+    narrative = "\n\n".join(narrative_parts)
+
+    return {
+        "doc_id": doc_id,
+        "edinet_code": edinet_code,
+        "form_code": form_code,
+        "event_type_guess": event_type_guess,
+        "submitted_at": submitted_at,
+        "narrative": narrative,
+        "_warnings": warnings,
+    }
+
 # ── Patterns for split_risk_section ──────────────────────────────────────────
 
 _RISK_ITEM_PATTERNS = re.compile(
@@ -484,18 +677,31 @@ def find_ixbrl_htm(zip_path: Path, pattern: str = "*honbun*_ixbrl.htm") -> list[
 def split_filing_by_ixbrl(zip_path: Path) -> dict[str, str]:
     """Parse honbun iXBRL HTM files and extract narrative chapter text.
 
-    For each chapter key in ELEMENT_TO_CHAPTER, finds the matching
-    ix:nonNumeric element (matched via the 'name' attribute) and extracts
-    its plain text.  If a chapter appears in multiple HTM files (unusual),
-    the longest extracted text wins.
+    Selects the element-to-chapter mapping based on filing type (detect_filing_type):
+      - yuho / unknown → ELEMENT_TO_CHAPTER (jpcrp_cor:)
+      - hanki          → JPCRP_SR_ELEMENT_TO_CHAPTER (also jpcrp_cor:, verified real-world)
+
+    For each chapter key, finds the matching ix:nonNumeric element (matched via the
+    'name' attribute) and extracts its plain text.  If a chapter appears in multiple
+    HTM files (unusual), the longest extracted text wins.
 
     Args:
-        zip_path: Path to the downloaded yuho ZIP.
+        zip_path: Path to the downloaded ZIP (yuho or hanki).
 
     Returns:
         Dict mapping chapter_key → normalised text.
         Only keys that were found are included.
     """
+    filing_type = detect_filing_type(zip_path)
+
+    if filing_type == "hanki":
+        chapter_map = JPCRP_SR_ELEMENT_TO_CHAPTER
+        element_set = _SR_CHAPTER_ELEMENT_SET
+    else:
+        # yuho or unknown: use standard map
+        chapter_map = ELEMENT_TO_CHAPTER
+        element_set = _CHAPTER_ELEMENT_SET
+
     htm_files = find_ixbrl_htm(zip_path)
     chapters: dict[str, str] = {}
 
@@ -505,11 +711,11 @@ def split_filing_by_ixbrl(zip_path: Path) -> dict[str, str]:
 
         # bs4 with lxml HTML parser lower-cases namespace tags (ix:nonnumeric),
         # but the 'name' attribute value is preserved verbatim.
-        tags = soup.find_all(attrs={"name": lambda n: n in _CHAPTER_ELEMENT_SET})
+        tags = soup.find_all(attrs={"name": lambda n: n in element_set})
 
         for tag in tags:
             elem_name = tag.get("name", "")
-            chapter_key = ELEMENT_TO_CHAPTER.get(elem_name)
+            chapter_key = chapter_map.get(elem_name)
             if chapter_key is None:
                 continue
             text = normalize_jp(tag.get_text(separator="\n", strip=True))
@@ -518,8 +724,9 @@ def split_filing_by_ixbrl(zip_path: Path) -> dict[str, str]:
                 chapters[chapter_key] = text
 
     log.info(
-        "split_filing_by_ixbrl: %s → chapters: %s",
+        "split_filing_by_ixbrl: %s (type=%s) → chapters: %s",
         zip_path.stem,
+        filing_type,
         sorted(chapters.keys()),
     )
     return chapters

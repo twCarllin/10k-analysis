@@ -394,8 +394,84 @@ def _render_going_concern(result: dict) -> str:
     return "\n".join(parts)
 
 
+def _render_recent_events(event_skill_results: list[dict]) -> str:
+    """Render Section 8: 近期重大事件（過去 12 個月）.
+
+    event_skill_results items carry doc_type ("rinji" | "hanki") so the renderer
+    can dispatch to the right schema:
+      - rinji → jp_extraordinary_event output (event_category / materiality / ...)
+      - hanki → jp_semi_annual_summary output (current_half_performance / ...)
+    """
+    if not event_skill_results:
+        return "> 過去 12 個月無重大事件揭露（半期報 / 臨時報）。\n"
+
+    parts = []
+    for item in event_skill_results:
+        doc_id = item.get("doc_id", "")
+        submitted_at = item.get("submitted_at", "")[:10]
+        doc_type = item.get("doc_type", "rinji")
+        result = item.get("skill_result", {})
+
+        if result.get("insufficient_data"):
+            parts.append(f"### {submitted_at}  {doc_id}  [{doc_type}]")
+            parts.append("> 事件資料不足，無法分析。\n")
+            continue
+
+        if doc_type == "hanki":
+            parts.append(f"### {submitted_at}  {doc_id}  [半期報]")
+            performance = result.get("current_half_performance", "")
+            if performance:
+                parts.append(tone_filter(str(performance)))
+                parts.append("")
+            for label, key in (
+                ("與前期同期比較", "vs_prior_half"),
+                ("全年預算進度", "vs_full_year_forecast_progress"),
+                ("業績修正", "forecast_revision"),
+                ("管理層語氣變化", "mgmt_outlook_change"),
+            ):
+                val = result.get(key)
+                if val:
+                    parts.append(f"**{label}**：{tone_filter(str(val))}")
+            parts.append("")
+            continue
+
+        # Default: rinji rendering
+        event_category = result.get("event_category", item.get("event_type_guess", "unknown"))
+        summary = result.get("event_summary", "")
+        materiality = result.get("materiality", "")
+        credit_impact = result.get("credit_impact", "")
+        key_terms = result.get("key_terms") or {}
+        quote = result.get("verbatim_quote", "")
+
+        parts.append(f"### {submitted_at}  {doc_id}  [{_escape_md_cell(str(event_category))}]")
+        if summary:
+            parts.append(tone_filter(str(summary)))
+            parts.append("")
+        if materiality or credit_impact:
+            row_parts = []
+            if materiality:
+                row_parts.append(f"**重要性**：{materiality}")
+            if credit_impact:
+                row_parts.append(f"**信用影響**：{credit_impact}")
+            parts.append("  ".join(row_parts))
+            parts.append("")
+        if key_terms and isinstance(key_terms, dict):
+            details = []
+            for k, v in key_terms.items():
+                if v:
+                    details.append(f"**{_escape_md_cell(str(k))}**：{_escape_md_cell(str(v))}")
+            if details:
+                parts.append("、".join(details))
+                parts.append("")
+        if quote:
+            parts.append(f"> 原文：{tone_filter(str(quote))}")
+            parts.append("")
+
+    return "\n".join(parts) if parts else "> 過去 12 個月無重大事件揭露（半期報 / 臨時報）。\n"
+
+
 def _render_credit_observations(skill_results: dict) -> str:
-    """Render Section 8: 信用觀察點 (synthesized from skills 1-7)."""
+    """Render Section 9: 信用觀察點 (synthesized from skills 1-7)."""
     parts = []
 
     # Derive key observations from risk + financial + going_concern
@@ -449,6 +525,7 @@ def save_jp_report(
     five_year: dict,
     skill_results: dict[str, dict],
     eval_results: dict | None = None,
+    recent_events: list[dict] | None = None,
 ) -> Path:
     """Render and save the JP investment research report.
 
@@ -522,8 +599,13 @@ def save_jp_report(
     lines.append("")
     lines.append(_render_going_concern(skill_results.get("jp_going_concern", {})))
 
-    # ── Section 8: 信用觀察點 ─────────────────────────────────────────────────
-    lines.append("## 8. 信用觀察點")
+    # ── Section 8: 近期重大事件（過去 12 個月）────────────────────────────────
+    lines.append("## 8. 近期重大事件（過去 12 個月）")
+    lines.append("")
+    lines.append(_render_recent_events(recent_events or []))
+
+    # ── Section 9: 信用觀察點 ─────────────────────────────────────────────────
+    lines.append("## 9. 信用觀察點")
     lines.append("")
     lines.append(_render_credit_observations(skill_results))
 
@@ -573,5 +655,100 @@ def save_jp_report(
     print(f"  報告 (PDF)：{report_pdf}")
     print(f"  原始 JSON：{json_path}")
     print(f"{'='*50}")
+
+    return report_md
+
+
+def save_jp_event_report(
+    doc_id: str,
+    edinet_code: str,
+    event_data: dict,
+    skill_result: dict,
+) -> Path:
+    """Render and save a short event report for a single rinji filing.
+
+    Output filename pattern: {edinet_code}_{doc_id}_event.md + .pdf
+
+    Returns the Path of the Markdown file.
+    """
+    out_dir = BASE_DIR / "data" / "output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    submitted_at = str(event_data.get("submitted_at", ""))[:10]
+    event_type = event_data.get("event_type_guess", "unknown")
+
+    lines = [
+        f"# 臨時報告書分析：{edinet_code}  {doc_id}",
+        "",
+        f"> EDINET コード: {edinet_code}",
+        f"> 提出日: {submitted_at}",
+        f"> 事件類別（推測）: {event_type}",
+        f"> doc_id: {doc_id}",
+        f"> 產出時間: {now_str}",
+        "",
+    ]
+
+    if skill_result.get("insufficient_data"):
+        lines.append("> 資料不足，無法分析此臨時報告。\n")
+    else:
+        event_category = skill_result.get("event_category", event_type)
+        summary = skill_result.get("event_summary", "")
+        materiality = skill_result.get("materiality", "")
+        credit_impact = skill_result.get("credit_impact", "")
+        key_terms = skill_result.get("key_terms") or {}
+        quote = skill_result.get("verbatim_quote", "")
+
+        lines.append(f"## 事件類別：{_escape_md_cell(str(event_category))}")
+        lines.append("")
+        if summary:
+            lines.append("## 事件摘要")
+            lines.append("")
+            lines.append(tone_filter(str(summary)))
+            lines.append("")
+        if materiality or credit_impact:
+            lines.append("## 評估")
+            lines.append("")
+            if materiality:
+                lines.append(f"**重要性**：{materiality}")
+            if credit_impact:
+                lines.append(f"**信用影響**：{credit_impact}")
+            lines.append("")
+        if key_terms and isinstance(key_terms, dict):
+            lines.append("## 關鍵條款")
+            lines.append("")
+            for k, v in key_terms.items():
+                if v:
+                    lines.append(f"- **{_escape_md_cell(str(k))}**：{_escape_md_cell(str(v))}")
+            lines.append("")
+        if quote:
+            lines.append("## 原文引用")
+            lines.append("")
+            lines.append(f"> {tone_filter(str(quote))}")
+            lines.append("")
+
+    lines.append("## 原始 Narrative")
+    lines.append("")
+    narrative = event_data.get("narrative", "")
+    lines.append(narrative[:2000] + ("…（截斷）" if len(narrative) > 2000 else ""))
+    lines.append("")
+
+    md_text = "\n".join(lines)
+
+    report_md = out_dir / f"{edinet_code}_{doc_id}_event.md"
+    report_md.write_text(md_text, encoding="utf-8")
+
+    report_pdf = out_dir / f"{edinet_code}_{doc_id}_event.pdf"
+    pdf_css = _build_pdf_css()
+    html_body = markdown.markdown(md_text, extensions=["tables"])
+    html_full = (
+        f'<html><head><meta charset="utf-8">'
+        f'<style>{pdf_css}</style></head>'
+        f'<body>{html_body}</body></html>'
+    )
+    HTML(string=html_full, base_url=str(out_dir)).write_pdf(str(report_pdf))
+
+    print(f"  Event report (MD)：{report_md}")
+    print(f"  Event report (PDF)：{report_pdf}")
 
     return report_md
