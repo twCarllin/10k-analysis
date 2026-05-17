@@ -53,7 +53,7 @@ last_modified: 2026-05-17
    - net_income：当期純利益的實際金額
    - yoy_pct：與前期同期相比的增減幅（如「+12.3%」「▲5.2%」）
    - annual_forecast：通期業績予想（若有揭露，包含金額與是否維持/修正）
-7. forward_guidance：摘述管理層對未來業績的具體承諾或展望（1–2 句繁中，含敬語強度評估）。無前瞻陳述時填 null。
+7. forward_guidance：摘述管理層對未來業績的具體承諾或展望（1–2 句繁中，含敬語強度評估）。**特別注意 PDF 中「今後の見通し」「次期の見通し」「来期の見通し」段落 — 這是專屬的前瞻 guidance 章節，必須優先抽取**；若無此段落但有「業績予想」「次年度予想」等其他前瞻陳述，也要納入。無前瞻陳述時填 null。
 8. segment_notes：若 pdf_text 有 segment 別揭露，每個 segment 一筆 {name, performance}；無則空陣列。
 9. pdf_extracted：boolean，標示是否使用了 pdf_text 進行分析（有 pdf_text 且成功提取資訊 → true；否則 → false）。
 10. 事件摘要（event_summary）：以 1–2 句繁體中文描述此公告的事件意義。若有具體業績數字，直接帶入摘要。
