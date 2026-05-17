@@ -723,10 +723,18 @@ def save_jp_report(
         lines.append("")
         lines.append(_render_tdnet_financial_highlights(recent_events or []))
 
-        # ── Section 2: 近期重大事件 ───────────────────────────────────────
-        lines.append("## 2. 近期重大事件（過去 12 個月）")
-        lines.append("")
-        lines.append(_render_recent_events(recent_events or []))
+        # ── Section 2: 其他重大事件 ────────────────────────────────────────
+        # Earnings_flash is fully covered in Section 1; only show the OTHER
+        # events here (rinji 股東會/M&A, hanki, share buyback, guidance
+        # revisions, etc.). Hide the whole section if nothing left.
+        other_events = [
+            e for e in (recent_events or [])
+            if not (e.get("doc_type") == "tdnet" and e.get("category") == "earnings_flash")
+        ]
+        if other_events:
+            lines.append("## 2. 其他重大事件（過去 12 個月）")
+            lines.append("")
+            lines.append(_render_recent_events(other_events))
     else:
         # ── Section 1: 公司概況 ───────────────────────────────────────────────
         lines.append("## 1. 公司概況（事業の内容）")
