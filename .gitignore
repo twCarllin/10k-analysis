@@ -3,6 +3,7 @@ config.json
 .venv/
 data/cache/
 data/output/
+pipeline_runs/
 __pycache__/
 *.pyc
 *.otf
