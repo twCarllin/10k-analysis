@@ -134,8 +134,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("ticker", nargs="?", default=None)
     p.add_argument("year", nargs="?", type=int, default=None)
-    p.add_argument("--market", default="sec", choices=["sec", "jp"],
-                   help="Market: sec (US SEC) or jp (EDINET Japanese). Default: sec")
+    p.add_argument("--market", default="sec", choices=["sec", "jp", "tw"],
+                   help="Market: sec (US SEC), jp (EDINET Japanese), or tw (TW credit). Default: sec")
     p.add_argument("--prior-year", type=int, default=None,
                    help="手動覆蓋前期年份（預設自動推算）")
     p.add_argument("--file", default=None)
@@ -164,12 +164,36 @@ def main():
                    help="JP logmi mode: fetch latest earnings call transcript for TICKER and analyse")
     p.add_argument("--since-minutes", type=int, default=15,
                    help="Watch mode: look back N minutes for new TDNET disclosures (default: 15)")
+    p.add_argument("--resume", default=None, metavar="RUN_ID",
+                   help="TW credit: resume from a previous run_id (after GATE 1 review)")
     args = p.parse_args()
 
     # Ticker is optional for watch mode (watchlist is in --tdnet-watch flag)
     ticker = args.ticker.upper() if args.ticker else None
     filing_type = args.filing_type
     quarter = args.quarter
+
+    # TW credit branch — early return before SEC/JP logic
+    if args.market == "tw":
+        if ticker is None:
+            p.error("ticker is required for --market tw")
+        if args.year is not None:
+            print("  [tw] year 參數在 tw market 中忽略（年度由輸入檔 report_base_date 決定）")
+        if args.dry_run:
+            print("  [tw] --dry-run 在 tw market v1 中忽略（離線測試靠 fake client/fixture）")
+        from runtime.tw_credit.tw_pipeline import run_tw_pipeline
+        try:
+            result = run_tw_pipeline(ticker, resume_run_id=args.resume)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"  [tw] 輸入驗證失敗：{exc}")
+            sys.exit(1)
+        status = result.get("status")
+        if status in ("gate1_pending", "completed"):
+            sys.exit(0)
+        else:
+            reason = result.get("reason", "")
+            print(f"  [tw] pipeline 終止：status={status}  reason={reason}")
+            sys.exit(1)
 
     # SEC-specific quarter validation (skipped for JP branch)
     if args.market != "jp":
