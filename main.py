@@ -28,6 +28,8 @@ Examples:
   python main.py 6315 2025 --market jp --analyze-call      # JP logmi call analysis
   python main.py 6315 --market jp --event-doc-id S100W8RH  # event pipeline (no year needed)
   python main.py --market jp --tdnet-watch 6315,7203 --since-minutes 30  # watch mode
+  python main.py 6771 --market tw --resume <run_id>            # TW credit: resume C/D
+  python main.py 6771 --market tw --dry-run --resume <run_id>  # TW credit: 純離線重渲染既有 run
 """
 import sys
 import json
@@ -179,11 +181,13 @@ def main():
             p.error("ticker is required for --market tw")
         if args.year is not None:
             print("  [tw] year 參數在 tw market 中忽略（年度由輸入檔 report_base_date 決定）")
-        if args.dry_run:
-            print("  [tw] --dry-run 在 tw market v1 中忽略（離線測試靠 fake client/fixture）")
+        if args.dry_run and args.resume is None:
+            p.error("--dry-run（tw）需搭配 --resume <run_id>：只重渲染既有 run 的報告")
         from runtime.tw_credit.tw_pipeline import run_tw_pipeline
         try:
-            result = run_tw_pipeline(ticker, resume_run_id=args.resume)
+            result = run_tw_pipeline(
+                ticker, resume_run_id=args.resume, dry_run=args.dry_run
+            )
         except (FileNotFoundError, ValueError) as exc:
             print(f"  [tw] 輸入驗證失敗：{exc}")
             sys.exit(1)
