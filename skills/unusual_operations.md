@@ -55,7 +55,7 @@ e. 投資者解讀：
 
 如果沒有識別到任何不尋常操作，unusual_items 輸出空陣列，這是合法結果。
 
-## Output Format
+## Output Format Example
 ```json
 {
   "unusual_items": [
