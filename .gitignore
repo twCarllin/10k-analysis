@@ -19,3 +19,7 @@ retro/
 subagents_record/
 runtime/transcript_scraper/node/node_modules/
 runtime/transcript_scraper/node/.pnpm-store/
+
+# per-run request/response tracing（診斷產物，不進 git）
+run/*.llm_trace.jsonl
+run/*.search_trace.jsonl
