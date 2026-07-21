@@ -2,6 +2,9 @@
   "anthropic_api_key": "sk-ant-...",
   "edgar_user_agent": "10k-research your-name@example.com",
   "edinet_api_key": "your-edinet-api-key",
+  "azure": {
+    "grounding_project_endpoint": "https://<your-resource>.services.ai.azure.com/api/projects/<your-project>"
+  },
   "google": {
     "docai_processor_name": "projects/<project>/locations/<location>/processors/<processor_id>",
     "service_account_path": "path/to/service-account.json",
