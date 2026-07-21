@@ -4,7 +4,10 @@
   "edinet_api_key": "your-edinet-api-key",
   "google": {
     "docai_processor_name": "projects/<project>/locations/<location>/processors/<processor_id>",
-    "service_account_path": "path/to/service-account.json"
+    "service_account_path": "path/to/service-account.json",
+    "vertex_model": "gemini-2.5-flash",
+    "vertex_location": "us-central1",
+    "vertex_project": "<project>"
   },
   "model": "claude-sonnet-4-5",
   "max_tokens": 4096,
