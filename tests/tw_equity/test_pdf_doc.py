@@ -316,9 +316,9 @@ class TestLines:
                 cache_dir=tmp_path / "cache",
             )
 
-    def test_cache_version_is_2(self):
+    def test_cache_version_is_3(self):
         """_CACHE_VERSION 比 1A 現值（1）大 1。"""
-        assert _CACHE_VERSION == 2
+        assert _CACHE_VERSION == 3
 
     def test_requirements_has_pymupdf(self):
         """requirements.txt 含 PyMuPDF>=1.27。"""

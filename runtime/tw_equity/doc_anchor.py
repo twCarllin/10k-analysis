@@ -294,3 +294,59 @@ GOVERNANCE_HEADING_ANCHORS: dict[str, HeadingAnchor] = {
     "ar_capital":    HeadingAnchor(["參、募資情形"], False),
     "ar_operations": HeadingAnchor(["肆、營運概況"], False),
 }
+
+
+# ── 年報標題行備援（1B-2，Spec §2.4）──────────────────────────────────────────
+
+AR_HEADING_FALLBACK: dict[str, HeadingAnchor] = {
+    "ar_market":          HeadingAnchor(["市場及產銷概況"], True),
+    "ar_mdna":            HeadingAnchor(["財務狀況及財務績效之檢討分析"], True),
+    "ar_fin_position":    HeadingAnchor(["財務狀況"], True, after="ar_mdna"),
+    "ar_fin_performance": HeadingAnchor(["財務績效"], True, after="ar_mdna"),
+}
+
+
+def find_annual_report_sections(
+    doc: PdfDoc, *, required: set[str]
+) -> dict[str, PageRange | None]:
+    """年報錨定：先走 find_sections（頁首 300 字），None 的 key 再以標題行備援。
+
+    Raises:
+        AnchorError: required 內有 key 仍找不到時。
+    """
+    order = list(ANNUAL_REPORT_ANCHORS)
+    first = find_sections(doc, ANNUAL_REPORT_ANCHORS, required=set(), order=order)
+    starts: dict[str, int] = {k: r.start for k, r in first.items() if r is not None}
+
+    for key, anchor in AR_HEADING_FALLBACK.items():
+        if first.get(key) is not None:
+            continue
+        sub = {key: anchor}
+        if anchor.after and anchor.after in AR_HEADING_FALLBACK:
+            sub = {anchor.after: AR_HEADING_FALLBACK[anchor.after], key: anchor}
+        got = find_heading_sections(doc, sub, required=set())
+        if got[key] is not None:
+            starts[key] = got[key].start
+
+    pages = sorted(doc.pages, key=lambda p: p.number)
+    last_page = pages[-1].number if pages else 0
+    found = [(k, starts[k]) for k in order if k in starts]
+    result: dict[str, PageRange | None] = {k: None for k in order}
+    for i, (key, s) in enumerate(found):
+        end = last_page
+        for _, nxt in found[i + 1:]:  # 規則同 find_sections：依 order 找第一個起頁較大者
+            if nxt > s:
+                end = nxt - 1
+                break
+        result[key] = PageRange(start=s, end=end)
+
+    missing = [k for k in order if k in required and result[k] is None]
+    missing += sorted(k for k in required if k not in result)
+    if missing:
+        found_keys = [k for k in order if result[k] is not None]
+        raise AnchorError(
+            f"必填 key 找不到：{'、'.join(missing)}。"
+            f"已找到：{'、'.join(found_keys) if found_keys else '（無）'}。"
+            f"建議：確認關鍵字與文件章名一致（PDF 可能使用 CJK 相容字元或空格）。"
+        )
+    return result

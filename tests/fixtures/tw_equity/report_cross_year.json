@@ -1,0 +1,313 @@
+{
+  "_source": "依據 runtime/mock_outputs.json 的 cross_year_compare 條目與 Spec §2.7（spec/2026-10-08-tw-equity-phase-1b2.md）；缺值形狀為刪去 cross_checks。 appendix_c 區塊依據 runtime/tw_equity/cross_year.py build_cross_year 輸出 key（fin_performance_series／overlap_checks／customer_concentration_series／top_shareholders_change／pledge_change）。 appendix_b_prior 區塊：prior 的欄位名依 Spec §2.7（bundle 於測試內建構）。",
+  "full": {
+    "cross_checks": [
+      {
+        "dimensions": [
+          "business",
+          "financial"
+        ],
+        "finding": "CYFINDING營收成長一致",
+        "implication": "趨勢穩定",
+        "direction": "positive"
+      },
+      {
+        "dimensions": [
+          "governance"
+        ],
+        "finding": "CYFINDING2質押增加",
+        "implication": "留意融資壓力",
+        "direction": "negative"
+      }
+    ],
+    "mgmt_credibility": "medium",
+    "mgmt_credibility_reason": "CYREASON部分承諾兌現",
+    "quality_trend": "stable",
+    "overall_direction": "improving",
+    "insufficient_data": false
+  },
+  "missing_checks": {
+    "mgmt_credibility": "medium",
+    "mgmt_credibility_reason": "CYREASON部分承諾兌現",
+    "quality_trend": "stable",
+    "overall_direction": "improving",
+    "insufficient_data": false
+  },
+  "error": {
+    "error": "CYBOOM boom"
+  },
+  "appendix_c": {
+    "full": {
+      "years": {
+        "current": 114,
+        "prior": 113
+      },
+      "fin_performance_series": [
+        {
+          "label": "營業收入",
+          "values": {
+            "114年度": 20275577,
+            "112年度": 12062664,
+            "113年度": 14278187
+          }
+        }
+      ],
+      "overlap_checks": [
+        {
+          "table": "T7b",
+          "label": "營業收入",
+          "year": "113年度",
+          "current_doc": 14278187,
+          "prior_doc": 14278187,
+          "match": true
+        }
+      ],
+      "customer_concentration_series": {
+        "T8_sales": [
+          {
+            "label": "112年度",
+            "top1_pct": 15.37
+          }
+        ],
+        "T8_purchase": [
+          {
+            "label": "112年度",
+            "top1_pct": 8.5
+          }
+        ]
+      },
+      "top_shareholders_change": [
+        {
+          "name": "APPCSHOLDER甲",
+          "current_pct": 5.0,
+          "prior_pct": 4.0,
+          "delta_pct": 1.0,
+          "status": "both"
+        }
+      ],
+      "pledge_change": {
+        "current_status": "rows",
+        "prior_status": "none",
+        "current_max_pct": 17.99,
+        "prior_max_pct": null
+      }
+    },
+    "mismatch": {
+      "years": {
+        "current": 114,
+        "prior": 113
+      },
+      "fin_performance_series": [
+        {
+          "label": "營業收入",
+          "values": {
+            "114年度": 20275577,
+            "112年度": 12062664,
+            "113年度": 14278187
+          }
+        }
+      ],
+      "overlap_checks": [
+        {
+          "table": "T7b",
+          "label": "營業收入",
+          "year": "113年度",
+          "current_doc": 14278187,
+          "prior_doc": 14278187,
+          "match": true
+        },
+        {
+          "table": "T7b",
+          "label": "APPCMISMATCH毛利",
+          "year": "113年度",
+          "current_doc": 100,
+          "prior_doc": 90,
+          "match": false
+        }
+      ],
+      "customer_concentration_series": {
+        "T8_sales": [
+          {
+            "label": "112年度",
+            "top1_pct": 15.37
+          }
+        ],
+        "T8_purchase": [
+          {
+            "label": "112年度",
+            "top1_pct": 8.5
+          }
+        ]
+      },
+      "top_shareholders_change": [
+        {
+          "name": "APPCSHOLDER甲",
+          "current_pct": 5.0,
+          "prior_pct": 4.0,
+          "delta_pct": 1.0,
+          "status": "both"
+        }
+      ],
+      "pledge_change": {
+        "current_status": "rows",
+        "prior_status": "none",
+        "current_max_pct": 17.99,
+        "prior_max_pct": null
+      }
+    },
+    "empty_sales": {
+      "years": {
+        "current": 114,
+        "prior": 113
+      },
+      "fin_performance_series": [
+        {
+          "label": "營業收入",
+          "values": {
+            "114年度": 20275577,
+            "112年度": 12062664,
+            "113年度": 14278187
+          }
+        }
+      ],
+      "overlap_checks": [
+        {
+          "table": "T7b",
+          "label": "營業收入",
+          "year": "113年度",
+          "current_doc": 14278187,
+          "prior_doc": 14278187,
+          "match": true
+        }
+      ],
+      "customer_concentration_series": {
+        "T8_sales": [],
+        "T8_purchase": [
+          {
+            "label": "112年度",
+            "top1_pct": 8.5
+          }
+        ]
+      },
+      "top_shareholders_change": [
+        {
+          "name": "APPCSHOLDER甲",
+          "current_pct": 5.0,
+          "prior_pct": 4.0,
+          "delta_pct": 1.0,
+          "status": "both"
+        }
+      ],
+      "pledge_change": {
+        "current_status": "rows",
+        "prior_status": "none",
+        "current_max_pct": 17.99,
+        "prior_max_pct": null
+      }
+    },
+    "combo": {
+      "years": {
+        "current": 114,
+        "prior": 113
+      },
+      "fin_performance_series": [
+        {
+          "label": "營業收入",
+          "values": {
+            "114年度": 20275577,
+            "112年度": 12062664,
+            "113年度": 14278187
+          }
+        }
+      ],
+      "overlap_checks": [
+        {
+          "table": "T7b",
+          "label": "營業收入",
+          "year": "113年度",
+          "current_doc": 14278187,
+          "prior_doc": 14278187,
+          "match": true
+        },
+        {
+          "table": "T7b",
+          "label": "APPCMISMATCH毛利",
+          "year": "113年度",
+          "current_doc": 100,
+          "prior_doc": 90,
+          "match": false
+        }
+      ],
+      "customer_concentration_series": {
+        "T8_sales": [
+          {
+            "label": "112年度",
+            "top1_pct": 15.37
+          }
+        ],
+        "T8_purchase": [
+          {
+            "label": "112年度",
+            "top1_pct": 8.5
+          }
+        ]
+      },
+      "top_shareholders_change": [],
+      "pledge_change": {
+        "current_status": "rows",
+        "prior_status": "none",
+        "current_max_pct": 17.99,
+        "prior_max_pct": null
+      }
+    }
+  },
+  "appendix_b_prior": {
+    "prior_garbled_ocr": {
+      "garbled_pages": [
+        51,
+        79
+      ],
+      "ocr_pages": [],
+      "anchors_summary": {
+        "ar_governance": {
+          "start": 8,
+          "end": 9
+        }
+      },
+      "skill_results": {},
+      "skipped_tasks": [
+        "tw_kam_analysis"
+      ],
+      "ocr_checks": []
+    },
+    "prior_ocr": {
+      "garbled_pages": [
+        51,
+        79
+      ],
+      "ocr_pages": [
+        51,
+        79
+      ],
+      "anchors_summary": {},
+      "skill_results": {},
+      "skipped_tasks": [],
+      "ocr_checks": [
+        {
+          "check": "top10_pct_sum",
+          "table": "T10_top10",
+          "label": "OCRBADCHECK",
+          "detail": "合計=120",
+          "passed": false
+        },
+        {
+          "check": "t7a_diff",
+          "table": "T7a",
+          "label": "OCRGOODCHECK",
+          "detail": "ok",
+          "passed": true
+        }
+      ]
+    }
+  }
+}

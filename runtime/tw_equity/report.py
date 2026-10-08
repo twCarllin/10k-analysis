@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -348,6 +349,33 @@ def _render_governance_flags(skill_results: dict, skipped_tasks: list[str]) -> l
 # ── 附錄 A：解析表 ────────────────────────────────────────────────────────────
 
 
+def _render_cross_year_compare(cross_year_compare: dict | None) -> list[str]:
+    if cross_year_compare is None:
+        return ["本節未執行：未提供前一年度"]
+    if not isinstance(cross_year_compare, dict):
+        return [_NO_RETURN]
+    if "error" in cross_year_compare:
+        return [f"本節 skill 失敗：{_t(cross_year_compare['error'])}"]
+    res = cross_year_compare
+    L = _insufficient_line(res)
+    L += ["**跨面向檢核**"]
+    cc = _list_of(res, "cross_checks")
+    if isinstance(cc, str):
+        L += _bullets(cc)
+    else:
+        for i in cc:
+            dims = _get(i, "dimensions")
+            dims_s = "、".join(_t(d) for d in dims) if isinstance(dims, list) else _NO_RETURN
+            L.append(f"- ［{dims_s}］{_val(i, 'finding')}；意涵：{_val(i, 'implication')}；"
+                     f"方向：{_val(i, 'direction')}")
+        if not cc:
+            L.append("- （無）")
+    L += ["", f"管理層可信度：{_val(res, 'mgmt_credibility')}（{_val(res, 'mgmt_credibility_reason')}）",
+          f"品質趨勢：{_val(res, 'quality_trend')}",
+          f"整體方向：{_val(res, 'overall_direction')}"]
+    return L
+
+
 def _two_year(tbl) -> list[str]:
     rows = [[r.label, r.current, r.prior, r.diff, r.diff_pct] for r in tbl.rows]
     return [f"單位：{_t(tbl.unit)}", ""] + _md_table(
@@ -469,7 +497,26 @@ def _fmt_anchor(v: Any) -> str:
     return f"p{s}" if s == e else f"p{s}–{e}"
 
 
-def _appendix_b(bundle: TablesBundle, anchors_summary: dict, skipped_tasks: list[str]) -> list[str]:
+def _pages(pages: list[int] | None) -> str:
+    return "、".join(f"p{n}" for n in pages) if pages else "無"
+
+
+def _page_status(label: str, garbled: list[int] | None, ocr: list[int] | None,
+                 ocr_checks: list[dict] | None) -> list[str]:
+    L = [f"**{label}**", "",
+         f"- 亂碼頁：{_pages(garbled)}",
+         f"- 已 OCR 頁：{_pages(ocr)}"]
+    failed = [c for c in (ocr_checks or []) if not c["passed"]]
+    if failed:
+        L += ["", "OCR 數字未通過檢查", ""]
+        L += _md_table(["檢查", "表", "項目", "說明"],
+                       [[c["check"], c["table"], c["label"], c["detail"]] for c in failed])
+    return L
+
+
+def _appendix_b(bundle: TablesBundle, anchors_summary: dict, skipped_tasks: list[str],
+                garbled_pages: list[int] | None = None, ocr_pages: list[int] | None = None,
+                ocr_checks: list[dict] | None = None, prior: dict | None = None) -> list[str]:
     L = ["### 錨定頁碼", ""]
     L += _md_table(["anchor key", "頁碼範圍"],
                    [[k, _fmt_anchor(v)] for k, v in anchors_summary.items()]) if anchors_summary else ["（無錨定資訊）"]
@@ -480,6 +527,96 @@ def _appendix_b(bundle: TablesBundle, anchors_summary: dict, skipped_tasks: list
     L.append(_NO_COVERAGE if cov is None else f"parent_cost_coverage = {cov:.4f}")
     if skipped_tasks:
         L += ["", "### 跳過的任務", ""] + [f"- {_t(s)}" for s in skipped_tasks]
+    L += ["", "### 亂碼頁與 OCR 頁", ""]
+    L += _page_status("當年度", garbled_pages, ocr_pages, ocr_checks)
+    if prior is not None:
+        L += ["", "### 前一年度", ""]
+        L += _page_status("前一年度頁面", prior["garbled_pages"], prior["ocr_pages"],
+                          prior.get("ocr_checks"))
+        L += ["", "**前一年度錨定頁碼**", ""]
+        pa = prior["anchors_summary"]
+        L += _md_table(["anchor key", "頁碼範圍"],
+                       [[k, _fmt_anchor(v)] for k, v in pa.items()]) if pa else ["（無錨定資訊）"]
+        L += ["", "**前一年度缺表清單**", ""]
+        L += [f"- {_t(m)}" for m in prior["bundle"].missing_tables] or ["- （無）"]
+        if prior["skipped_tasks"]:
+            L += ["", "**前一年度跳過的任務**", ""] + [f"- {_t(s)}" for s in prior["skipped_tasks"]]
+    return L
+
+
+_NOT_OBTAINED = "未取得"
+
+
+def _year_sort_key(label: str) -> tuple[int, str]:
+    m = re.match(r"\s*(\d+)", str(label))
+    return (int(m.group(1)) if m else 10**9, str(label))
+
+
+def _appendix_c(cross_year: dict | None) -> list[str]:
+    if cross_year is None:
+        return ["本附錄未執行：未提供前一年度"]
+    if not isinstance(cross_year, dict):
+        return [_NO_RETURN]
+    L = ["### 財務績效表序列", ""]
+    series = _list_of(cross_year, "fin_performance_series")
+    if isinstance(series, str):
+        L.append(series)
+    elif not series:
+        L.append(_NOT_OBTAINED)
+    else:
+        years = sorted({y for r in series for y in r["values"]}, key=_year_sort_key)
+        L += _md_table(["項目", *years],
+                       [[r["label"], *[r["values"].get(y) for y in years]] for r in series])
+    L += ["", "### 重疊年度數字檢查", ""]
+    ov = _list_of(cross_year, "overlap_checks")
+    if isinstance(ov, str):
+        L.append(ov)
+    elif not ov:
+        L.append(_NOT_OBTAINED)
+    else:
+        bad = [o for o in ov if not o["match"]]
+        if not bad:
+            L.append("兩份文件重疊年度數字一致")
+        else:
+            L += _md_table(["表", "項目", "年度", "當年度文件", "前一年度文件"],
+                           [[o["table"], o["label"], o["year"], o["current_doc"], o["prior_doc"]]
+                            for o in bad])
+    L += ["", "### 客戶集中度序列", ""]
+    conc = _get(cross_year, "customer_concentration_series")
+    if not isinstance(conc, dict):
+        L.append(_NO_RETURN)
+    else:
+        for key in ("T8_sales", "T8_purchase"):
+            L += [f"**{key}**", ""]
+            rows = _list_of(conc, key)
+            if isinstance(rows, str):
+                L.append(rows)
+            elif not rows:
+                L.append(_NOT_OBTAINED)
+            else:
+                L += _md_table(["年度", "top1_pct"], [[r["label"], _val(r, "top1_pct")] for r in rows])
+            L.append("")
+        L.pop()
+    L += ["", "### 前十大股東變動", ""]
+    sh = _list_of(cross_year, "top_shareholders_change")
+    if isinstance(sh, str):
+        L.append(sh)
+    elif not sh:
+        L.append(_NOT_OBTAINED)
+    else:
+        L += _md_table(["股東", "當年度持股%", "前一年度持股%", "變動", "狀態"],
+                       [[r["name"], r["current_pct"], r["prior_pct"], r["delta_pct"], r["status"]]
+                        for r in sh])
+    L += ["", "### 質押變動", ""]
+    pc = _get(cross_year, "pledge_change")
+    if not isinstance(pc, dict):
+        L.append(_NO_RETURN)
+    elif not pc:
+        L.append(_NOT_OBTAINED)
+    else:
+        L += _md_table(["", "狀態", "最高質押比例%"],
+                       [["當年度", _val(pc, "current_status"), _val(pc, "current_max_pct")],
+                        ["前一年度", _val(pc, "prior_status"), _val(pc, "prior_max_pct")]])
     return L
 
 
@@ -494,9 +631,21 @@ def save_tw_equity_report(
     skill_results: dict,
     eval_results: dict,
     skipped_tasks: list[str],
+    cross_year_compare: dict | None = None,
+    cross_year: dict | None = None,
+    garbled_pages: list[int] | None = None,
+    ocr_pages: list[int] | None = None,
+    ocr_checks: list[dict] | None = None,
+    prior: dict | None = None,
     out_dir: Path | None = None,
 ) -> Path:
-    """輸出 md／pdf／raw.json 到 out_dir（預設 data/output/<ticker>/），回傳 md 路徑。"""
+    """輸出 md／pdf／raw.json 到 out_dir（預設 data/output/<ticker>/），回傳 md 路徑。
+
+    prior：前一年度結果（無前一年度時為 None）。必備 key：
+    bundle（TablesBundle）、anchors_summary（dict）、skill_results（dict）、
+    skipped_tasks（list[str]）、garbled_pages（list[int]）、ocr_pages（list[int]）；
+    選填 key：ocr_checks（list[dict]）。
+    """
     now = datetime.now()
     ts = now.strftime("%Y%m%d_%H%M")
     out_dir = Path(out_dir) if out_dir is not None else Path("data/output") / inputs.ticker
@@ -515,8 +664,11 @@ def save_tw_equity_report(
         "## 5. 業務與管理層敘述", "", *_render_business_analysis(skill_results, skipped_tasks), "",
         "## 6. 客戶與供應商", "", *_render_customer_supplier(skill_results, skipped_tasks), "",
         "## 7. 公司治理警訊", "", *_render_governance_flags(skill_results, skipped_tasks), "",
+        "## 8. 跨年比較", "", *_render_cross_year_compare(cross_year_compare), "",
         "## 附錄 A：解析表原始數字", "", *_appendix_a(bundle),
-        "## 附錄 B：錨定與缺表", "", *_appendix_b(bundle, anchors_summary, skipped_tasks), "",
+        "## 附錄 B：錨定與缺表", "", *_appendix_b(bundle, anchors_summary, skipped_tasks,
+                                                garbled_pages, ocr_pages, ocr_checks, prior), "",
+        "## 附錄 C：跨年表格比對", "", *_appendix_c(cross_year), "",
     ]
     md_text = "\n".join(lines)
 
@@ -528,6 +680,20 @@ def save_tw_equity_report(
         "skill_results": skill_results,
         "eval_results": eval_results,
         "anchors_summary": anchors_summary,
+        "garbled_pages": garbled_pages,
+        "ocr_pages": ocr_pages,
+        "ocr_checks": ocr_checks,
+        "prior": None if prior is None else {
+            "bundle": prior["bundle"].to_dict(),
+            "anchors_summary": prior["anchors_summary"],
+            "skill_results": prior["skill_results"],
+            "skipped_tasks": prior["skipped_tasks"],
+            "garbled_pages": prior["garbled_pages"],
+            "ocr_pages": prior["ocr_pages"],
+            "ocr_checks": prior.get("ocr_checks"),
+        },
+        "cross_year": cross_year,
+        "cross_year_compare": cross_year_compare,
     }
     (out_dir / f"{stem}_raw.json").write_text(
         json.dumps(raw, ensure_ascii=False, indent=2, default=str), encoding="utf-8")

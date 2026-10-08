@@ -145,6 +145,8 @@ def main():
                    help="清除 checkpoint 重新開始")
     p.add_argument("--dry-run", action="store_true",
                    help="不發 API，用 mock 結果測試流程")
+    p.add_argument("--ocr", action="store_true",
+                   help="tw-equity 專用：亂碼頁改走 OCR（付費外部 API，須明示開啟）")
     p.add_argument("--only", default=None,
                    help="只重跑指定 task（逗號分隔），其餘從快取載入。"
                         "下游 eval + synthesis 自動重跑")
@@ -187,7 +189,7 @@ def main():
             from agent_runner import set_dry_run
             set_dry_run(True)
         try:
-            run_tw_equity_pipeline(ticker, dry_run=args.dry_run)
+            run_tw_equity_pipeline(ticker, dry_run=args.dry_run, ocr=args.ocr)
         except (FileNotFoundError, ValueError, AnchorError) as exc:
             print(f"[tw-equity] {exc}")
             sys.exit(1)

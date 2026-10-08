@@ -56,7 +56,7 @@ def test_tw_equity_success_exit_0_and_calls_pipeline(main_mod, capsys):
     import runtime.tw_equity.tw_pipeline as real
     seen = {}
 
-    def fake(ticker, *, dry_run=False, base_dir=None):
+    def fake(ticker, *, dry_run=False, base_dir=None, ocr=False):
         seen["args"] = (ticker, dry_run)
         return Path("x.md")
 
@@ -105,3 +105,46 @@ def test_market_tw_still_routes_to_credit_branch(main_mod):
         code = _run(main_mod, ["3653", "--market", "tw"])
     assert code == 0
     assert called["credit"] == "3653"
+
+
+def _ocr_seen(main_mod, argv):
+    import runtime.tw_equity.tw_pipeline as real
+    seen = {}
+
+    def fake(ticker, **kw):
+        seen.update(kw)
+        return Path("x.md")
+
+    with mock.patch.object(real, "run_tw_equity_pipeline", fake):
+        code = _run(main_mod, argv)
+    assert code == 0
+    return seen
+
+
+def test_ocr_flag_defaults_false(main_mod):
+    seen = _ocr_seen(main_mod, ["3653", "--market", "tw-equity", "--dry-run"])
+    assert seen["ocr"] is False
+
+
+def test_ocr_flag_passes_true(main_mod):
+    seen = _ocr_seen(main_mod, ["3653", "--market", "tw-equity", "--ocr"])
+    assert seen["ocr"] is True
+
+
+def test_dry_run_and_ocr_both_passed(main_mod):
+    seen = _ocr_seen(main_mod, ["3653", "--market", "tw-equity", "--dry-run", "--ocr"])
+    assert seen["dry_run"] is True and seen["ocr"] is True
+
+
+def test_ocr_flag_on_tw_credit_branch_not_passed(main_mod):
+    import runtime.tw_credit.tw_pipeline as credit
+    got = {}
+
+    def fake_credit(ticker, **kw):
+        got.update(kw)
+        return {"status": "completed"}
+
+    with mock.patch.object(credit, "run_tw_pipeline", fake_credit):
+        code = _run(main_mod, ["3653", "--market", "tw", "--ocr"])
+    assert code == 0
+    assert "ocr" not in got

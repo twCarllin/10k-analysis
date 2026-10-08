@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
-_CACHE_VERSION = 2
+_CACHE_VERSION = 3
 _DEFAULT_CACHE_DIR = Path("data/cache/tw_equity")
 
 
@@ -28,6 +29,8 @@ class Page:
 class PdfDoc:
     path: Path
     pages: list[Page]
+    garbled_pages: list[int] = field(default_factory=list)  # 偵測到的亂碼頁
+    ocr_pages: list[int] = field(default_factory=list)      # 已以 OCR 取代內容的頁
 
     def text_of(self, start: int, end: int) -> str:
         """回傳頁碼 start..end（含兩端）的文字，頁間以 '\\f' 接。"""
@@ -51,6 +54,46 @@ class PdfDoc:
         return result
 
 
+# ── 亂碼偵測與 OCR 政策 ─────────────────────────────────────────────────────
+
+_CID_RE = re.compile(r"\(cid:\d+\)")
+_GARBLED_THRESHOLD = 20
+
+OcrFn = Callable[[Path, "list[int]"], "dict[int, Page]"]  # 頁碼 → 取代用 Page
+
+
+def is_garbled(page: Page) -> bool:
+    """page.text 中 `(cid:\d+)` 出現 ≥20 次視為亂碼頁。"""
+    return len(_CID_RE.findall(page.text)) >= _GARBLED_THRESHOLD
+
+
+def apply_ocr_policy(doc: PdfDoc, ocr: OcrFn | None = None) -> PdfDoc:
+    """偵測亂碼頁；有 ocr 則呼叫一次並取代，未取代的亂碼頁清空。
+
+    ocr 例外不吞，原樣往上拋。回傳新 PdfDoc（不改傳入物件的頁）。
+    """
+    garbled = [p.number for p in doc.pages if is_garbled(p)]
+    replaced: dict[int, Page] = {}
+    if ocr is not None and garbled:
+        got = ocr(doc.path, list(garbled))
+        replaced = {n: got[n] for n in garbled if n in got}
+    pages: list[Page] = []
+    for p in doc.pages:
+        if p.number in replaced:
+            r = replaced[p.number]
+            pages.append(Page(number=p.number, text=r.text, tables=r.tables, lines=r.lines))
+        elif p.number in garbled:
+            pages.append(Page(number=p.number, text="", tables=[], lines=[]))
+        else:
+            pages.append(p)
+    return PdfDoc(
+        path=doc.path,
+        pages=pages,
+        garbled_pages=garbled,
+        ocr_pages=sorted(replaced),
+    )
+
+
 # ── 序列化 ──────────────────────────────────────────────────────────────────
 
 def to_json(doc: PdfDoc) -> dict[str, Any]:
@@ -67,6 +110,8 @@ def to_json(doc: PdfDoc) -> dict[str, Any]:
             }
             for p in doc.pages
         ],
+        "garbled_pages": list(doc.garbled_pages),
+        "ocr_pages": list(doc.ocr_pages),
     }
 
 
@@ -83,7 +128,12 @@ def from_json(data: dict[str, Any]) -> PdfDoc | None:
         )
         for pg in data["pages"]
     ]
-    return PdfDoc(path=Path(data["path"]), pages=pages)
+    return PdfDoc(
+        path=Path(data["path"]),
+        pages=pages,
+        garbled_pages=list(data.get("garbled_pages", [])),
+        ocr_pages=list(data.get("ocr_pages", [])),
+    )
 
 
 # ── 快取工具 ─────────────────────────────────────────────────────────────────
@@ -94,8 +144,9 @@ def _sha256_prefix(path: Path) -> str:
     return digest[:16]
 
 
-def _cache_path(pdf_path: Path, cache_dir: Path) -> Path:
-    return cache_dir / f"{_sha256_prefix(pdf_path)}.json"
+def _cache_path(pdf_path: Path, cache_dir: Path, *, with_ocr: bool = False) -> Path:
+    suffix = ".ocr.json" if with_ocr else ".json"
+    return cache_dir / f"{_sha256_prefix(pdf_path)}{suffix}"
 
 
 # ── 主入口 ───────────────────────────────────────────────────────────────────
@@ -106,6 +157,7 @@ def load_pdf(
     cache_dir: Path | None = None,
     _opener: Any = None,
     _line_opener: Any = None,
+    ocr: OcrFn | None = None,
 ) -> PdfDoc:
     """載入 PDF 並回傳 PdfDoc，第二次呼叫讀快取。
 
@@ -118,6 +170,7 @@ def load_pdf(
         _line_opener: 測試注入點——支援 __getitem__／__len__，每頁有
                  get_text("words")；預設 fitz.open。_opener 提供時若未提供
                  本參數，lines 為空（不開真實 PDF）。
+        ocr: 亂碼頁 OCR 備援；None 則亂碼頁清空。
 
     Returns:
         PdfDoc 實例。
@@ -127,12 +180,12 @@ def load_pdf(
 
     # 有注入點時，跳過快取讀取（直接用注入資料），但仍寫快取
     if _opener is not None:
-        doc = _build_from_opener(path, _opener, _line_opener)
-        _write_cache(doc, path, cache_dir)
+        doc = apply_ocr_policy(_build_from_opener(path, _opener, _line_opener), ocr)
+        _write_cache(doc, path, cache_dir, with_ocr=ocr is not None)
         return doc
 
     # 嘗試讀快取
-    cp = _cache_path(path, cache_dir)
+    cp = _cache_path(path, cache_dir, with_ocr=ocr is not None)
     if cp.exists():
         try:
             cached = from_json(json.loads(cp.read_text(encoding="utf-8")))
@@ -144,16 +197,18 @@ def load_pdf(
     # 從真實 PDF 抽取
     import pdfplumber  # 延遲 import
 
-    doc = _build_from_pdfplumber(path, _line_opener)
-    _write_cache(doc, path, cache_dir)
+    doc = apply_ocr_policy(_build_from_pdfplumber(path, _line_opener), ocr)
+    _write_cache(doc, path, cache_dir, with_ocr=ocr is not None)
     return doc
 
 
-def _write_cache(doc: PdfDoc, pdf_path: Path, cache_dir: Path) -> None:
+def _write_cache(
+    doc: PdfDoc, pdf_path: Path, cache_dir: Path, *, with_ocr: bool = False
+) -> None:
     """寫快取；失敗靜默忽略。"""
     try:
         cache_dir.mkdir(parents=True, exist_ok=True)
-        cp = _cache_path(pdf_path, cache_dir)
+        cp = _cache_path(pdf_path, cache_dir, with_ocr=with_ocr)
         cp.write_text(
             json.dumps(to_json(doc), ensure_ascii=False),
             encoding="utf-8",

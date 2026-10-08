@@ -4,5 +4,11 @@
   "fiscal_year": 2025,
   "annual_report_path": "tw_report/2025_3653_健策年報.pdf",
   "consolidated_fs_path": "tw_report/3653_2025Q4合併財報.pdf",
-  "parent_fs_path": null
+  "parent_fs_path": null,
+  "prior": {
+    "fiscal_year": 2024,
+    "annual_report_path": "tw_report/3653_2024年報.pdf",
+    "consolidated_fs_path": null,
+    "parent_fs_path": null
+  }
 }

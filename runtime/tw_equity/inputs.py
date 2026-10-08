@@ -11,6 +11,19 @@ from pathlib import Path
 
 
 @dataclass(frozen=True)
+class PriorYearInputs:
+    fiscal_year: int
+    annual_report_path: Path
+    consolidated_fs_path: Path | None
+    parent_fs_path: Path | None
+
+    @property
+    def roc_year(self) -> int:
+        """民國年：fiscal_year - 1911。"""
+        return self.fiscal_year - 1911
+
+
+@dataclass(frozen=True)
 class TwEquityInputs:
     ticker: str
     company_name: str
@@ -18,6 +31,7 @@ class TwEquityInputs:
     annual_report_path: Path
     consolidated_fs_path: Path | None
     parent_fs_path: Path | None
+    prior: PriorYearInputs | None = None
 
     @property
     def roc_year(self) -> int:
@@ -93,8 +107,8 @@ def load_inputs(ticker: str, *, base_dir: Path | None = None) -> TwEquityInputs:
     if not annual_report_path.exists():
         raise FileNotFoundError(f"年報 PDF 不存在：{annual_report_path}")
 
-    def _optional_path(key: str) -> Path | None:
-        val = data.get(key)
+    def _optional_path(key: str, src: dict | None = None) -> Path | None:
+        val = (data if src is None else src).get(key)
         if val is None:
             return None
         p = _resolve(val)
@@ -105,6 +119,8 @@ def load_inputs(ticker: str, *, base_dir: Path | None = None) -> TwEquityInputs:
     consolidated_fs_path = _optional_path("consolidated_fs_path")
     parent_fs_path = _optional_path("parent_fs_path")
 
+    prior = _load_prior(data.get("prior"), fiscal_year, _resolve, _optional_path)
+
     return TwEquityInputs(
         ticker=ticker_val,
         company_name=company_name,
@@ -112,4 +128,36 @@ def load_inputs(ticker: str, *, base_dir: Path | None = None) -> TwEquityInputs:
         annual_report_path=annual_report_path,
         consolidated_fs_path=consolidated_fs_path,
         parent_fs_path=parent_fs_path,
+        prior=prior,
+    )
+
+
+def _load_prior(raw, fiscal_year, _resolve, _optional_path) -> PriorYearInputs | None:
+    """解析選填的 prior 區塊；缺或 null → None。"""
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError("必填欄位缺失或型別錯誤：prior")
+    errors: list[str] = []
+    py = raw.get("fiscal_year")
+    if not isinstance(py, int) or isinstance(py, bool):
+        errors.append("prior.fiscal_year")
+    ar = raw.get("annual_report_path")
+    if not isinstance(ar, str):
+        errors.append("prior.annual_report_path")
+    if errors:
+        raise ValueError(f"必填欄位缺失或型別錯誤：{', '.join(errors)}")
+    if py != fiscal_year - 1:
+        raise ValueError(
+            f"prior.fiscal_year 必須為 fiscal_year-1：fiscal_year={fiscal_year}，"
+            f"prior.fiscal_year={py}"
+        )
+    ar_path = _resolve(ar)
+    if not ar_path.exists():
+        raise FileNotFoundError(f"prior 年報 PDF 不存在：{ar_path}")
+    return PriorYearInputs(
+        fiscal_year=py,
+        annual_report_path=ar_path,
+        consolidated_fs_path=_optional_path("consolidated_fs_path", raw),
+        parent_fs_path=_optional_path("parent_fs_path", raw),
     )

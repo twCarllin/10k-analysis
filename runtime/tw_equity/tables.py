@@ -163,6 +163,11 @@ def _extract_unit(page_text: str) -> str:
     return "unknown"
 
 
+def _nospace(text: str) -> str:
+    """NFKC 正規化並去除所有空白（OCR 表頭常寫成「113 年度」）。"""
+    return "".join(unicodedata.normalize("NFKC", text).split())
+
+
 def _find_header_row_idx(
     table: list[list[str | None]],
     *,
@@ -170,11 +175,11 @@ def _find_header_row_idx(
     prior_label: str,
 ) -> int | None:
     """找含 current_label、prior_label 且含「差異」的 header 列索引。"""
-    norm_cur = unicodedata.normalize("NFKC", current_label)
-    norm_pri = unicodedata.normalize("NFKC", prior_label)
+    norm_cur = _nospace(current_label)
+    norm_pri = _nospace(prior_label)
     norm_diff = "差異"
     for i, row in enumerate(table):
-        rt = _row_text(row)
+        rt = _nospace(_row_text(row))
         if norm_cur in rt and norm_pri in rt and norm_diff in rt:
             return i
     return None
@@ -203,9 +208,11 @@ def parse_two_year_table(
     prior_label = f"{roc_year - 1}年度"
 
     # 找含年度標籤與差異的表
-    table = find_table(
-        tables,
-        header_keywords=[current_label, prior_label, "差異"],
+    table = next(
+        (t for t in tables
+         if _find_header_row_idx(
+             t, current_label=current_label, prior_label=prior_label) is not None),
+        None,
     )
     if table is None:
         return None
@@ -220,15 +227,15 @@ def parse_two_year_table(
     header_row = table[header_idx]
 
     # 取各欄索引（用 NFKC 正規化後比對，處理 CJK 相容表意字元）
-    norm_cur = unicodedata.normalize("NFKC", current_label)
-    norm_pri = unicodedata.normalize("NFKC", prior_label)
+    norm_cur = _nospace(current_label)
+    norm_pri = _nospace(prior_label)
     cur_col = next(
         (i for i, c in enumerate(header_row)
-         if c and norm_cur in unicodedata.normalize("NFKC", c)), None
+         if c and norm_cur in _nospace(c)), None
     )
     pri_col = next(
         (i for i, c in enumerate(header_row)
-         if c and norm_pri in unicodedata.normalize("NFKC", c)), None
+         if c and norm_pri in _nospace(c)), None
     )
     diff_col = next(
         (i for i, c in enumerate(header_row)
