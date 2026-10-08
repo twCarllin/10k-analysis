@@ -151,6 +151,35 @@ python main.py --market jp --tdnet-watch 6315,7203,9984 --since-minutes 30
 python main.py 6315 --market jp --analyze-call
 ```
 
+### 台股（`--market tw` 徵信 vs `--market tw-equity` 投資研究）
+
+兩條線定位不同，不要混用：
+
+- `--market tw`：**徵信**（`runtime/tw_credit/`），評估授信風險。
+- `--market tw-equity`：**投資研究**（`runtime/tw_equity/`），與美股／日股並列的 market adapter，輸入為年報＋財報 PDF。
+
+```bash
+python main.py 3653 --market tw-equity              # 真跑（LLM 走 agent_runner 既有 provider）
+python main.py 3653 --market tw-equity --dry-run    # 不發 API，skill 回 mock_outputs.json 的 tw_ 條目
+```
+
+- ticker 必填；`year` 位置參數在 tw-equity 忽略（年度由輸入檔決定）。
+- 輸入檔 `tw_equity_inputs/<ticker>.json`：
+
+```json
+{
+  "ticker": "3653",
+  "company_name": "健策精密工業股份有限公司",
+  "fiscal_year": 2025,
+  "annual_report_path": "tw_report/2025_3653_健策年報.pdf",
+  "consolidated_fs_path": null,
+  "parent_fs_path": null
+}
+```
+
+  `ticker`、`company_name`、`fiscal_year`（西元年）、`annual_report_path` 必填；`consolidated_fs_path`／`parent_fs_path` 可為 `null` 或省略，但給了路徑而檔案不存在會報 `FileNotFoundError`。輸入驗證失敗時印 `[tw-equity] <訊息>` 並以 exit 1 結束。
+- **Phase 1A 限制**：解析層只用 pdfplumber（無 DI／OCR 備援）；財報缺檔時 T1–T5 列入 `missing_tables`，並在報告附錄明示；T6（產銷量值）為選配，錨不到同樣記 `missing_tables`；T9（背書保證／資金貸與）延到 Phase 1B。
+
 **會計年度命名**：「FY2026」= 結束於 2026 年的會計年度，預設 fiscal year end = 3/31（大多數日企）。FY2026 Q1 = 2025/4–6、Q4 = 2026/1–3（年度結尾）。
 
 ## Pipeline 架構

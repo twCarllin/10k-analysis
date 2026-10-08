@@ -25,6 +25,9 @@ REQUIRED_KEYS = {
     "three_statement_cross": ["checks", "overall_signals", "insufficient_data"],
     "competitor_mapping": ["named_competitors", "market_position", "disclosure_quality", "mode", "insufficient_data"],
     "supply_chain": ["supply_chain_risks", "overall_risk_level", "trend", "insufficient_data"],
+    "tw_cost_structure":     ["coverage_basis", "cost_composition", "key_observations", "insufficient_data"],
+    "tw_financial_analysis": ["balance_sheet", "income_statement", "overall_health", "insufficient_data"],
+    "tw_footnotes_quality":  ["related_party", "guarantees_and_loans", "insufficient_data"],
 }
 
 HARD_RULES = {

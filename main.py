@@ -136,8 +136,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("ticker", nargs="?", default=None)
     p.add_argument("year", nargs="?", type=int, default=None)
-    p.add_argument("--market", default="sec", choices=["sec", "jp", "tw"],
-                   help="Market: sec (US SEC), jp (EDINET Japanese), or tw (TW credit). Default: sec")
+    p.add_argument("--market", default="sec", choices=["sec", "jp", "tw", "tw-equity"],
+                   help="Market: sec (US SEC), jp (EDINET Japanese), tw (TW credit), or tw-equity (TW equity analysis). Default: sec")
     p.add_argument("--prior-year", type=int, default=None,
                    help="手動覆蓋前期年份（預設自動推算）")
     p.add_argument("--file", default=None)
@@ -174,6 +174,24 @@ def main():
     ticker = args.ticker.upper() if args.ticker else None
     filing_type = args.filing_type
     quarter = args.quarter
+
+    # TW equity branch — early return before TW credit/SEC/JP logic
+    if args.market == "tw-equity":
+        if ticker is None:
+            p.error("ticker is required for --market tw-equity")
+        if args.year is not None:
+            print("  [tw-equity] year 參數在 tw-equity market 中忽略（年度由輸入檔決定）")
+        from runtime.tw_equity.tw_pipeline import run_tw_equity_pipeline
+        from runtime.tw_equity.doc_anchor import AnchorError
+        if args.dry_run:
+            from agent_runner import set_dry_run
+            set_dry_run(True)
+        try:
+            run_tw_equity_pipeline(ticker, dry_run=args.dry_run)
+        except (FileNotFoundError, ValueError, AnchorError) as exc:
+            print(f"[tw-equity] {exc}")
+            sys.exit(1)
+        sys.exit(0)
 
     # TW credit branch — early return before SEC/JP logic
     if args.market == "tw":

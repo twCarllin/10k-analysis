@@ -1,0 +1,48 @@
+{
+  "_source": "Spec §3.1–3.3 Output 骨架；full=所有欄位有值（內含 TONE 測試詞「惡化」與 pipe 字元），partial=刻意缺 key（tw_financial_analysis 整個缺；tw_cost_structure 缺 inventory／operating_leverage／key_observations；tw_footnotes_quality 缺 guarantees_and_loans／kam）",
+  "full": {
+    "tw_cost_structure": {
+      "coverage_basis": "parent",
+      "coverage_note": "COVNOTE母公司涵蓋率 0.85",
+      "cost_composition": [{"item": "直接原料", "share_pct": 62.5, "yoy_pct": 4.1, "note": "占比最高"}],
+      "expense_nature": [{"item": "員工福利", "pct_of_revenue": 8.3, "note": "小幅上升"}],
+      "inventory": {"structure_note": "INVSTRUCT以原料為主", "writedown_note": "跌價下降"},
+      "unit_economics": [{"product": "主力產品", "implied_asp": 120.5, "implied_unit_cost": 95.2, "note": "同步走升"}],
+      "operating_leverage": {"revenue_yoy_pct": 6.2, "operating_income_yoy_pct": 9.8, "summary": "OPLEV正向營業槓桿"},
+      "key_observations": ["COSTOBS原料價格為主要變數，毛利惡化風險低"],
+      "insufficient_data": false
+    },
+    "tw_financial_analysis": {
+      "balance_sheet": {"summary": "BSSUM總資產增加", "notable_changes": [{"item": "存貨", "diff_pct": 35.2, "note": "較前年增加"}]},
+      "income_statement": {"summary": "ISSUM營收成長", "margins": [{"metric": "毛利率", "current_pct": 28.4, "prior_pct": 26.9}]},
+      "management_explanation": {"consistent": true, "unexplained_changes": [{"item": "存貨", "diff_pct": 35.2}], "summary": "MGMTSUM大致一致"},
+      "overall_health": "stable",
+      "overall_health_rationale": "HEALTHWHY獲利率提升",
+      "insufficient_data": false
+    },
+    "tw_footnotes_quality": {
+      "related_party": [{"counterparty": "子公司 A|B", "nature": "進貨", "amount_note": "約占 5%", "flag": "normal"}],
+      "contingencies": [{"item": "未決訴訟", "note": "專利訴訟"}],
+      "guarantees_and_loans": {"summary": "GLSUM背書保證在上限內", "flag": "normal"},
+      "kam": [{"matter": "存貨評價", "risk_pointed": "淨變現價值估計"}],
+      "key_observations": ["FNOBS條件無重大差異"],
+      "insufficient_data": false
+    }
+  },
+  "partial": {
+    "tw_cost_structure": {
+      "coverage_basis": "annual_report_only",
+      "coverage_note": "PARTCOV",
+      "cost_composition": [{"item": "直接原料", "share_pct": 62.5, "yoy_pct": 4.1}],
+      "expense_nature": [],
+      "unit_economics": [],
+      "insufficient_data": true
+    },
+    "tw_footnotes_quality": {
+      "related_party": [],
+      "contingencies": [{"item": "未決訴訟", "note": "PARTCONT"}],
+      "key_observations": [],
+      "insufficient_data": false
+    }
+  }
+}

@@ -11,6 +11,7 @@ pandas>=2.0
 openpyxl>=3.1
 weasyprint>=63
 markdown>=3.5
+pdfplumber>=0.11.9
 
 # dev-only: testing
 pytest>=7.0

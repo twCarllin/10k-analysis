@@ -701,5 +701,50 @@
     ],
     "tone_vs_prior": null,
     "insufficient_data": false
+  },
+  "tw_cost_structure": {
+    "coverage_basis": "parent",
+    "coverage_note": "母公司成本表涵蓋率 0.85，以 T1–T3 為主。",
+    "cost_composition": [
+      {"item": "直接原料", "share_pct": 62.5, "yoy_pct": 4.1, "note": "占營業成本比重最高"}
+    ],
+    "expense_nature": [
+      {"item": "員工福利", "pct_of_revenue": 8.3, "note": "占營收比小幅上升"}
+    ],
+    "inventory": {"structure_note": "以原料與製成品為主", "writedown_note": "跌價損失較前年下降"},
+    "unit_economics": [
+      {"product": "主力產品", "implied_asp": 120.5, "implied_unit_cost": 95.2, "note": "單價與單位成本同步走升"}
+    ],
+    "operating_leverage": {"revenue_yoy_pct": 6.2, "operating_income_yoy_pct": 9.8, "summary": "營業利益 YoY 高於營收 YoY，呈現正向營業槓桿"},
+    "key_observations": ["直接原料占比最高，原料價格為主要變數"],
+    "insufficient_data": false
+  },
+  "tw_financial_analysis": {
+    "balance_sheet": {
+      "summary": "總資產增加，主要來自存貨與現金。",
+      "notable_changes": [{"item": "存貨", "diff_pct": 35.2, "note": "較前年增加 35.2%"}]
+    },
+    "income_statement": {
+      "summary": "營收與獲利皆成長。",
+      "margins": [{"metric": "毛利率", "current_pct": 28.4, "prior_pct": 26.9}]
+    },
+    "management_explanation": {
+      "consistent": true,
+      "unexplained_changes": [{"item": "存貨", "diff_pct": 35.2}],
+      "summary": "管理層說明與數字大致一致，存貨大幅增加未見說明。"
+    },
+    "overall_health": "stable",
+    "overall_health_rationale": "獲利率提升且負債結構穩定，但存貨增加幅度需追蹤。",
+    "insufficient_data": false
+  },
+  "tw_footnotes_quality": {
+    "related_party": [
+      {"counterparty": "子公司 A", "nature": "進貨", "amount_note": "年度進貨金額占營業成本約 5%", "flag": "normal"}
+    ],
+    "contingencies": [{"item": "未決訴訟", "note": "附註揭露一件專利訴訟，尚無法估計金額"}],
+    "guarantees_and_loans": {"summary": "對子公司背書保證，金額在公司章程上限內。", "flag": "normal"},
+    "kam": [{"matter": "存貨評價", "risk_pointed": "淨變現價值估計涉及管理層判斷"}],
+    "key_observations": ["關係人交易條件與非關係人無重大差異"],
+    "insufficient_data": false
   }
 }
