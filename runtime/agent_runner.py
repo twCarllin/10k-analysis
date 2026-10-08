@@ -16,6 +16,16 @@ if _provider == "anthropic":
     _api_key = _config.get("anthropic_api_key", "") or _config.get("api_key", "")
     _model = _config.get("model", "claude-sonnet-4-5")
     client = anthropic.Anthropic(api_key=_api_key)
+elif _provider == "azure":
+    # Azure AI Foundry OpenAI 相容介面（config.azure.endpoint 已含 /openai/v1），走 Responses API
+    from openai import OpenAI
+    _azure = _config.get("azure", {})
+    _api_key = _azure.get("api_key", "")
+    _model = _azure.get("deployment_name", "gpt-5.5")
+    _azure_max_output_tokens = int(_azure.get("max_output_tokens", 16384))
+    _azure_reasoning_effort = _azure.get("reasoning_effort", "medium")
+    client = OpenAI(api_key=_api_key, base_url=_azure.get("endpoint", ""),
+                    timeout=int(_azure.get("chat_timeout", 300)))
 else:
     from openai import OpenAI
     _api_key = (
@@ -105,6 +115,21 @@ def run_agent(agent_name, skill_name, inputs,
         )
         raw = response.content[0].text.strip()
         usage = response.usage
+    elif _provider == "azure":
+        # reasoning token 計入 max_output_tokens，故不沿用頂層 max_tokens（4096 會截斷）
+        response = client.responses.create(
+            model=model,
+            instructions=system,
+            input=user_content,
+            max_output_tokens=_azure_max_output_tokens,
+            reasoning={"effort": _azure_reasoning_effort},
+        )
+        raw = response.output_text.strip()
+        _u = getattr(response, "usage", None)
+        usage = type("Usage", (), {
+            "input_tokens": getattr(_u, "input_tokens", 0) or 0,
+            "output_tokens": getattr(_u, "output_tokens", 0) or 0,
+        })()
     else:
         response = client.chat.completions.create(
             model=model,
