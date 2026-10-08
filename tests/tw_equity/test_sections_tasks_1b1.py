@@ -54,13 +54,11 @@ def test_gov_anchors_none_gives_empty_strings() -> None:
     assert r["ar_governance"] == "" and r["ar_capital"] == ""
 
 
-def test_long_governance_truncated_by_truncate_with_notice() -> None:
-    from agent_runner import truncate_with_notice
-
+def test_long_governance_not_truncated_by_default() -> None:
     big = _doc(1, "字" * 13000)
     r = _build(big, {"ar_governance": PageRange(1, 1)})
-    assert r["ar_governance"] == truncate_with_notice(big.text_of(1, 1), 12000)
-    assert "截斷提示" in r["ar_governance"]
+    assert r["ar_governance"] == big.text_of(1, 1)
+    assert "截斷提示" not in r["ar_governance"]
 
 
 def test_governance_anchor_missing_is_empty_not_truncated() -> None:

@@ -21,6 +21,7 @@ from runtime.tw_equity.doc_anchor import (
     PARENT_FS_ANCHORS,
     AnchorError,
     PageRange,
+    find_annual_report_sections,
     find_sections,
 )
 
@@ -250,3 +251,55 @@ class TestAnchorDicts:
         """PARENT_FS_ANCHORS 包含所有 required key。"""
         for key in _PS_REQUIRED:
             assert key in PARENT_FS_ANCHORS, f"missing key: {key}"
+
+
+# ── run 2026-10-08-tw-equity-rotated-pages：ar_letter 以治理章終止、ar_risk 不誤中治理頁 ──
+
+
+def _page(n: int, text: str) -> Page:
+    return Page(number=n, text=text, tables=[], lines=[])
+
+
+class TestGovernanceTerminatesLetter:
+    def test_letter_ends_before_governance(self) -> None:
+        doc = _make_doc([
+            _page(1, "壹、致股東報告書 各位股東..."),
+            _page(2, "貳、公司治理報告 一、董事..."),
+            _page(3, "一、業務內容 ..."),
+        ])
+        r = find_annual_report_sections(doc, required={"ar_letter"})
+        assert r["ar_letter"] == PageRange(1, 1)
+        assert r["ar_governance"] == PageRange(2, 2)
+        assert r["ar_business"] == PageRange(3, 3)
+
+    def test_letter_without_governance_keeps_old_behavior(self) -> None:
+        doc = _make_doc([
+            _page(1, "壹、致股東報告書 各位股東..."),
+            _page(2, "（續）"),
+            _page(3, "一、業務內容 ..."),
+        ])
+        r = find_annual_report_sections(doc, required={"ar_letter"})
+        assert r["ar_letter"] == PageRange(1, 2)
+        assert r["ar_governance"] is None
+
+    def test_risk_start_not_before_mdna(self) -> None:
+        """治理頁交叉引用「風險事項」→ ar_risk 不得錨在 ar_mdna 之前，改往後找。"""
+        doc = _make_doc([
+            _page(1, "壹、致股東報告書"),
+            _page(2, "貳、公司治理報告 評估項目 運作情形 ... 請詳閱風險事項 ..."),
+            _page(3, "伍、財務狀況及財務績效之檢討分析與風險事項 ..."),  # 只命中 2 key，不被判為目錄頁
+            _page(4, "陸、特別記載事項"),
+        ])
+        r = find_annual_report_sections(doc, required=set())
+        assert r["ar_mdna"] == PageRange(3, 3)
+        assert r["ar_risk"] == PageRange(3, 3)
+
+    def test_risk_dropped_when_only_hit_is_before_mdna(self) -> None:
+        doc = _make_doc([
+            _page(1, "貳、公司治理報告 ... 風險事項 ..."),
+            _page(2, "伍、財務狀況及財務績效之檢討分析 ..."),
+            _page(3, "陸、特別記載事項"),
+        ])
+        r = find_annual_report_sections(doc, required=set())
+        assert r["ar_mdna"] == PageRange(2, 2)
+        assert r["ar_risk"] is None

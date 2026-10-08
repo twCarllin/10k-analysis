@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "path": "/Users/carllin/Documents/work/10k-analysis/tw_report/2025_3653_健策年報.pdf",
   "pages": [
     {
@@ -2904,5 +2904,7 @@
         "- 95 -"
       ]
     }
-  ]
+  ],
+  "garbled_pages": [],
+  "ocr_pages": []
 }

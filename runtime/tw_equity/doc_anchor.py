@@ -42,6 +42,7 @@ class PageRange:
 
 ANNUAL_REPORT_ANCHORS: dict[str, list[str]] = {
     "ar_letter":           ["致股東報告書"],
+    "ar_governance":       ["公司治理報告"],   # 只作 ar_letter 的終止錨；段落文字仍取自 GOVERNANCE_HEADING_ANCHORS
     "ar_business":         ["一、業務內容"],
     "ar_market":           ["二、市場及產銷概況"],
     "ar_customers":        ["主要銷貨客戶", "曾占進(銷)貨總額", "主要進銷貨客戶"],
@@ -306,6 +307,10 @@ AR_HEADING_FALLBACK: dict[str, HeadingAnchor] = {
 }
 
 
+# key 的起頁必須 ≥ 另一 key 的起頁：泛用關鍵字（「風險事項」）在前段章節被交叉引用時改往後找
+_AR_START_AFTER: dict[str, str] = {"ar_risk": "ar_mdna"}
+
+
 def find_annual_report_sections(
     doc: PdfDoc, *, required: set[str]
 ) -> dict[str, PageRange | None]:
@@ -317,6 +322,18 @@ def find_annual_report_sections(
     order = list(ANNUAL_REPORT_ANCHORS)
     first = find_sections(doc, ANNUAL_REPORT_ANCHORS, required=set(), order=order)
     starts: dict[str, int] = {k: r.start for k, r in first.items() if r is not None}
+
+    pages_sorted = sorted(doc.pages, key=lambda p: p.number)
+    for key, after in _AR_START_AFTER.items():
+        floor = starts.get(after)
+        if floor is None or starts.get(key, floor) >= floor:
+            continue
+        hit = next((p.number for p in pages_sorted
+                    if p.number >= floor and _hits_any(ANNUAL_REPORT_ANCHORS[key], _nfkc(p.text[:300]))), None)
+        if hit is None:
+            starts.pop(key, None)
+        else:
+            starts[key] = hit
 
     for key, anchor in AR_HEADING_FALLBACK.items():
         if first.get(key) is not None:

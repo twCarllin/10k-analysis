@@ -63,12 +63,18 @@ def test_missing_anchor_gives_empty_string_with_gov():
     assert r["fs_audit_kam"] == ""
 
 
-def test_long_text_truncated_by_truncate_with_notice():
-    from agent_runner import truncate_with_notice
-
+def test_long_text_not_truncated_by_default():
     big = _doc(1, "字" * 13000)
     r = build_sections(big, {"ar_letter": PageRange(1, 1)}, _doc(), {}, _doc(), {}, bundle=_bundle())
-    assert r["ar_letter"] == truncate_with_notice(big.text_of(1, 1), 12000)
+    assert r["ar_letter"] == big.text_of(1, 1)
+    assert "截斷提示" not in r["ar_letter"]
+
+
+def test_explicit_max_chars_still_truncates():
+    big = _doc(1, "字" * 13000)
+    r = build_sections(big, {"ar_letter": PageRange(1, 1)}, _doc(), {}, _doc(), {},
+                       bundle=_bundle(), max_chars={"ar_letter": 3})
+    assert r["ar_letter"].startswith("字字字")
     assert "截斷提示" in r["ar_letter"]
 
 

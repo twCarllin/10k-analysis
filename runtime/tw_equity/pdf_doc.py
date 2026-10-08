@@ -7,13 +7,14 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-_CACHE_VERSION = 3
+_CACHE_VERSION = 4  # 4：橫向頁轉正後抽取
 _DEFAULT_CACHE_DIR = Path("data/cache/tw_equity")
 
 
@@ -220,6 +221,36 @@ def _write_cache(
 _Y_TOLERANCE = 3.0
 
 
+def _page_rotation_fix(fitz_page: Any) -> int:
+    """依頁內文字方向判斷需設定的 /Rotate：(0,-1) → 90、(0,1) → 270、其他 → 0。
+
+    以 line 的字元數加權多數決；無文字回 0。
+    """
+    votes: dict[int, int] = {}
+    for block in fitz_page.get_text("dict").get("blocks", []):
+        for line in block.get("lines", []):
+            dy = line.get("dir", (1.0, 0.0))[1]
+            key = 90 if dy < -0.5 else 270 if dy > 0.5 else 0
+            n = sum(len(sp.get("text", "")) for sp in line.get("spans", []))
+            votes[key] = votes.get(key, 0) + n
+    return max(votes, key=votes.get) if votes else 0
+
+
+def _rotated_words(fitz_page: Any) -> list[Any]:
+    """取 words；頁有 /Rotate 時把座標乘 rotation_matrix，使分群依視覺列。"""
+    words = fitz_page.get_text("words")
+    if not getattr(fitz_page, "rotation", 0):
+        return words
+    import fitz  # 延遲 import
+
+    m = fitz_page.rotation_matrix
+    out = []
+    for w in words:
+        r = fitz.Rect(w[:4]) * m
+        out.append((r.x0, r.y0, r.x1, r.y1, *w[4:]))
+    return out
+
+
 def _words_to_lines(words: Any) -> list[str]:
     """words（(x0, y0, x1, y1, word, ...)）依 y1 分群成列文字，由上而下。"""
     ordered = sorted(words, key=lambda w: w[3])
@@ -243,19 +274,31 @@ def _lines_from_opener(line_opener: Any, n_pages: int) -> list[list[str]]:
         raise ValueError(
             f"頁數不一致：_opener {n_pages} 頁、_line_opener {len(line_opener)} 頁"
         )
-    return [_words_to_lines(line_opener[i].get_text("words")) for i in range(n_pages)]
+    return [_words_to_lines(_rotated_words(line_opener[i])) for i in range(n_pages)]
 
 
 def _build_from_pdfplumber(path: Path, line_opener: Any = None) -> PdfDoc:
     import pdfplumber
 
     close_fitz = None
+    source: Any = path
     if line_opener is None:
         import fitz  # 延遲 import
 
         line_opener = close_fitz = fitz.open(path)
+        # 橫向排版頁（文字方向非水平）：pdfplumber 會反序、words 依 y 分群會把直欄當列。
+        # 對這些頁設 /Rotate 轉正，兩個通道改讀轉正後的同一份 bytes。
+        rotated = {i: _page_rotation_fix(line_opener[i]) for i in range(len(line_opener))}
+        if any(rotated.values()):
+            for i, rot in rotated.items():
+                if rot:
+                    line_opener[i].set_rotation(rot)
+            buf = line_opener.tobytes()
+            close_fitz.close()
+            line_opener = close_fitz = fitz.open("pdf", buf)
+            source = io.BytesIO(buf)
     try:
-        with pdfplumber.open(path) as pdf:
+        with pdfplumber.open(source) as pdf:
             all_lines = _lines_from_opener(line_opener, len(pdf.pages))
             pages = []
             for i, pg in enumerate(pdf.pages, start=1):

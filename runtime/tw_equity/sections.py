@@ -8,7 +8,7 @@ from runtime.tw_equity.doc_anchor import PageRange
 from runtime.tw_equity.pdf_doc import PdfDoc
 from runtime.tw_equity.tables import TablesBundle
 
-_DEFAULT_MAX_CHARS = 12000
+_DEFAULT_MAX_CHARS: int | None = None  # None：不截斷（max_chars 明給該 key 才截）
 
 _AR_KEYS = ("ar_letter", "ar_business", "ar_market", "ar_mdna", "ar_risk")
 _GOV_KEYS = ("ar_governance", "ar_capital")
@@ -40,6 +40,7 @@ def build_sections(
                 out[key] = ""
                 continue
             text = doc.text_of(rng.start, rng.end)
-            out[key] = truncate_with_notice(text, max_chars.get(key, _DEFAULT_MAX_CHARS))
+            limit = max_chars.get(key, _DEFAULT_MAX_CHARS)
+            out[key] = truncate_with_notice(text, limit) if limit is not None else text
     out["tables_json"] = json.dumps(bundle.to_dict(), ensure_ascii=False)
     return out

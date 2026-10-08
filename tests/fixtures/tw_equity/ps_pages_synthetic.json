@@ -1,6 +1,6 @@
 {
   "_source": "依據 Spec §2.4 T1-T3 及損益關鍵列；合成資料，非真實財報",
-  "version": 3,
+  "version": 4,
   "path": "synthetic/ps_pages",
   "pages": [
     {
