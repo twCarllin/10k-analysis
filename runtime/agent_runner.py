@@ -37,6 +37,19 @@ def set_dry_run(enabled: bool):
 
 _MOCK_OUTPUTS = json.loads((BASE_DIR / "runtime" / "mock_outputs.json").read_text())
 
+# skill .md 依市場分子目錄；名稱全域唯一，呼叫端只給名稱不給目錄
+SKILL_DIRS = ("common", "us", "jp", "tw")
+
+
+def skill_path(skill_name: str) -> Path:
+    """在 skills/{common,us,jp,tw}/ 依序找 {skill_name}.md；找不到 raise FileNotFoundError。"""
+    for d in SKILL_DIRS:
+        candidate = BASE_DIR / "skills" / d / f"{skill_name}.md"
+        if candidate.exists():
+            return candidate
+    searched = ", ".join(f"skills/{d}/" for d in SKILL_DIRS)
+    raise FileNotFoundError(f"skill '{skill_name}.md' not found in {searched}")
+
 def truncate_with_notice(text: str, max_chars: int) -> str:
     """Truncate text with explicit notice to the agent."""
     if len(text) <= max_chars:
@@ -50,10 +63,11 @@ def truncate_with_notice(text: str, max_chars: int) -> str:
 
 
 def _get_skill_version(skill_name: str) -> str:
-    skill_path = BASE_DIR / f"skills/{skill_name}.md"
-    if not skill_path.exists():
+    try:
+        path = skill_path(skill_name)
+    except FileNotFoundError:
         return "unknown"
-    header = skill_path.read_text(encoding="utf-8")[:200]
+    header = path.read_text(encoding="utf-8")[:200]
     m = re.search(r"skill_version:\s*([\d.]+)", header)
     return m.group(1) if m else "unknown"
 
@@ -72,7 +86,7 @@ def run_agent(agent_name, skill_name, inputs,
     skill_limits = _config.get("max_tokens_by_skill", {})
     max_tokens = max_tokens or skill_limits.get(skill_name) or _config.get("max_tokens", 4096)
     agent_md = (BASE_DIR / f"agents/{agent_name}.md").read_text()
-    skill_md = (BASE_DIR / f"skills/{skill_name}.md").read_text()
+    skill_md = skill_path(skill_name).read_text()
     system = f"{agent_md}\n\n---\n\n[SKILL]\n{skill_md}"
 
     parts = ["[INPUT]"]

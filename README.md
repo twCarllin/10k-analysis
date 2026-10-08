@@ -301,7 +301,11 @@ tenk/
 ├── requirements.txt
 ├── agents/
 │   └── analyst_agent.md             # 共用 agent 定義
-├── skills/                          # 24 個 skill .md
+├── skills/                          # skill .md，依市場分子目錄（名稱全域唯一）
+│   ├── common/                      # 市場無關：eval／synthesis／rerate／cross_year／三表交叉
+│   ├── us/                          # SEC 10-K／10-Q 專用
+│   ├── jp/                          # jp_* EDINET／TDNET 專用
+│   └── tw/                          # tw_credit_* 徵信 pipeline 專用
 ├── runtime/
 │   ├── agent_runner.py              # Claude API + context log + dry-run
 │   ├── orchestrator.py              # 多階段執行 + eval loop + checkpoint
