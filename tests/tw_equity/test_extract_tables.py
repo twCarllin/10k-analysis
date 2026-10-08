@@ -158,7 +158,7 @@ class TestAllTablesPresent:
 
     def test_missing_tables_only_1b1_names(self, bundle: TablesBundle) -> None:
         """合成 fixture 齊（無 lines、無 gov_anchors）時 missing_tables 只剩 T9、T10_pledge、T10_top10。"""
-        assert sorted(bundle.missing_tables) == ["T10_pledge", "T10_top10", "T9"]
+        assert sorted(bundle.missing_tables) == ["FS_BS", "FS_CF", "FS_IS", "T10_pledge", "T10_top10", "T9"]  # 合成 fs 無三表列
 
     def test_ar_tables_not_none(self, bundle: TablesBundle) -> None:
         """年報各表非 None。"""
@@ -226,6 +226,7 @@ class TestFsPsNone:
         )
         bundle = extract_tables(empty_ar, {}, None, None, None, None, roc_year=114)
         assert set(bundle.missing_tables) == {
+            "FS_BS", "FS_IS", "FS_CF",
             "T1", "T2", "T3", "T4", "T5", "T6",
             "T7a", "T7b", "T8_sales", "T8_purchase",
             "T9", "T10_pledge", "T10_top10",

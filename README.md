@@ -180,6 +180,7 @@ python main.py 3653 --market tw-equity --ocr        # 亂碼頁改走 OCR（付�
 
   `ticker`、`company_name`、`fiscal_year`（西元年）、`annual_report_path` 必填；`consolidated_fs_path`／`parent_fs_path` 可為 `null` 或省略，但給了路徑而檔案不存在會報 `FileNotFoundError`。輸入驗證失敗時印 `[tw-equity] <訊息>` 並以 exit 1 結束。
 - **跨年比較（Phase 1B-2）**：輸入檔可加選填 `prior`（`fiscal_year` 須為前一年、`annual_report_path` 必填，`consolidated_fs_path`／`parent_fs_path` 可省略）。有 `prior` 時前一年度另跑一次分析，報告多出第 8 節「跨年比較」與附錄 C；無 `prior` 時第 8 節印「本節未執行：未提供前一年度」。
+- 合併財報三表逐列解析為標準化帳本（`raw.json` 的 `bundle.statements`），含勾稽結果（附錄 D）。
 - **`--ocr`**：年報中的亂碼頁（`(cid:N)` 字元過多）預設清空並記入附錄 B；加 `--ocr` 才會呼叫 OCR（Mistral 為主、失敗改 Azure DI），屬付費外部 API，預設關閉。
 - **Phase 1A 限制**：解析層只用 pdfplumber（無 DI／OCR 備援）；財報缺檔時 T1–T5 列入 `missing_tables`，並在報告附錄明示；T6（產銷量值）為選配，錨不到同樣記 `missing_tables`；T9（背書保證／資金貸與）延到 Phase 1B。
 

@@ -25,7 +25,7 @@ _PDF_PATH = _REPO_ROOT / "tw_report" / "3653_2025Q4合併財報.pdf"
 _OUT_PATH = Path(__file__).resolve().parent / "fs_3653_pages.json"
 
 _SELECTED_PAGES: list[int] = [
-    2, 3, 5, 6, 10, 11, 12, 14, 22, 29, 31, 46, 47, 51, 55, 64, 67,
+    2, 3, 5, 6, 10, 11, 12, 13, 14, 15, 22, 29, 31, 46, 47, 51, 55, 64, 67,
 ]
 
 

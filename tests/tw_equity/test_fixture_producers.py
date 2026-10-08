@@ -22,7 +22,7 @@ from runtime.tw_equity import pdf_doc as _pdf_doc  # noqa: E402
 from tests.fixtures.tw_equity import make_ar2024_fixture, make_fs_fixture  # noqa: E402
 
 _FIX = _REPO_ROOT / "tests" / "fixtures" / "tw_equity"
-_FS_PAGES = {2, 3, 5, 6, 10, 11, 12, 14, 22, 29, 31, 46, 47, 51, 55, 64, 67}
+_FS_PAGES = {2, 3, 5, 6, 10, 11, 12, 14, 22, 29, 31, 46, 47, 51, 55, 64, 67, 13, 15}
 _AR_1A_PAGES = {3, 4, 5, 6, 65, 66, 67, 76, 81, 82, 92, 93, 94, 95, 96, 97, 98, 99}
 _AR_PAGES = _AR_1A_PAGES | {8, 57, 58, 59, 65}
 

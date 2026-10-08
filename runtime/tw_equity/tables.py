@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from runtime.tw_equity.pdf_doc import PdfDoc
+    from runtime.tw_equity.statements import StatementLedger
 
 
 # ── 內部常數 ──────────────────────────────────────────────────────────────────
@@ -1460,6 +1461,9 @@ _MISS_T8_PURCHASE = "T8_purchase"
 _MISS_T9 = "T9"
 _MISS_T10_PLEDGE = "T10_pledge"
 _MISS_T10_TOP10 = "T10_top10"
+_MISS_FS_BS = "FS_BS"
+_MISS_FS_IS = "FS_IS"
+_MISS_FS_CF = "FS_CF"
 
 # 損益關鍵科目標籤（parse_key_lines 用）
 _KEY_LINE_LABELS: list[str] = [
@@ -1503,11 +1507,12 @@ class TablesBundle:
     consolidated_key_lines: dict
     parent_key_lines: dict
     parent_cost_coverage: float | None       # 個體營業成本 / 合併營業成本
-    missing_tables: list[str]                # 固定名稱：T1–T6,T7a,T7b,T8_sales,T8_purchase,T9,T10_pledge,T10_top10
+    missing_tables: list[str]                # 固定名稱：T1–T6,T7a,T7b,T8_sales,T8_purchase,T9,T10_pledge,T10_top10,FS_BS,FS_IS,FS_CF
     unit_notes: dict[str, str]
     guarantees_loans: "GuaranteesLoans | None" = None
     pledges: "PledgeTable | None" = None
     top_shareholders: "TopShareholders | None" = None
+    statements: "StatementLedger | None" = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -1533,6 +1538,7 @@ class TablesBundle:
             "guarantees_loans": self.guarantees_loans.to_dict() if self.guarantees_loans else None,
             "pledges": self.pledges.to_dict() if self.pledges else None,
             "top_shareholders": self.top_shareholders.to_dict() if self.top_shareholders else None,
+            "statements": self.statements.to_dict() if self.statements else None,
         }
 
 
@@ -1714,6 +1720,15 @@ def extract_tables(
     if top_shareholders is None:
         missing.append(_MISS_T10_TOP10)
 
+    # ── 合併財報三表帳本（statements.py；函式內 import 避開與 tables 的循環） ──
+    from runtime.tw_equity.statements import extract_statements
+
+    statements = extract_statements(fs, fs_anchors)
+    counts = statements.to_dict()["row_counts"] if statements is not None else {}
+    for st, name in (("bs", _MISS_FS_BS), ("is", _MISS_FS_IS), ("cf", _MISS_FS_CF)):
+        if not counts.get(st):
+            missing.append(name)
+
     # ── parent_key_lines（個體損益表 ps_is） ─────────────────────────────────
     _, ps_is_text = _get_ps("ps_is")
     if ps_is_text:
@@ -1754,4 +1769,5 @@ def extract_tables(
         guarantees_loans=guarantees_loans,
         pledges=pledges,
         top_shareholders=top_shareholders,
+        statements=statements,
     )

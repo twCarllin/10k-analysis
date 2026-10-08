@@ -620,6 +620,32 @@ def _appendix_c(cross_year: dict | None) -> list[str]:
     return L
 
 
+_APPENDIX_D_UNMAPPED_MAX = 30
+_CHECK_MARK = {True: "✅", False: "❌", None: "—"}
+
+
+def _appendix_d(bundle: TablesBundle) -> list[str]:
+    st = bundle.statements
+    if st is None:
+        return ["無合併財報或三表未解析"]
+    d = st.to_dict()
+    rc = d["row_counts"]
+    L = [f"單位：{_t(d['unit']) or _NOT_OBTAINED}；期間：{_t(d['period_current'])} vs "
+         f"{_t(d['period_prior'])}；列數：BS {rc['bs']}／IS {rc['is']}／CF {rc['cf']}；"
+         f"未對照科目：{len(d['unmapped_labels'])}", ""]
+    L += _md_table(["項目", "期間", "左值", "右值", "結果"],
+                   [[c["name"], c["period"], c["lhs"], c["rhs"], _CHECK_MARK[c["passed"]]]
+                    for c in d["checks"]])
+    L += ["", "### 未對照科目", ""]
+    un = d["unmapped_labels"]
+    if not un:
+        L.append("無")
+    else:
+        L.append("、".join(_t(u) for u in un[:_APPENDIX_D_UNMAPPED_MAX])
+                 + ("…" if len(un) > _APPENDIX_D_UNMAPPED_MAX else ""))
+    return L
+
+
 # ── 主函式 ────────────────────────────────────────────────────────────────────
 
 
@@ -669,6 +695,7 @@ def save_tw_equity_report(
         "## 附錄 B：錨定與缺表", "", *_appendix_b(bundle, anchors_summary, skipped_tasks,
                                                 garbled_pages, ocr_pages, ocr_checks, prior), "",
         "## 附錄 C：跨年表格比對", "", *_appendix_c(cross_year), "",
+        "## 附錄 D：合併財報三表勾稽", "", *_appendix_d(bundle), "",
     ]
     md_text = "\n".join(lines)
 

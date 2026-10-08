@@ -88,4 +88,4 @@ def test_governance_skipped_prints_not_executed(tmp_path):
 def test_eight_main_sections_and_three_appendices(tmp_path):
     heads = re.findall(r"^## (.+)$", _text(tmp_path, FULL), flags=re.M)
     assert len([h for h in heads if re.match(r"\d+\. ", h)]) == 8
-    assert len([h for h in heads if h.startswith("附錄")]) == 3
+    assert len([h for h in heads if h.startswith("附錄")]) == 4  # A–D
