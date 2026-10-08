@@ -28,6 +28,10 @@ REQUIRED_KEYS = {
     "tw_cost_structure":     ["coverage_basis", "cost_composition", "key_observations", "insufficient_data"],
     "tw_financial_analysis": ["balance_sheet", "income_statement", "overall_health", "insufficient_data"],
     "tw_footnotes_quality":  ["related_party", "guarantees_and_loans", "insufficient_data"],
+    "tw_kam_analysis":       ["matters", "key_observations", "insufficient_data"],
+    "tw_business_analysis":  ["business_summary", "narrative_vs_numbers", "insufficient_data"],
+    "tw_customer_supplier":  ["customer_concentration", "supplier_concentration", "insufficient_data"],
+    "tw_governance_flags":   ["pledge", "ownership", "insufficient_data"],
 }
 
 HARD_RULES = {

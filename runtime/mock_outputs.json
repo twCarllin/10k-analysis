@@ -746,5 +746,36 @@
     "kam": [{"matter": "存貨評價", "risk_pointed": "淨變現價值估計涉及管理層判斷"}],
     "key_observations": ["關係人交易條件與非關係人無重大差異"],
     "insufficient_data": false
+  },
+  "tw_kam_analysis": {
+    "matters": [{"matter": "存貨評價", "why_key": "存貨金額重大，淨變現價值估計涉及管理層判斷。", "audit_response": "會計師測試存貨庫齡報表並檢視期後售價。", "risk_area": "inventory"}],
+    "linkage_to_numbers": [{"matter": "存貨評價", "table_ref": "T5 inventory.writedown", "observation": "T5 揭露存貨跌價損失，與該事項相關。"}],
+    "key_observations": ["關鍵查核事項集中於存貨評價，未見其他事項"],
+    "insufficient_data": false
+  },
+  "tw_business_analysis": {
+    "business_summary": "公司主要從事精密零組件之製造與銷售。",
+    "products": [{"name": "散熱模組", "note": "年報列為主要產品"}],
+    "management_plans": [{"plan": "擴充海外產能", "horizon": "未來兩年", "measurable": false}],
+    "narrative_vs_numbers": [{"claim": "營收較去年成長", "table_ref": "T7b fin_performance", "status": "consistent", "note": "T7b 營業收入 YoY 為正，與敘述一致。"}],
+    "key_observations": ["致股東報告書的量化宣稱可由 T7b 核對"],
+    "insufficient_data": false
+  },
+  "tw_customer_supplier": {
+    "customer_concentration": {"top1_pct": 25.0, "top3_pct": 48.0, "direction": "stable", "note": "前三大客戶占比與前一年度相近。"},
+    "supplier_concentration": {"top1_pct": 18.0, "top3_pct": 40.0, "direction": "unknown", "note": "供應商僅揭露單一年度。"},
+    "related_counterparties": [{"name": "子公司 A", "kind": "supplier", "relation": "子公司"}],
+    "bargaining_power": {"vs_customers": "neutral", "vs_suppliers": "neutral", "rationale": "客戶集中度中等，供應商來源分散。"},
+    "key_observations": ["客戶集中度維持穩定"],
+    "insufficient_data": false
+  },
+  "tw_governance_flags": {
+    "pledge": {"status": "rows", "max_pledge_pct": 35.0, "flag": "watch", "note": "最高質押比率高於 30% 門檻。"},
+    "ownership": {"structure_note": "前十大股東以法人與創辦家族為主。", "family_relations_note": "relation_notes 顯示兩位股東為二親等。", "flag": "normal"},
+    "board": {"independence_note": "董事會含三席獨立董事。", "flag": "normal"},
+    "guarantees": {"note": "背書保證對象為子公司，占淨值比率低。", "flag": "normal"},
+    "capital_actions": [{"item": "限制員工權利新股", "note": "年報揭露本年度發行"}],
+    "key_observations": ["質押比率高於 30% 門檻，標為 watch"],
+    "insufficient_data": false
   }
 }

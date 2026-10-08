@@ -225,3 +225,102 @@ class TestTablesOf:
         doc = load_pdf(_dummy_pdf(tmp_path), _opener=opener, cache_dir=tmp_path / "cache")
         result = doc.tables_of(2, 2)
         assert result == t2
+
+
+# ── lines 通道（PyMuPDF words）────────────────────────────────────────────────
+
+class _FakeWordsPage:
+    def __init__(self, words: list[tuple]) -> None:
+        self._words = words
+
+    def get_text(self, kind: str) -> list[tuple]:
+        assert kind == "words"
+        return self._words
+
+
+class _FakeLineOpener:
+    def __init__(self, pages: list[list[tuple]]) -> None:
+        self._pages = [_FakeWordsPage(w) for w in pages]
+
+    def __getitem__(self, i: int) -> _FakeWordsPage:
+        return self._pages[i]
+
+    def __len__(self) -> int:
+        return len(self._pages)
+
+
+def _w(x0: float, y1: float, word: str) -> tuple:
+    return (x0, y1 - 10, x0 + 5, y1, word, 0, 0, 0)
+
+
+def _load_lines(tmp_path: Path, word_pages: list[list[tuple]]) -> PdfDoc:
+    opener = _make_opener(texts=["t"] * len(word_pages))
+    return load_pdf(
+        _dummy_pdf(tmp_path),
+        _opener=opener,
+        _line_opener=_FakeLineOpener(word_pages),
+        cache_dir=tmp_path / "cache",
+    )
+
+
+class TestLines:
+    def test_same_row_sorted_by_x0_single_space(self, tmp_path):
+        """y1 差 ≤3、x 亂序 → 同一列、x0 升冪、單空白接合。"""
+        words = [_w(50, 102.5, "C"), _w(10, 100, "A"), _w(30, 101, "B")]
+        doc = _load_lines(tmp_path, [words])
+        assert doc.pages[0].lines == ["A B C"]
+
+    def test_y_gap_over_3_splits_rows_top_to_bottom(self, tmp_path):
+        """y1 差 >3 → 分兩列、由上而下。"""
+        words = [_w(10, 120, "lower"), _w(10, 100, "upper")]
+        doc = _load_lines(tmp_path, [words])
+        assert doc.pages[0].lines == ["upper", "lower"]
+
+    def test_blank_word_row_dropped(self, tmp_path):
+        """[邊界] 全空白 word 的列 → 丟棄。"""
+        words = [_w(10, 100, "  "), _w(10, 120, "keep")]
+        doc = _load_lines(tmp_path, [words])
+        assert doc.pages[0].lines == ["keep"]
+
+    def test_lines_of_concatenates_inclusive(self, tmp_path):
+        """lines_of(2,3) → 兩頁 lines 依頁序串接、含兩端。"""
+        pages = [[_w(10, 100, f"p{n}")] for n in (1, 2, 3, 4)]
+        doc = _load_lines(tmp_path, pages)
+        assert doc.lines_of(2, 3) == ["p2", "p3"]
+
+    def test_json_round_trip_preserves_lines(self, tmp_path):
+        """to_json → from_json → lines 等價。"""
+        doc = _load_lines(tmp_path, [[_w(10, 100, "a"), _w(20, 100, "b")]])
+        restored = from_json(to_json(doc))
+        assert restored is not None
+        assert restored.pages[0].lines == doc.pages[0].lines == ["a b"]
+
+    def test_from_json_missing_lines_defaults_empty(self, tmp_path):
+        """舊格式缺 lines 欄 → lines=[]。"""
+        doc = _load_lines(tmp_path, [[_w(10, 100, "a")]])
+        data = to_json(doc)
+        for pg in data["pages"]:
+            del pg["lines"]
+        restored = from_json(data)
+        assert restored is not None
+        assert restored.pages[0].lines == []
+
+    def test_page_count_mismatch_raises(self, tmp_path):
+        """[邊界] 兩個 opener 頁數不同 → ValueError。"""
+        opener = _make_opener(texts=["a", "b"])
+        with pytest.raises(ValueError):
+            load_pdf(
+                _dummy_pdf(tmp_path),
+                _opener=opener,
+                _line_opener=_FakeLineOpener([[_w(10, 100, "a")]]),
+                cache_dir=tmp_path / "cache",
+            )
+
+    def test_cache_version_is_2(self):
+        """_CACHE_VERSION 比 1A 現值（1）大 1。"""
+        assert _CACHE_VERSION == 2
+
+    def test_requirements_has_pymupdf(self):
+        """requirements.txt 含 PyMuPDF>=1.27。"""
+        req = (Path(__file__).resolve().parents[2] / "requirements.txt").read_text()
+        assert "PyMuPDF>=1.27" in req

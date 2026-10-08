@@ -18,9 +18,10 @@ from runtime.tw_equity.tables import TablesBundle  # noqa: E402
 WHITELIST = {
     "ar_letter", "ar_business", "ar_market", "ar_mdna", "ar_risk",
     "fs_note_related", "fs_note_contingent", "fs_note_disclosure",
-    "fs_audit_kam", "tables_json",
+    "fs_audit_kam", "tables_json", "ar_governance", "ar_capital",
 }
 AR_KEYS = ["ar_letter", "ar_business", "ar_market", "ar_mdna", "ar_risk"]
+GOV_KEYS = ["ar_governance", "ar_capital"]
 FS_KEYS = ["fs_note_related", "fs_note_contingent", "fs_note_disclosure", "fs_audit_kam"]
 
 
@@ -43,18 +44,21 @@ def _full(doc_keys, rng=PageRange(1, 2)):
     return {k: rng for k in doc_keys}
 
 
-def test_full_input_keys_equal_whitelist():
-    r = build_sections(_doc(), _full(AR_KEYS), _doc(), _full(FS_KEYS), _doc(), {}, bundle=_bundle())
+def test_full_input_keys_equal_whitelist_with_gov():
+    r = build_sections(_doc(), _full(AR_KEYS), _doc(), _full(FS_KEYS), _doc(), {}, bundle=_bundle(),
+                       gov_anchors=_full(GOV_KEYS))
     assert set(r) == WHITELIST
     assert r["ar_letter"] == "內容1\f內容2"
 
 
-def test_missing_anchor_gives_empty_string():
+def test_missing_anchor_gives_empty_string_with_gov():
     ar_a = _full(AR_KEYS)
     ar_a["ar_risk"] = None
     del ar_a["ar_market"]
-    r = build_sections(_doc(), ar_a, _doc(), {}, _doc(), {}, bundle=_bundle())
+    r = build_sections(_doc(), ar_a, _doc(), {}, _doc(), {}, bundle=_bundle(),
+                       gov_anchors={"ar_governance": None})
     assert set(r) == WHITELIST
+    assert r["ar_governance"] == "" and r["ar_capital"] == ""
     assert r["ar_risk"] == "" and r["ar_market"] == ""
     assert r["fs_audit_kam"] == ""
 

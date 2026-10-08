@@ -17,8 +17,9 @@ from runtime.tw_equity.inputs import TwEquityInputs  # noqa: E402
 from runtime.tw_equity.report import save_tw_equity_report  # noqa: E402
 from runtime.tw_equity.tables import (  # noqa: E402
     CostDetail, CostRow, CustomerEntry, CustomerTable, CustomerYear,
-    ExpenseNature, ExpenseNatureRow, InventoryNote, InventoryRow,
-    TablesBundle, TwoYearRow, TwoYearTable,
+    ExpenseNature, ExpenseNatureRow, GuaranteeRow, GuaranteesLoans, InventoryNote,
+    InventoryRow, PledgeRow, PledgeTable, ShareholderRow, TablesBundle, TopShareholders,
+    TwoYearRow, TwoYearTable,
 )
 
 FIXTURE = json.loads(
@@ -63,6 +64,13 @@ def _full_bundle() -> TablesBundle:
         cost_detail_opex=_cost("opex", "T3列"),
         consolidated_key_lines={}, parent_key_lines={},
         parent_cost_coverage=0.85, missing_tables=[], unit_notes={},
+        guarantees_loans=GuaranteesLoans("none", "table", [GuaranteeRow(
+            1, "T9保證人", "T9被保人", "(2)", 100.0, 90.0, 80.0, 70.0, None, 5.5, 200.0,
+            "Y", "N", "N")], [], 5.5),
+        pledges=PledgeTable("rows", [PledgeRow(
+            "T10質押人", "借款", "114.01.01", "銀行", "無", 1000.0, 10.0, 35.0, 5000.0)], 35.0),
+        top_shareholders=TopShareholders(
+            [ShareholderRow("T10股東", False, 9000.0, 20.0, None, None, None, None)], []),
     )
 
 
@@ -142,10 +150,10 @@ def test_missing_skill_keys_print_marker_without_error(tmp_path):
     assert foot.count(NO_RETURN) >= 2  # guarantees_and_loans／kam
 
 
-def test_missing_tables_print_not_obtained_and_list_names(tmp_path):
+def test_missing_tables_print_not_obtained_and_list_names_1b1(tmp_path):
     _, text = _run(tmp_path, _missing_bundle(coverage=0.5), FULL)
     appx_a = text.split("## 附錄 A")[1].split("## 附錄 B")[0]
-    assert appx_a.count("未取得") == 9
+    assert appx_a.count("未取得") == 12
     appx_b = text.split("## 附錄 B")[1]
     for name in ("T1", "T4", "T8_sales"):
         assert name in appx_b

@@ -211,6 +211,140 @@ def _render_footnotes_quality(skill_results: dict) -> list[str]:
     return L
 
 
+def _not_executed(task_id: str) -> list[str]:
+    return [f"本節未執行：輸入資料不足（{task_id}）"]
+
+
+_NARRATIVE_STATUS = {"consistent": "一致", "inconsistent": "不一致", "unverifiable": "無法驗證"}
+
+
+def _render_kam_analysis(skill_results: dict, skipped_tasks: list[str]) -> list[str]:
+    if "tw_kam_analysis" in skipped_tasks:
+        return _not_executed("tw_kam_analysis")
+    res, fallback = _skill_guard(skill_results, "tw_kam_analysis")
+    if fallback:
+        return fallback
+    L = _insufficient_line(res)
+    L += ["**關鍵查核事項**"]
+    ms = _list_of(res, "matters")
+    L += _bullets(ms if isinstance(ms, str) else [
+        f"- {_val(i, 'matter')}（{_val(i, 'risk_area')}）：{_val(i, 'why_key')}；查核回應：{_val(i, 'audit_response')}"
+        for i in ms])
+    L += ["", "**與財報數字的連結**"]
+    lk = _list_of(res, "linkage_to_numbers")
+    L += _bullets(lk if isinstance(lk, str) else [
+        f"- {_val(i, 'matter')}［{_val(i, 'table_ref')}］：{_val(i, 'observation')}" for i in lk])
+    L += ["", "**重點觀察**"]
+    obs = _list_of(res, "key_observations")
+    L += _bullets(obs if isinstance(obs, str) else [f"- {_t(o)}" for o in obs])
+    return L
+
+
+def _render_business_analysis(skill_results: dict, skipped_tasks: list[str]) -> list[str]:
+    if "tw_business_analysis" in skipped_tasks:
+        return _not_executed("tw_business_analysis")
+    res, fallback = _skill_guard(skill_results, "tw_business_analysis")
+    if fallback:
+        return fallback
+    L = _insufficient_line(res)
+    L.append(f"- 業務概述：{_val(res, 'business_summary')}")
+    L += ["", "**主要產品**"]
+    pr = _list_of(res, "products")
+    L += _bullets(pr if isinstance(pr, str) else [
+        f"- {_val(i, 'name')}：{_val(i, 'note')}" for i in pr])
+    L += ["", "**管理層計畫**"]
+    mp = _list_of(res, "management_plans")
+    L += _bullets(mp if isinstance(mp, str) else [
+        f"- {_val(i, 'plan')}（期間：{_val(i, 'horizon')}；可量化：{_val(i, 'measurable')}）" for i in mp])
+    L += ["", "**敘述與數字對照**"]
+    nv = _list_of(res, "narrative_vs_numbers")
+    L += _bullets(nv if isinstance(nv, str) else [
+        f"- {_val(i, 'claim')}［{_val(i, 'table_ref')}］："
+        f"{_NARRATIVE_STATUS.get(_get(i, 'status'), _val(i, 'status'))}；{_val(i, 'note')}" for i in nv])
+    L += ["", "**重點觀察**"]
+    obs = _list_of(res, "key_observations")
+    L += _bullets(obs if isinstance(obs, str) else [f"- {_t(o)}" for o in obs])
+    return L
+
+
+def _conc(d: Any, label: str) -> str:
+    if d is _NO_RETURN:
+        return f"- {label}：{_NO_RETURN}"
+    return (f"- {label}：前一大 {_val(d, 'top1_pct')}%，前三大 {_val(d, 'top3_pct')}%，"
+            f"趨勢 {_val(d, 'direction')}；{_val(d, 'note')}")
+
+
+def _render_customer_supplier(skill_results: dict, skipped_tasks: list[str]) -> list[str]:
+    if "tw_customer_supplier" in skipped_tasks:
+        return _not_executed("tw_customer_supplier")
+    res, fallback = _skill_guard(skill_results, "tw_customer_supplier")
+    if fallback:
+        return fallback
+    L = _insufficient_line(res)
+    L += ["**集中度**"]
+    L.append(_conc(_get(res, "customer_concentration"), "客戶"))
+    L.append(_conc(_get(res, "supplier_concentration"), "供應商"))
+    L += ["", "**關係人往來對象**"]
+    rc = _list_of(res, "related_counterparties")
+    L += _bullets(rc if isinstance(rc, str) else [
+        f"- {_val(i, 'name')}（{_val(i, 'kind')}）：{_val(i, 'relation')}" for i in rc])
+    L += ["", "**議價力**"]
+    bp = _get(res, "bargaining_power")
+    if bp is _NO_RETURN:
+        L.append(f"- {_NO_RETURN}")
+    else:
+        L.append(f"- 對客戶：{_val(bp, 'vs_customers')}；對供應商：{_val(bp, 'vs_suppliers')}")
+        L.append(f"- {_val(bp, 'rationale')}")
+    L += ["", "**重點觀察**"]
+    obs = _list_of(res, "key_observations")
+    L += _bullets(obs if isinstance(obs, str) else [f"- {_t(o)}" for o in obs])
+    return L
+
+
+def _render_governance_flags(skill_results: dict, skipped_tasks: list[str]) -> list[str]:
+    if "tw_governance_flags" in skipped_tasks:
+        return _not_executed("tw_governance_flags")
+    res, fallback = _skill_guard(skill_results, "tw_governance_flags")
+    if fallback:
+        return fallback
+    L = _insufficient_line(res)
+    L += ["**質押**"]
+    pl = _get(res, "pledge")
+    if pl is _NO_RETURN:
+        L.append(f"- {_NO_RETURN}")
+    else:
+        L.append(f"- 狀態：{_val(pl, 'status')}；最高質押比率 {_val(pl, 'max_pledge_pct')}%；"
+                 f"警示：{_val(pl, 'flag')}")
+        L.append(f"- {_val(pl, 'note')}")
+    L += ["", "**股權結構**"]
+    ow = _get(res, "ownership")
+    if ow is _NO_RETURN:
+        L.append(f"- {_NO_RETURN}")
+    else:
+        L.append(f"- {_val(ow, 'structure_note')}［{_val(ow, 'flag')}］")
+        L.append(f"- 親屬關係：{_val(ow, 'family_relations_note')}")
+    L += ["", "**董事會**"]
+    bd = _get(res, "board")
+    if bd is _NO_RETURN:
+        L.append(f"- {_NO_RETURN}")
+    else:
+        L.append(f"- {_val(bd, 'independence_note')}［{_val(bd, 'flag')}］")
+    L += ["", "**背書保證**"]
+    gu = _get(res, "guarantees")
+    if gu is _NO_RETURN:
+        L.append(f"- {_NO_RETURN}")
+    else:
+        L.append(f"- {_val(gu, 'note')}［{_val(gu, 'flag')}］")
+    L += ["", "**資本運作**"]
+    ca = _list_of(res, "capital_actions")
+    L += _bullets(ca if isinstance(ca, str) else [
+        f"- {_val(i, 'item')}：{_val(i, 'note')}" for i in ca])
+    L += ["", "**重點觀察**"]
+    obs = _list_of(res, "key_observations")
+    L += _bullets(obs if isinstance(obs, str) else [f"- {_t(o)}" for o in obs])
+    return L
+
+
 # ── 附錄 A：解析表 ────────────────────────────────────────────────────────────
 
 
@@ -259,6 +393,42 @@ def _cost_detail(tbl) -> list[str]:
     return [f"單位：{_t(tbl.unit)}", ""] + _md_table(["項目", *tbl.periods], rows)
 
 
+def _guarantees_loans(tbl) -> list[str]:
+    L = [f"資金貸與狀態：{_t(tbl.loans_status)}", f"背書保證狀態：{_t(tbl.guarantees_status)}"]
+    if tbl.max_pct_of_net_worth is not None:
+        L.append(f"最高占淨值比率：{_num(tbl.max_pct_of_net_worth)}%")
+    if tbl.guarantees:
+        L += [""] + _md_table(
+            ["編號", "背書保證者", "被背書保證對象", "關係", "單項限額", "本期最高餘額", "期末餘額",
+             "實際動支", "擔保金額", "占淨值%", "累計限額", "母對子", "子對母", "對大陸"],
+            [[g.no, g.guarantor, g.guaranteed, g.relation_code, g.single_limit, g.max_balance,
+              g.ending_balance, g.drawn, g.collateral, g.pct_of_net_worth, g.max_limit,
+              g.parent_to_sub, g.sub_to_parent, g.to_china] for g in tbl.guarantees])
+    return L
+
+
+def _pledges(tbl) -> list[str]:
+    L = [f"狀態：{_t(tbl.status)}"]
+    if tbl.max_pledge_pct is not None:
+        L.append(f"最高質押比率：{_num(tbl.max_pledge_pct)}%")
+    if tbl.rows:
+        L += [""] + _md_table(
+            ["姓名", "事由", "日期", "質權人", "關係", "股數", "持股%", "質押%", "金額"],
+            [[r.name, r.reason, r.date, r.counterparty, r.relation, r.shares, r.holding_pct,
+              r.pledge_pct, r.amount] for r in tbl.rows])
+    return L
+
+
+def _top_shareholders(tbl) -> list[str]:
+    L = _md_table(
+        ["姓名", "代表人列", "持股數", "持股%", "配偶股數", "配偶%", "代名股數", "代名%"],
+        [[r.name, "是" if r.is_representative else "否", r.shares, r.pct, r.spouse_shares,
+          r.spouse_pct, r.nominee_shares, r.nominee_pct] for r in tbl.rows])
+    if tbl.relation_notes:
+        L += [""] + [f"- {_t(n)}" for n in tbl.relation_notes]
+    return L
+
+
 def _appendix_a(bundle: TablesBundle) -> list[str]:
     specs = [
         ("T7a 財務狀況比較表", bundle.fin_position, _two_year),
@@ -270,6 +440,9 @@ def _appendix_a(bundle: TablesBundle) -> list[str]:
         ("T1 營業成本明細", bundle.cost_detail_cogs, _cost_detail),
         ("T2 製造費用明細", bundle.cost_detail_mfg, _cost_detail),
         ("T3 營業費用明細", bundle.cost_detail_opex, _cost_detail),
+        ("T9 背書保證／資金貸與", bundle.guarantees_loans, _guarantees_loans),
+        ("T10 股權質押", bundle.pledges, _pledges),
+        ("T10 前十大股東", bundle.top_shareholders, _top_shareholders),
     ]
     L: list[str] = []
     for title, tbl, fn in specs:
@@ -338,6 +511,10 @@ def save_tw_equity_report(
         "## 1. 成本結構", "", *_render_cost_structure(skill_results), "",
         "## 2. 財務分析", "", *_render_financial_analysis(skill_results), "",
         "## 3. 附註品質", "", *_render_footnotes_quality(skill_results), "",
+        "## 4. 關鍵查核事項", "", *_render_kam_analysis(skill_results, skipped_tasks), "",
+        "## 5. 業務與管理層敘述", "", *_render_business_analysis(skill_results, skipped_tasks), "",
+        "## 6. 客戶與供應商", "", *_render_customer_supplier(skill_results, skipped_tasks), "",
+        "## 7. 公司治理警訊", "", *_render_governance_flags(skill_results, skipped_tasks), "",
         "## 附錄 A：解析表原始數字", "", *_appendix_a(bundle),
         "## 附錄 B：錨定與缺表", "", *_appendix_b(bundle, anchors_summary, skipped_tasks), "",
     ]

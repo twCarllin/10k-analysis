@@ -586,6 +586,82 @@ def parse_key_lines(
     return result
 
 
+# ── 列文字通道（Spec §2.3.1） ─────────────────────────────────────────────────
+
+_LINE_TOKEN_RE = re.compile(
+    r"(?<![\w,.])\(?\d{1,3}(?:,\d{3})+(?:\.\d+)?\)?"
+    r"|(?<![\w,.])\(?\d+(?:\.\d+)?%?\)?(?![\d年月日度])"
+    r"|(?<!\S)-(?!\S)"
+)
+_LINE_PAREN_RE = re.compile(r"\(\s*\$?\s*([\d,.%]+)\s*\)")
+_ABS_LABELS = frozenset(["營業成本", "營業費用"])
+
+
+def _norm_line(line: str) -> str:
+    s = unicodedata.normalize("NFKC", line)
+    s = _LINE_PAREN_RE.sub(r"(\1)", s)
+    return s.replace("$", "")
+
+
+def line_amounts(line: str) -> list[float | None]:
+    """由左至右取列內金額 token；括號為負、`-` 為 None、`%` 回傳數字本身。"""
+    out: list[float | None] = []
+    for tok in _LINE_TOKEN_RE.findall(_norm_line(line)):
+        if tok == "-":
+            out.append(None)
+            continue
+        neg = tok.startswith("(")
+        v = parse_amount(tok.strip("()%").rstrip("%"))
+        out.append(-v if (neg and v is not None) else v)
+    return out
+
+
+def _label_suffix(line: str, label: str) -> str | None:
+    """line 去空白後以 label 開頭 → 回 label 之後的（正規化）文字；否則 None。"""
+    nline = _norm_line(line)
+    nlabel = re.sub(r"\s+", "", _norm_line(label))
+    consumed = ""
+    for i, ch in enumerate(nline):
+        if len(consumed) == len(nlabel):
+            return nline[i:]
+        if ch.isspace():
+            continue
+        consumed += ch
+        if not nlabel.startswith(consumed):
+            return None
+    return "" if consumed == nlabel else None
+
+
+def parse_key_lines_from_lines(
+    lines: list[str],
+    labels: list[str],
+) -> dict[str, tuple[float | None, float | None]]:
+    """列通道版 parse_key_lines；支援續行合併（最多 1 列）。找不到 → (None, None)。"""
+    result: dict[str, tuple[float | None, float | None]] = {}
+    for label in labels:
+        value: tuple[float | None, float | None] = (None, None)
+        for i, line in enumerate(lines):
+            suffix = _label_suffix(line, label)
+            if suffix is None:
+                continue
+            amts = line_amounts(suffix)
+            if len(amts) < 2 and label != "營業費用" and i + 1 < len(lines):
+                amts = line_amounts(suffix + " " + lines[i + 1])
+            if not amts:
+                continue
+            if len(amts) >= 4:
+                value = (amts[0], amts[2])
+            elif len(amts) >= 2:
+                value = (amts[0], amts[1])
+            else:
+                value = (amts[0], None)
+            break
+        if label in _ABS_LABELS:
+            value = tuple(None if v is None else abs(v) for v in value)  # type: ignore[assignment]
+        result[label] = value
+    return result
+
+
 # ── ExpenseNature dataclass (T4) ─────────────────────────────────────────────
 
 _EXPENSE_NATURE_YEAR_RE = re.compile(r"\d{2,3}年度")
@@ -819,6 +895,414 @@ def parse_inventory_note(
     )
 
 
+# ── T4／T5 列通道解析（Spec §2.3.1） ──────────────────────────────────────────
+
+_NUM_PAT = r"(?:\(?[\d,]+(?:\.\d+)?\)?|-)"
+
+
+def _label_amounts_re(n: int) -> "re.Pattern[str]":
+    return re.compile(
+        r"^(?P<label>[^\d()\-,.%]*?)\s*(?P<nums>" + _NUM_PAT + r"(?:\s+" + _NUM_PAT + r"){" + str(n - 1) + r"})$"
+    )
+
+
+_ROW3_RE = _label_amounts_re(3)
+_ROW2_RE = _label_amounts_re(2)
+_PERIOD_LINE_RE = re.compile(r"^\d{2,3}年度$")
+_DATE_RE = re.compile(r"\d{2,3}年\d{1,2}月\d{1,2}日")
+_WRITEDOWN_RE = re.compile(r"淨變現價值而認列之銷貨成本\$?([\d,]+)及\$?([\d,]+)")
+
+
+def _compact(line: str) -> str:
+    return re.sub(r"\s+", "", unicodedata.normalize("NFKC", line))
+
+
+def _split_row(line: str, pat: "re.Pattern[str]") -> tuple[str, list[float | None]] | None:
+    m = pat.match(_norm_line(line).strip())
+    if m is None:
+        return None
+    label = re.sub(r"\s+", "", m.group("label"))
+    return label, [parse_amount(t) for t in m.group("nums").split()]
+
+
+def parse_expense_nature_lines(lines: list[str]) -> ExpenseNature | None:
+    """列通道版 T4 解析；找不到「期別列＋欄頭列」或無資料列 → None。"""
+    periods: list[str] = []
+    data: dict[str, dict[str, tuple[float | None, ...]]] = {}
+    current: str | None = None
+    i = 0
+    while i < len(lines):
+        compact = _compact(lines[i])
+        if _PERIOD_LINE_RE.match(compact):
+            nxt = _compact(lines[i + 1]) if i + 1 < len(lines) else ""
+            if all(k in nxt for k in ("營業成本", "營業費用", "合計")):
+                current = compact
+                if current not in periods:
+                    periods.append(current)
+                i += 2
+                continue
+            current = None
+        elif current is not None:
+            row = _split_row(lines[i], _ROW3_RE)
+            if row is not None:
+                data.setdefault(row[0] or "員工福利費用合計", {})[current] = tuple(row[1])
+        i += 1
+    if not periods or not data:
+        return None
+    blank: tuple[float | None, ...] = (None, None, None)
+    rows = [
+        ExpenseNatureRow(
+            label=lb,
+            cost_of_sales=[per.get(p, blank)[0] for p in periods],
+            opex=[per.get(p, blank)[1] for p in periods],
+            total=[per.get(p, blank)[2] for p in periods],
+        )
+        for lb, per in data.items()
+    ]
+    return ExpenseNature(unit="unknown", periods=periods, rows=rows)
+
+
+def parse_inventory_note_lines(lines: list[str]) -> InventoryNote | None:
+    """列通道版 T5 解析；找不到欄頭（兩個日期）或無資料列 → None。periods 為欄頭日期字串。"""
+    headers = [i for i, ln in enumerate(lines) if len(_DATE_RE.findall(_compact(ln))) == 2]
+    if not headers:
+        return None
+    inv_idx = next((i for i, ln in enumerate(lines) if "存貨" in ln), None)
+    start = next((h for h in headers if inv_idx is not None and h > inv_idx), headers[0])
+    periods = _DATE_RE.findall(_compact(lines[start]))
+
+    rows: list[InventoryRow] = []
+    for line in lines[start + 1:]:
+        row = _split_row(line, _ROW2_RE)
+        if row is None:
+            continue
+        rows.append(InventoryRow(
+            label=row[0] or "合計", cost=[None, None], allowance=[None, None], net=row[1],
+        ))
+        if not row[0]:
+            break
+    if not rows:
+        return None
+
+    m = _WRITEDOWN_RE.search(_compact("".join(lines[start:])))
+    writedown = [parse_amount(m.group(1)), parse_amount(m.group(2))] if m else None
+    return InventoryNote(unit="unknown", periods=periods, rows=rows, writedown=writedown)
+
+
+# ── T9 背書保證／資金貸與（Spec §2.3.3） ───────────────────────────────────────
+
+
+@dataclass
+class GuaranteeRow:
+    no: int | None
+    guarantor: str
+    guaranteed: str
+    relation_code: str | None
+    single_limit: float | None
+    max_balance: float | None
+    ending_balance: float | None
+    drawn: float | None
+    collateral: float | None
+    pct_of_net_worth: float | None
+    max_limit: float | None
+    parent_to_sub: str | None
+    sub_to_parent: str | None
+    to_china: str | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return dict(self.__dict__)
+
+
+@dataclass
+class GuaranteesLoans:
+    loans_status: str            # "none" | "table" | "unknown"
+    guarantees_status: str       # "none" | "table" | "unknown"
+    guarantees: list[GuaranteeRow]
+    loans_raw: list[str]
+    max_pct_of_net_worth: float | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "loans_status": self.loans_status,
+            "guarantees_status": self.guarantees_status,
+            "guarantees": [g.to_dict() for g in self.guarantees],
+            "loans_raw": list(self.loans_raw),
+            "max_pct_of_net_worth": self.max_pct_of_net_worth,
+        }
+
+
+_T9_RELATION_RE = re.compile(r"^\(\d\)$")
+_T9_AMOUNT_TOK_RE = re.compile(r"^(?:\(?[\d,]+(?:\.\d+)?%?\)?|-)$")
+_T9_ROW_START_RE = re.compile(r"^\d+\s")
+_T9_FIELDS = ["single_limit", "max_balance", "ending_balance", "drawn", "collateral",
+              "pct_of_net_worth", "max_limit"]
+
+
+def _t9_status(compact_lines: list[str], subject: str) -> str:
+    none_kw = unicodedata.normalize("NFKC", f"{subject}：無")
+    table_kw = unicodedata.normalize("NFKC", f"{subject}：請詳附表")
+    if any(none_kw in c for c in compact_lines):
+        return "none"
+    if any(table_kw in c for c in compact_lines):
+        return "table"
+    return "unknown"
+
+
+def _t9_parse_row(line: str) -> GuaranteeRow:
+    toks = _norm_line(line).split()
+    no = int(toks[0])
+    i = 1
+    names: list[str] = []
+    relation: str | None = None
+    while i < len(toks):
+        if _T9_RELATION_RE.match(toks[i]):
+            relation = toks[i]
+            i += 1
+            break
+        if i >= 3 and _T9_AMOUNT_TOK_RE.match(toks[i]):
+            break
+        names.append(toks[i])
+        i += 1
+    rest = toks[i:]
+    amts = [t for t in rest if _T9_AMOUNT_TOK_RE.match(t)][:len(_T9_FIELDS)]
+    flags = [t for t in rest if t in ("Y", "N")][:3]
+    vals = {f: (parse_amount(amts[k].rstrip("%")) if k < len(amts) else None)
+            for k, f in enumerate(_T9_FIELDS)}
+    flags += [None] * (3 - len(flags))  # type: ignore[list-item]
+    return GuaranteeRow(
+        no=no,
+        guarantor=names[0] if names else "",
+        guaranteed="".join(names[1:]),
+        relation_code=relation,
+        parent_to_sub=flags[0], sub_to_parent=flags[1], to_china=flags[2],
+        **vals,
+    )
+
+
+def parse_guarantees_loans(lines: list[str]) -> GuaranteesLoans | None:
+    """解析背書保證／資金貸與（T9）；兩狀態皆 unknown 且無資料列 → None。"""
+    compact_lines = [_compact(ln) for ln in lines]
+    loans_status = _t9_status(compact_lines, "資金貸與他人")
+    guarantees_status = _t9_status(compact_lines, "為他人背書保證")
+
+    guarantees: list[GuaranteeRow] = []
+    loans_raw: list[str] = []
+    mode: str | None = None
+    i = 0
+    while i < len(lines):
+        c = compact_lines[i]
+        if c == "為他人背書保證":
+            mode = "g"
+        elif c == "資金貸與他人":
+            mode = "l"
+        elif mode == "l" and _T9_ROW_START_RE.match(lines[i].strip()):
+            loans_raw.append(lines[i].strip())
+        elif (mode == "g" and _T9_ROW_START_RE.match(lines[i].strip())
+              and len(line_amounts(lines[i])) >= 5):
+            row = _t9_parse_row(lines[i])
+            nxt = lines[i + 1] if i + 1 < len(lines) else None
+            if nxt is not None and not line_amounts(nxt) and not nxt.strip().startswith("註"):
+                row.guarantor += _compact(nxt)
+                i += 1
+            guarantees.append(row)
+        i += 1
+
+    if loans_status == "unknown" and guarantees_status == "unknown" and not guarantees and not loans_raw:
+        return None
+    pcts = [g.pct_of_net_worth for g in guarantees if g.pct_of_net_worth is not None]
+    return GuaranteesLoans(
+        loans_status=loans_status,
+        guarantees_status=guarantees_status,
+        guarantees=guarantees,
+        loans_raw=loans_raw,
+        max_pct_of_net_worth=max(pcts) if pcts else None,
+    )
+
+
+# ── T10 股權質押（Spec §2.3.4，table 通道） ────────────────────────────────────
+
+
+@dataclass
+class PledgeRow:
+    name: str
+    reason: str | None
+    date: str | None
+    counterparty: str | None
+    relation: str | None
+    shares: float | None
+    holding_pct: float | None
+    pledge_pct: float | None
+    amount: float | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return dict(self.__dict__)
+
+
+@dataclass
+class PledgeTable:
+    status: str                  # "rows" | "none" | "external_reference" | "unknown"
+    rows: list[PledgeRow]
+    max_pledge_pct: float | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "rows": [r.to_dict() for r in self.rows],
+            "max_pledge_pct": self.max_pledge_pct,
+        }
+
+
+_PLEDGE_MARKER = "股權質押資訊"
+_PLEDGE_EXTERNAL_KW = "請參閱公開資訊觀測站"
+_PLEDGE_WINDOW = 80
+
+
+def _cell_text(cell: str | None) -> str | None:
+    """去除 cell 內換行；空或 `-` → None。"""
+    if cell is None:
+        return None
+    t = unicodedata.normalize("NFKC", cell).replace("\n", "").strip()
+    return None if t in ("", "-") else t
+
+
+def _cell_num(cell: str | None) -> float | None:
+    t = _cell_text(cell)
+    return parse_amount(t.rstrip("%")) if t is not None else None
+
+
+def parse_pledges(
+    tables: list[list[list[str | None]]],
+    page_text: str,
+) -> PledgeTable:
+    """解析股權質押資訊（T10）；只看「股權質押資訊」之後的文字。一律回 PledgeTable。"""
+    compact = re.sub(r"\s+", "", unicodedata.normalize("NFKC", page_text or ""))
+    idx = compact.find(_PLEDGE_MARKER)
+    if idx < 0:
+        return PledgeTable(status="unknown", rows=[], max_pledge_pct=None)
+    after = compact[idx + len(_PLEDGE_MARKER):]
+
+    for table in tables:
+        if not table:
+            continue
+        header = re.sub(r"\s+", "", unicodedata.normalize("NFKC", " ".join(c or "" for c in table[0])))
+        if "質押" not in header or "股數" not in header:
+            continue
+        rows: list[PledgeRow] = []
+        for r in table[1:]:
+            cells = list(r) + [None] * (9 - len(r))
+            name = _cell_text(cells[0])
+            if not name:
+                continue
+            rows.append(PledgeRow(
+                name=name, reason=_cell_text(cells[1]), date=_cell_text(cells[2]),
+                counterparty=_cell_text(cells[3]), relation=_cell_text(cells[4]),
+                shares=_cell_num(cells[5]), holding_pct=_cell_num(cells[6]),
+                pledge_pct=_cell_num(cells[7]), amount=_cell_num(cells[8]),
+            ))
+        pcts = [x.pledge_pct for x in rows if x.pledge_pct is not None]
+        return PledgeTable(status="rows", rows=rows, max_pledge_pct=max(pcts) if pcts else None)
+
+    window = after[:_PLEDGE_WINDOW]
+    if _PLEDGE_EXTERNAL_KW in window:
+        return PledgeTable(status="external_reference", rows=[], max_pledge_pct=None)
+    if "無" in window:
+        return PledgeTable(status="none", rows=[], max_pledge_pct=None)
+    return PledgeTable(status="unknown", rows=[], max_pledge_pct=None)
+
+
+# ── T10 前十大股東（Spec §2.3.4，table 通道） ──────────────────────────────────
+
+
+@dataclass
+class ShareholderRow:
+    name: str
+    is_representative: bool
+    shares: float | None
+    pct: float | None
+    spouse_shares: float | None
+    spouse_pct: float | None
+    nominee_shares: float | None
+    nominee_pct: float | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return dict(self.__dict__)
+
+
+@dataclass
+class TopShareholders:
+    rows: list[ShareholderRow]
+    relation_notes: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "rows": [r.to_dict() for r in self.rows],
+            "relation_notes": list(self.relation_notes),
+        }
+
+
+_REP_SPLIT_RE = re.compile(r"\s*代表人[:：]\s*")
+_NOTE_LINE_RE = re.compile(r"^\d+\.")
+
+
+def _relation_notes(page_text: str) -> list[str]:
+    text = unicodedata.normalize("NFKC", page_text or "")
+    m = re.search(r"註:\s*\d+\.", text)
+    if m is None:
+        return []
+    body = text[m.start():].split(":", 1)[1]
+    notes: list[str] = []
+    for ln in body.splitlines():
+        ln = ln.strip()
+        if _NOTE_LINE_RE.match(ln):
+            notes.append(ln)
+        elif ln and notes:
+            break
+    return notes
+
+
+def parse_top_shareholders(
+    tables: list[list[list[str | None]]],
+    page_text: str,
+) -> TopShareholders | None:
+    """解析前十大股東表（T10）；無符合表頭的表 → None。"""
+    table = None
+    for t in tables:
+        if not t:
+            continue
+        header = re.sub(r"\s+", "", unicodedata.normalize("NFKC", " ".join(c or "" for c in t[0])))
+        if "本人" in header and "持有股份" in header:
+            table = t
+            break
+    if table is None:
+        return None
+
+    def nums(row: list[str | None]) -> tuple[float | None, ...]:
+        cells = list(row) + [None] * (7 - len(row))
+        return tuple(_cell_num(cells[i]) for i in range(1, 7))
+
+    rows: list[ShareholderRow] = []
+    data = table[1:]
+    i = 0
+    while i < len(data):
+        row = data[i]
+        i += 1
+        name_raw = unicodedata.normalize("NFKC", (row[0] if row else None) or "")
+        if not name_raw.strip():
+            continue
+        if _REP_SPLIT_RE.search(name_raw):
+            corp, rep = _REP_SPLIT_RE.split(name_raw, 1)
+            corp, rep = corp.replace("\n", "").strip(), rep.replace("\n", "").strip()
+            rows.append(ShareholderRow(corp, False, *nums(row)))
+            rep_nums = (None,) * 6
+            if i < len(data) and not _cell_text(data[i][0] if data[i] else None):
+                rep_nums = nums(data[i])
+                i += 1
+            rows.append(ShareholderRow(rep, True, *rep_nums))
+        else:
+            rows.append(ShareholderRow(name_raw.replace("\n", "").strip(), False, *nums(row)))
+    return TopShareholders(rows=rows, relation_notes=_relation_notes(page_text))
+
+
 # ── ProductionSalesTable dataclass (T6) ──────────────────────────────────────
 
 _PROD_SALES_COL_MAP: list[tuple[str, tuple[str, ...]]] = [
@@ -966,11 +1450,35 @@ _MISS_T7A = "T7a"
 _MISS_T7B = "T7b"
 _MISS_T8_SALES = "T8_sales"
 _MISS_T8_PURCHASE = "T8_purchase"
+_MISS_T9 = "T9"
+_MISS_T10_PLEDGE = "T10_pledge"
+_MISS_T10_TOP10 = "T10_top10"
 
 # 損益關鍵科目標籤（parse_key_lines 用）
 _KEY_LINE_LABELS: list[str] = [
     "營業收入", "營業成本", "營業毛利", "營業費用", "營業利益", "本期淨利"
 ]
+
+
+def _sum_pct(entries: list["CustomerEntry"]) -> float | None:
+    vals = [e.pct for e in entries if e.pct is not None]
+    return round(sum(vals), 2) if vals else None
+
+
+def _concentration(table: "CustomerTable | None") -> list[dict[str, Any]]:
+    """T8 衍生集中度：每年度 top1／top3／已列名加總（pct 為 None 不計入；表缺 → []）。"""
+    if table is None:
+        return []
+    out: list[dict[str, Any]] = []
+    for y in table.years:
+        top1 = y.entries[0].pct if y.entries else None
+        out.append({
+            "label": y.label,
+            "top1_pct": round(top1, 2) if top1 is not None else None,
+            "top3_pct": _sum_pct(y.entries[:3]),
+            "named_total_pct": _sum_pct(y.entries),
+        })
+    return out
 
 
 @dataclass
@@ -988,8 +1496,11 @@ class TablesBundle:
     consolidated_key_lines: dict
     parent_key_lines: dict
     parent_cost_coverage: float | None       # 個體營業成本 / 合併營業成本
-    missing_tables: list[str]                # 固定名稱：T1,T2,T3,T4,T5,T6,T7a,T7b,T8_sales,T8_purchase
+    missing_tables: list[str]                # 固定名稱：T1–T6,T7a,T7b,T8_sales,T8_purchase,T9,T10_pledge,T10_top10
     unit_notes: dict[str, str]
+    guarantees_loans: "GuaranteesLoans | None" = None
+    pledges: "PledgeTable | None" = None
+    top_shareholders: "TopShareholders | None" = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -1008,6 +1519,13 @@ class TablesBundle:
             "parent_cost_coverage": self.parent_cost_coverage,
             "missing_tables": self.missing_tables,
             "unit_notes": self.unit_notes,
+            "concentration": {
+                "T8_sales": _concentration(self.customers_sales),
+                "T8_purchase": _concentration(self.customers_purchase),
+            },
+            "guarantees_loans": self.guarantees_loans.to_dict() if self.guarantees_loans else None,
+            "pledges": self.pledges.to_dict() if self.pledges else None,
+            "top_shareholders": self.top_shareholders.to_dict() if self.top_shareholders else None,
         }
 
 
@@ -1020,6 +1538,7 @@ def extract_tables(
     ps_anchors: "dict | None",
     *,
     roc_year: int,
+    gov_anchors: dict | None = None,
 ) -> TablesBundle:
     """彙整年報、合併財報、個體財報的所有表格解析結果。
 
@@ -1031,6 +1550,7 @@ def extract_tables(
         ps: 個體財報 PdfDoc；缺檔時傳 None。
         ps_anchors: 個體財報錨點 dict；ps=None 時傳 None。
         roc_year: 民國年（例：114）。
+        gov_anchors: 年報治理錨點 dict（ar_pledge／ar_top10）；None 時兩個 T10 表皆缺。
 
     Returns:
         TablesBundle 彙整結果；缺檔時對應表進 missing_tables，不 raise。
@@ -1061,6 +1581,14 @@ def extract_tables(
         if pr is None:
             return None, None
         return ps.tables_of(pr.start, pr.end), ps.text_of(pr.start, pr.end)
+
+    def _get_fs_lines(key: str) -> list[str]:
+        if fs is None or fs_anchors is None:
+            return []
+        pr = fs_anchors.get(key)
+        if pr is None:
+            return []
+        return fs.lines_of(pr.start, pr.end)
 
     # ── T7a 財務狀況表（年報 ar_fin_position） ────────────────────────────────
     tables_7a, text_7a = _get_ar("ar_fin_position")
@@ -1099,23 +1627,19 @@ def extract_tables(
 
     # ── T4 費用性質（合併財報 fs_note_expense_nature） ───────────────────────
     fs_tables_en, _ = _get_fs("fs_note_expense_nature")
-    if fs_tables_en is None:
-        expense_nature = None
-        missing.append(_MISS_T4)
-    else:
+    expense_nature = parse_expense_nature_lines(_get_fs_lines("fs_note_expense_nature"))
+    if expense_nature is None and fs_tables_en is not None:
         expense_nature = parse_expense_nature(fs_tables_en)
-        if expense_nature is None:
-            missing.append(_MISS_T4)
+    if expense_nature is None:
+        missing.append(_MISS_T4)
 
     # ── T5 存貨附註（合併財報 fs_note_inventory） ────────────────────────────
     fs_tables_inv, _ = _get_fs("fs_note_inventory")
-    if fs_tables_inv is None:
-        inventory = None
-        missing.append(_MISS_T5)
-    else:
+    inventory = parse_inventory_note_lines(_get_fs_lines("fs_note_inventory"))
+    if inventory is None and fs_tables_inv is not None:
         inventory = parse_inventory_note(fs_tables_inv)
-        if inventory is None:
-            missing.append(_MISS_T5)
+    if inventory is None:
+        missing.append(_MISS_T5)
 
     # ── T1 營業成本明細（個體財報 ps_cogs_detail） ────────────────────────────
     ps_tables_cogs, _ = _get_ps("ps_cogs_detail")
@@ -1149,10 +1673,39 @@ def extract_tables(
 
     # ── consolidated_key_lines（合併損益表 fs_is → 或 ar_fin_performance 備援）
     _, fs_is_text = _get_fs("fs_is")
-    if fs_is_text:
+    consolidated_key_lines = parse_key_lines_from_lines(_get_fs_lines("fs_is"), _KEY_LINE_LABELS)
+    if all(v == (None, None) for v in consolidated_key_lines.values()):
+        consolidated_key_lines = None  # 列通道無結果 → 退回 table 通道
+    if consolidated_key_lines is not None:
+        pass
+    elif fs_is_text:
         consolidated_key_lines = parse_key_lines(fs_is_text, _KEY_LINE_LABELS)
     else:
         consolidated_key_lines = parse_key_lines(text_7b, _KEY_LINE_LABELS)
+
+    # ── T9 背書保證／資金貸與（合併財報 fs_note_disclosure 列通道） ────────────
+    guarantees_loans = parse_guarantees_loans(_get_fs_lines("fs_note_disclosure"))
+    if guarantees_loans is None:
+        missing.append(_MISS_T9)
+
+    # ── T10 股權質押／前十大股東（年報治理錨點，table 通道） ───────────────────
+    pledges: PledgeTable | None = None
+    top_shareholders: TopShareholders | None = None
+    if gov_anchors is not None:
+        pr_p = gov_anchors.get("ar_pledge")
+        if pr_p is not None:
+            pledges = parse_pledges(
+                ar.tables_of(pr_p.start, pr_p.end), ar.text_of(pr_p.start, pr_p.end)
+            )
+        pr_t = gov_anchors.get("ar_top10")
+        if pr_t is not None:
+            top_shareholders = parse_top_shareholders(
+                ar.tables_of(pr_t.start, pr_t.end), ar.text_of(pr_t.start, pr_t.end)
+            )
+    if pledges is None or pledges.status == "unknown":
+        missing.append(_MISS_T10_PLEDGE)
+    if top_shareholders is None:
+        missing.append(_MISS_T10_TOP10)
 
     # ── parent_key_lines（個體損益表 ps_is） ─────────────────────────────────
     _, ps_is_text = _get_ps("ps_is")
@@ -1191,4 +1744,7 @@ def extract_tables(
         parent_cost_coverage=parent_cost_coverage,
         missing_tables=missing,
         unit_notes=unit_notes,
+        guarantees_loans=guarantees_loans,
+        pledges=pledges,
+        top_shareholders=top_shareholders,
     )

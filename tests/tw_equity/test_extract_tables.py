@@ -156,9 +156,9 @@ class TestAllTablesPresent:
             roc_year=114,
         )
 
-    def test_missing_tables_empty(self, bundle: TablesBundle) -> None:
-        """全 fixture 齊時 missing_tables 應為空。"""
-        assert bundle.missing_tables == []
+    def test_missing_tables_only_1b1_names(self, bundle: TablesBundle) -> None:
+        """合成 fixture 齊（無 lines、無 gov_anchors）時 missing_tables 只剩 T9、T10_pledge、T10_top10。"""
+        assert sorted(bundle.missing_tables) == ["T10_pledge", "T10_top10", "T9"]
 
     def test_ar_tables_not_none(self, bundle: TablesBundle) -> None:
         """年報各表非 None。"""
@@ -219,7 +219,7 @@ class TestFsPsNone:
         assert "T3" in bundle.missing_tables
 
     def test_all_absent_missing_full_fixed_names(self) -> None:
-        """ar 錨點全缺 + fs/ps 缺 → missing_tables 為完整 10 個固定名稱。"""
+        """ar 錨點全缺 + fs/ps 缺 → missing_tables 為完整 13 個固定名稱。"""
         empty_ar = PdfDoc(
             path=Path("empty_ar.pdf"),
             pages=[Page(number=1, text="年報無財務表", tables=[])],
@@ -228,6 +228,7 @@ class TestFsPsNone:
         assert set(bundle.missing_tables) == {
             "T1", "T2", "T3", "T4", "T5", "T6",
             "T7a", "T7b", "T8_sales", "T8_purchase",
+            "T9", "T10_pledge", "T10_top10",
         }
 
     def test_ar_tables_not_in_missing(self, bundle: TablesBundle) -> None:

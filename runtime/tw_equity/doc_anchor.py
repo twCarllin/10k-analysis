@@ -15,6 +15,7 @@ PARENT_FS_ANCHORS）與 find_sections 函式。
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass
 
@@ -172,3 +173,124 @@ def find_sections(
         )
 
     return result
+
+
+# ── 標題行錨定（1B-1，只讀 Page.lines）───────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class HeadingAnchor:
+    keywords: list[str]          # 依優先序
+    enum: bool                   # True＝須有編號前綴；False＝整列（去空白後）等於關鍵字
+    after: str | None = None     # 起頁須 ≥ 指定 key 的起頁
+
+
+_PREFIX = r"(?:[壹貳參肆伍陸柒捌玖拾]+、|[一二三四五六七八九十]+、|[（(][一二三四五六七八九十]+[)）]|\d+\.)"
+_PREFIX_RE = re.compile("^" + _PREFIX)
+_PAGE_TAIL_RE = re.compile(r"\d+(?:[~～\-]\d+)?$")
+
+
+def _norm(line: str) -> str:
+    """NFKC 後刪除所有空白（處理「合 併 資 產 負 債 表」字距）。"""
+    return re.sub(r"\s+", "", _nfkc(line))
+
+
+def _is_heading(norm: str, anchor: HeadingAnchor) -> bool:
+    for kw in anchor.keywords:
+        k = _norm(kw)
+        if anchor.enum:
+            m = _PREFIX_RE.match(norm)
+            if m and norm[m.end():].startswith(k) and not _PAGE_TAIL_RE.search(norm):
+                return True
+        else:
+            if norm == k:
+                return True
+            m = _PREFIX_RE.match(norm)
+            if m and norm[m.end():] == k:
+                return True
+    return False
+
+
+def _page_hits(lines: list[str], anchors: dict[str, HeadingAnchor]) -> set[str]:
+    norms = [_norm(l) for l in lines]
+    return {
+        key for key, a in anchors.items() if any(_is_heading(n, a) for n in norms)
+    }
+
+
+def find_heading_sections(
+    doc: PdfDoc,
+    anchors: dict[str, HeadingAnchor],
+    *,
+    required: set[str],
+) -> dict[str, PageRange | None]:
+    """以標題行（Page.lines）錨定章節頁碼範圍；演算法見 Spec §2.2.1。
+
+    Raises:
+        AnchorError: required 內有 key 找不到時。
+    """
+    pages = sorted(doc.pages, key=lambda p: p.number)
+    hits = {p.number: _page_hits(p.lines, anchors) for p in pages}
+    toc_last = max((n for n, ks in hits.items() if len(ks) >= 3), default=0)
+
+    start: dict[str, int | None] = {}
+
+    def _resolve(key: str, seen: frozenset[str] = frozenset()) -> int | None:
+        if key in start:
+            return start[key]
+        a = anchors[key]
+        floor = toc_last
+        if a.after and a.after in anchors and a.after not in seen:
+            floor = max(floor, _resolve(a.after, seen | {key}) or 0)
+        start[key] = next(
+            (n for n in sorted(hits) if n > toc_last and n >= floor and key in hits[n]),
+            None,
+        )
+        return start[key]
+
+    for key in anchors:
+        _resolve(key)
+
+    last_page = pages[-1].number if pages else 0
+    starts_sorted = sorted({s for s in start.values() if s})
+    result: dict[str, PageRange | None] = {}
+    for key in anchors:
+        s = start[key]
+        if not s:
+            result[key] = None
+            continue
+        larger = [x for x in starts_sorted if x > s]
+        result[key] = PageRange(start=s, end=(larger[0] - 1) if larger else last_page)
+
+    missing = [k for k in anchors if k in required and result[k] is None]
+    missing += sorted(k for k in required if k not in anchors)
+    if missing:
+        found_keys = [k for k in anchors if result[k] is not None]
+        raise AnchorError(
+            f"必填 key 找不到：{'、'.join(missing)}。"
+            f"已找到：{'、'.join(found_keys) if found_keys else '（無）'}。"
+            f"建議：確認關鍵字與文件章名一致（PDF 可能使用 CJK 相容字元或空格）。"
+        )
+    return result
+
+
+FS_HEADING_ANCHORS: dict[str, HeadingAnchor] = {
+    "fs_audit_kam":           HeadingAnchor(["關鍵查核事項"], False),
+    "fs_bs":                  HeadingAnchor(["合併資產負債表"], False),
+    "fs_is":                  HeadingAnchor(["合併綜合損益表"], False),
+    "fs_cf":                  HeadingAnchor(["合併現金流量表"], False),
+    "fs_note_items":          HeadingAnchor(["重要會計項目之說明"], True),
+    "fs_note_inventory":      HeadingAnchor(["存貨"], True, after="fs_note_items"),
+    "fs_note_expense_nature": HeadingAnchor(["費用性質之額外資訊"], True, after="fs_note_items"),
+    "fs_note_related":        HeadingAnchor(["關係人交易"], True),
+    "fs_note_contingent":     HeadingAnchor(["重大或有負債及未認列之合約承諾"], True),
+    "fs_note_disclosure":     HeadingAnchor(["附註揭露事項"], True),
+}
+
+GOVERNANCE_HEADING_ANCHORS: dict[str, HeadingAnchor] = {
+    "ar_governance": HeadingAnchor(["公司治理報告"], True),
+    "ar_pledge":     HeadingAnchor(["股權質押資訊"], True),
+    "ar_top10":      HeadingAnchor(["持股比例占前十名之股東"], True),
+    "ar_capital":    HeadingAnchor(["參、募資情形"], False),
+    "ar_operations": HeadingAnchor(["肆、營運概況"], False),
+}

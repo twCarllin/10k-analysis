@@ -1,4 +1,4 @@
-"""pdf_doc.py — pdfplumber 封裝層，含 sha256 快取。
+"""pdf_doc.py — pdfplumber／PyMuPDF 封裝層，含 sha256 快取。
 
 提供 Page／PdfDoc dataclass 與 load_pdf 函式。
 快取格式版本由 _CACHE_VERSION 控制；版本不符視同無快取。
@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-_CACHE_VERSION = 1
+_CACHE_VERSION = 2
 _DEFAULT_CACHE_DIR = Path("data/cache/tw_equity")
 
 
@@ -21,6 +21,7 @@ class Page:
     number: int                              # 1-indexed
     text: str                                # pdfplumber extract_text()，None → ""
     tables: list[list[list[str | None]]]     # pdfplumber extract_tables() 原樣
+    lines: list[str] = field(default_factory=list)  # PyMuPDF words 重組的列文字
 
 
 @dataclass
@@ -41,6 +42,14 @@ class PdfDoc:
                 result.extend(p.tables)
         return result
 
+    def lines_of(self, start: int, end: int) -> list[str]:
+        """回傳頁碼 start..end（含兩端）的列文字，依頁序串接。"""
+        result: list[str] = []
+        for p in self.pages:
+            if start <= p.number <= end:
+                result.extend(p.lines)
+        return result
+
 
 # ── 序列化 ──────────────────────────────────────────────────────────────────
 
@@ -54,6 +63,7 @@ def to_json(doc: PdfDoc) -> dict[str, Any]:
                 "number": p.number,
                 "text": p.text,
                 "tables": p.tables,
+                "lines": p.lines,
             }
             for p in doc.pages
         ],
@@ -69,6 +79,7 @@ def from_json(data: dict[str, Any]) -> PdfDoc | None:
             number=pg["number"],
             text=pg["text"],
             tables=pg["tables"],
+            lines=pg.get("lines", []),
         )
         for pg in data["pages"]
     ]
@@ -94,6 +105,7 @@ def load_pdf(
     *,
     cache_dir: Path | None = None,
     _opener: Any = None,
+    _line_opener: Any = None,
 ) -> PdfDoc:
     """載入 PDF 並回傳 PdfDoc，第二次呼叫讀快取。
 
@@ -103,6 +115,9 @@ def load_pdf(
         _opener: 測試注入點——回傳有 .pages 屬性的物件，
                  每頁有 extract_text() 與 extract_tables()。
                  提供時跳過快取讀取（直接用注入資料）。
+        _line_opener: 測試注入點——支援 __getitem__／__len__，每頁有
+                 get_text("words")；預設 fitz.open。_opener 提供時若未提供
+                 本參數，lines 為空（不開真實 PDF）。
 
     Returns:
         PdfDoc 實例。
@@ -112,7 +127,7 @@ def load_pdf(
 
     # 有注入點時，跳過快取讀取（直接用注入資料），但仍寫快取
     if _opener is not None:
-        doc = _build_from_opener(path, _opener)
+        doc = _build_from_opener(path, _opener, _line_opener)
         _write_cache(doc, path, cache_dir)
         return doc
 
@@ -129,7 +144,7 @@ def load_pdf(
     # 從真實 PDF 抽取
     import pdfplumber  # 延遲 import
 
-    doc = _build_from_pdfplumber(path)
+    doc = _build_from_pdfplumber(path, _line_opener)
     _write_cache(doc, path, cache_dir)
     return doc
 
@@ -147,23 +162,68 @@ def _write_cache(doc: PdfDoc, pdf_path: Path, cache_dir: Path) -> None:
         pass
 
 
-def _build_from_pdfplumber(path: Path) -> PdfDoc:
+_Y_TOLERANCE = 3.0
+
+
+def _words_to_lines(words: Any) -> list[str]:
+    """words（(x0, y0, x1, y1, word, ...)）依 y1 分群成列文字，由上而下。"""
+    ordered = sorted(words, key=lambda w: w[3])
+    rows: list[list[Any]] = []
+    for w in ordered:
+        if rows and w[3] - rows[-1][0][3] <= _Y_TOLERANCE:
+            rows[-1].append(w)
+        else:
+            rows.append([w])
+    lines: list[str] = []
+    for row in rows:
+        row.sort(key=lambda w: w[0])
+        line = " ".join(str(w[4]) for w in row).strip()
+        if line:
+            lines.append(line)
+    return lines
+
+
+def _lines_from_opener(line_opener: Any, n_pages: int) -> list[list[str]]:
+    if len(line_opener) != n_pages:
+        raise ValueError(
+            f"頁數不一致：_opener {n_pages} 頁、_line_opener {len(line_opener)} 頁"
+        )
+    return [_words_to_lines(line_opener[i].get_text("words")) for i in range(n_pages)]
+
+
+def _build_from_pdfplumber(path: Path, line_opener: Any = None) -> PdfDoc:
     import pdfplumber
 
-    with pdfplumber.open(path) as pdf:
-        pages = []
-        for i, pg in enumerate(pdf.pages, start=1):
-            text = pg.extract_text() or ""
-            tables = pg.extract_tables() or []
-            pages.append(Page(number=i, text=text, tables=tables))
+    close_fitz = None
+    if line_opener is None:
+        import fitz  # 延遲 import
+
+        line_opener = close_fitz = fitz.open(path)
+    try:
+        with pdfplumber.open(path) as pdf:
+            all_lines = _lines_from_opener(line_opener, len(pdf.pages))
+            pages = []
+            for i, pg in enumerate(pdf.pages, start=1):
+                text = pg.extract_text() or ""
+                tables = pg.extract_tables() or []
+                pages.append(
+                    Page(number=i, text=text, tables=tables, lines=all_lines[i - 1])
+                )
+    finally:
+        if close_fitz is not None:
+            close_fitz.close()
     return PdfDoc(path=path, pages=pages)
 
 
-def _build_from_opener(path: Path, opener: Any) -> PdfDoc:
+def _build_from_opener(path: Path, opener: Any, line_opener: Any = None) -> PdfDoc:
     """從 _opener 注入物件建立 PdfDoc。"""
+    n = len(opener.pages)
+    all_lines = (
+        _lines_from_opener(line_opener, n) if line_opener is not None else [[] for _ in range(n)]
+    )
     pages = []
     for i, pg in enumerate(opener.pages, start=1):
         text = pg.extract_text() or ""
         tables = pg.extract_tables() or []
-        pages.append(Page(number=i, text=text, tables=tables))
+        pages.append(Page(number=i, text=text, tables=tables, lines=all_lines[i - 1]))
     return PdfDoc(path=path, pages=pages)

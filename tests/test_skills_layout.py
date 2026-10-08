@@ -51,7 +51,7 @@ def test_four_subdirs_exist_and_basenames_unique():
         for f in (SKILLS / d).glob("*.md"):
             assert f.stem not in names, f"duplicate skill name {f.stem} in {d} and {names[f.stem]}"
             names[f.stem] = d
-    assert len(names) == 51  # 48（skills-reorg）＋3 個 tw_equity skill（run 2026-10-08-tw-equity-phase-1a，Spec §3）
+    assert len(names) == 55  # 48（skills-reorg）＋3 個 tw_equity skill（run 2026-10-08-tw-equity-phase-1a，Spec §3）＋4 個（run 2026-10-08-tw-equity-phase-1b1，Spec §3）
 
 
 def test_skill_path_resolves_every_referenced_skill():

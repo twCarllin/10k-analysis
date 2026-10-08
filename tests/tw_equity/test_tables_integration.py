@@ -158,13 +158,13 @@ def test_full_flow_fs_ps_tables_parsed(full_bundle: TablesBundle) -> None:
 
 def test_full_flow_missing_tables_only_ar_absent(full_bundle: TablesBundle) -> None:
     """I3: 年報確無的 T6 進 missing_tables；T1–T5、T7、T8（含 T8_purchase）不在。"""
-    assert sorted(full_bundle.missing_tables) == ["T6"]
+    assert sorted(full_bundle.missing_tables) == ["T10_pledge", "T10_top10", "T6", "T9"]
 
 
 def test_full_flow_to_dict_roundtrips_json(full_bundle: TablesBundle) -> None:
     """I3: to_dict 可 JSON 序列化且 missing_tables 保留。"""
     d = json.loads(json.dumps(full_bundle.to_dict()))
-    assert sorted(d["missing_tables"]) == ["T6"]
+    assert sorted(d["missing_tables"]) == ["T10_pledge", "T10_top10", "T6", "T9"]
 
 
 # ── I4: 缺財報檔 ─────────────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ def test_full_flow_to_dict_roundtrips_json(full_bundle: TablesBundle) -> None:
 def test_missing_fs_ps_files_listed_no_raise(ar_only_bundle: TablesBundle) -> None:
     """I4: 缺 fs/ps → T1–T5 進 missing_tables，年報表仍解析。"""
     assert set(ar_only_bundle.missing_tables) == {
-        "T1", "T2", "T3", "T4", "T5", "T6"
+        "T1", "T2", "T3", "T4", "T5", "T6", "T9", "T10_pledge", "T10_top10"
     }
     assert ar_only_bundle.fin_performance is not None
     assert ar_only_bundle.customers_sales is not None
@@ -184,7 +184,7 @@ def test_missing_only_ps_lists_only_t1_t2_t3(
 ) -> None:
     """I4: 只缺 ps → 僅 T1–T3 額外進 missing_tables。"""
     b = extract_tables(ar_doc, ar_anchors, fs_doc, fs_anchors, None, None, roc_year=114)
-    assert set(b.missing_tables) == {"T1", "T2", "T3", "T6"}
+    assert set(b.missing_tables) == {"T1", "T2", "T3", "T6", "T9", "T10_pledge", "T10_top10"}
 
 
 # ── I5: parent_cost_coverage ─────────────────────────────────────────────────

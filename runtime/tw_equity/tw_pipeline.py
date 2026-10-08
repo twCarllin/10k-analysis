@@ -12,8 +12,10 @@ from pathlib import Path
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.doc_anchor import (
     ANNUAL_REPORT_ANCHORS,
-    FS_ANCHORS,
+    FS_HEADING_ANCHORS,
+    GOVERNANCE_HEADING_ANCHORS,
     PARENT_FS_ANCHORS,
+    find_heading_sections,
     find_sections,
 )
 from runtime.tw_equity.inputs import load_inputs
@@ -28,7 +30,7 @@ _AR_REQUIRED = {
     "ar_letter", "ar_business", "ar_market", "ar_customers",
     "ar_mdna", "ar_fin_position", "ar_fin_performance",
 }
-_FS_REQUIRED = {"fs_bs", "fs_is", "fs_note_expense_nature"}
+_FS_REQUIRED = {"fs_bs", "fs_is"}
 _PS_REQUIRED = {"ps_is", "ps_cogs_detail"}
 
 MAX_RETRIES = 2
@@ -78,7 +80,8 @@ def run_tw_equity_pipeline(
     print("[tw-equity Phase 3] find sections")
     ar_anchors = find_sections(ar, ANNUAL_REPORT_ANCHORS, required=_AR_REQUIRED,
                                order=list(ANNUAL_REPORT_ANCHORS))
-    fs_anchors = (find_sections(fs, FS_ANCHORS, required=_FS_REQUIRED, order=list(FS_ANCHORS))
+    gov_anchors = find_heading_sections(ar, GOVERNANCE_HEADING_ANCHORS, required=set())
+    fs_anchors = (find_heading_sections(fs, FS_HEADING_ANCHORS, required=_FS_REQUIRED)
                   if fs is not None else None)
     ps_anchors = (find_sections(ps, PARENT_FS_ANCHORS, required=_PS_REQUIRED,
                                 order=list(PARENT_FS_ANCHORS))
@@ -86,7 +89,7 @@ def run_tw_equity_pipeline(
 
     print("[tw-equity Phase 4] extract tables")
     bundle = extract_tables(ar, ar_anchors, fs, fs_anchors, ps, ps_anchors,
-                            roc_year=inputs.roc_year)
+                            roc_year=inputs.roc_year, gov_anchors=gov_anchors)
 
     print("[tw-equity Phase 5] build sections")
     empty = pdf_doc.PdfDoc(path=Path(""), pages=[])
@@ -95,14 +98,15 @@ def run_tw_equity_pipeline(
         fs if fs is not None else empty, fs_anchors or {},
         ps if ps is not None else empty, ps_anchors or {},
         bundle=bundle,
+        gov_anchors=gov_anchors,
     )
 
     print("[tw-equity Phase 6] run skills")
     skipped_tasks: list[str] = []
     active: list[dict] = []
     for task in TW_PHASE1_TASKS:
-        if task["task_id"] == "tw_footnotes_quality" and not any(
-            sections.get(k, "") for k in task["input_keys"]
+        if task["skip_if_empty"] and not any(
+            sections.get(k, "") for k in task["skip_if_empty"]
         ):
             skipped_tasks.append(task["task_id"])
             print(f"  [skip] {task['task_id']}（輸入全空）")
@@ -151,7 +155,7 @@ def run_tw_equity_pipeline(
     report_path = save_tw_equity_report(
         inputs=inputs,
         bundle=bundle,
-        anchors_summary={**ar_anchors, **(fs_anchors or {}), **(ps_anchors or {})},
+        anchors_summary={**ar_anchors, **gov_anchors, **(fs_anchors or {}), **(ps_anchors or {})},
         skill_results=skill_results,
         eval_results=eval_results,
         skipped_tasks=skipped_tasks,

@@ -33,6 +33,8 @@ _SELECTED_PAGES: list[int] = [
     76,                  # T8 前置頁
     81, 82,              # T8 主體
     92, 93, 94, 95, 96, 97, 98, 99,  # ar_mdna(92)、ar_special(99)
+    8, 57, 58, 59,       # 1B-1 加頁
+    # 65 已在 T7a 前置段
 ]
 
 
@@ -51,16 +53,20 @@ def extract_pages(pdf_path: Path, page_numbers: list[int]) -> _pdf_doc.PdfDoc:
     if not pdf_path.exists():
         raise FileNotFoundError(f"來源 PDF 不存在：{pdf_path}")
 
+    import fitz
     import pdfplumber
 
     page_set = set(page_numbers)
     pages: list[_pdf_doc.Page] = []
-    with pdfplumber.open(pdf_path) as pdf:
+    with pdfplumber.open(pdf_path) as pdf, fitz.open(pdf_path) as fdoc:
         for i, pg in enumerate(pdf.pages, start=1):
             if i in page_set:
                 text = pg.extract_text() or ""
                 tables = pg.extract_tables() or []
-                pages.append(_pdf_doc.Page(number=i, text=text, tables=tables))
+                lines = _pdf_doc._words_to_lines(fdoc[i - 1].get_text("words"))
+                pages.append(
+                    _pdf_doc.Page(number=i, text=text, tables=tables, lines=lines)
+                )
 
     return _pdf_doc.PdfDoc(path=pdf_path, pages=pages)
 

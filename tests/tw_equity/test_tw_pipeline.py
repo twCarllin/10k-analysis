@@ -70,9 +70,11 @@ def _raw(md: Path) -> dict:
     return json.loads(raw_path.read_text(encoding="utf-8"))
 
 
-def test_tasks_table_matches_spec():
+def test_tasks_table_matches_spec_1b1():
     assert [t["task_id"] for t in TW_PHASE1_TASKS] == [
-        "tw_cost_structure", "tw_financial_analysis", "tw_footnotes_quality"]
+        "tw_cost_structure", "tw_financial_analysis", "tw_footnotes_quality",
+        "tw_kam_analysis", "tw_business_analysis", "tw_customer_supplier",
+        "tw_governance_flags"]
     assert all(t["skill"] == t["task_id"] for t in TW_PHASE1_TASKS)
     assert TW_PHASE1_TASKS[0]["input_keys"] == ["tables_json", "ar_market"]
     assert TW_PHASE1_TASKS[1]["input_keys"] == ["tables_json", "ar_mdna", "ar_letter"]
@@ -115,11 +117,15 @@ def test_missing_annual_report_raises_file_not_found(env):
         run_tw_equity_pipeline("3653", dry_run=True, base_dir=base)
 
 
-def test_dry_run_with_footnote_inputs_runs_all_three_tasks(env):
+def test_dry_run_with_footnote_inputs_runs_1a_tasks_plus_unskipped_new(env):
     base, calls, _, state = env
     run_tw_equity_pipeline("3653", dry_run=True, base_dir=base)
     sent = {s for s, _ in calls}
-    assert sent == {"tw_cost_structure", "tw_financial_analysis", "tw_footnotes_quality"}
+    # 本 fixture 無合併財報 → fs_audit_kam 為空 → tw_kam_analysis 依 skip_if_empty 跳過；其餘新 task 輸入非空
+    assert sent == {
+        "tw_cost_structure", "tw_financial_analysis", "tw_footnotes_quality",
+        "tw_business_analysis", "tw_customer_supplier", "tw_governance_flags",
+    }
     foot = dict(calls)["tw_footnotes_quality"]
     assert foot["ar_risk"]
 
