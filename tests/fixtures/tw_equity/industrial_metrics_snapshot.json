@@ -11,25 +11,26 @@
       "key": "cfo",
       "name": "營業活動之淨現金流入",
       "prior": 4325575.0,
-      "share": null
+      "share": 1.1928791327565
      },
      {
-      "current": null,
-      "delta": null,
+      "current": -483040.0,
+      "delta": -234130.0,
       "key": "capex",
-      "name": "capex",
-      "prior": null,
-      "share": null
+      "name": "購置不動產、廠房及設備",
+      "prior": -248910.0,
+      "share": -0.1928791327565001
      }
     ],
     "name": "自由現金流變動",
-    "residual": null,
+    "residual": 0.0,
     "target": "fcf",
-    "target_current": null,
-    "target_delta": null,
-    "target_prior": null,
+    "target_current": 5290534.0,
+    "target_delta": 1213869.0,
+    "target_prior": 4076665.0,
     "top_drivers": [
-     "cfo"
+     "cfo",
+     "capex"
     ]
    },
    {
@@ -463,6 +464,14 @@
    {
     "components": [
      {
+      "current": -483040.0,
+      "delta": -234130.0,
+      "key": "capex",
+      "name": "購置不動產、廠房及設備",
+      "prior": -248910.0,
+      "share": 0.9382538931946237
+     },
+     {
       "current": 434219.0,
       "delta": 93618.0,
       "key": "interest_received",
@@ -485,14 +494,6 @@
       "name": "處分不動產、廠房及設備價款",
       "prior": 76.0,
       "share": -0.003919242760621629
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "capex",
-      "name": "capex",
-      "prior": null,
-      "share": null
      },
      {
       "current": null,
@@ -552,15 +553,15 @@
      }
     ],
     "name": "投資現金流變動",
-    "residual": -345886.0,
+    "residual": -111756.0,
     "target": "cfi",
     "target_current": -504487.0,
     "target_delta": -249538.0,
     "target_prior": -254949.0,
     "top_drivers": [
+     "capex",
      "interest_received",
-     "intangible_purchase",
-     "ppe_disposal_proceeds"
+     "intangible_purchase"
     ]
    },
    {
@@ -831,8 +832,8 @@
     "prior": null
    },
    "capex_to_revenue": {
-    "current": null,
-    "prior": null
+    "current": 2.967118814852744,
+    "prior": 3.041818868613491
    },
    "cash_to_assets": {
     "current": 62.3726488346167,
@@ -883,12 +884,12 @@
     "prior": 22.49870689676548
    },
    "fcf": {
-    "current": null,
-    "prior": null
+    "current": 5290534.0,
+    "prior": 4076665.0
    },
    "fcf_margin": {
-    "current": null,
-    "prior": null
+    "current": 32.4976046953009,
+    "prior": 49.81911742403366
    },
    "gross_margin": {
     "current": 84.18118540524476,
@@ -947,50 +948,50 @@
    {
     "formula": "cfo + capex",
     "inputs": {
-     "capex": null,
+     "capex": -483040.0,
      "cfo": 5773574.0
     },
     "key": "fcf",
     "name": "自由現金流",
     "period": "current",
     "unit": "仟元",
-    "value": null
+    "value": 5290534.0
    },
    {
     "formula": "cfo + capex",
     "inputs": {
-     "capex": null,
+     "capex": -248910.0,
      "cfo": 4325575.0
     },
     "key": "fcf",
     "name": "自由現金流",
     "period": "prior",
     "unit": "仟元",
-    "value": null
+    "value": 4076665.0
    },
    {
     "formula": "fcf / revenue * 100",
     "inputs": {
-     "fcf": null,
+     "fcf": 5290534.0,
      "revenue": 16279766.0
     },
     "key": "fcf_margin",
     "name": "自由現金流率",
     "period": "current",
     "unit": "%",
-    "value": null
+    "value": 32.4976046953009
    },
    {
     "formula": "fcf / revenue * 100",
     "inputs": {
-     "fcf": null,
+     "fcf": 4076665.0,
      "revenue": 8182933.0
     },
     "key": "fcf_margin",
     "name": "自由現金流率",
     "period": "prior",
     "unit": "%",
-    "value": null
+    "value": 49.81911742403366
    },
    {
     "formula": "gross_profit / revenue * 100",
@@ -1141,7 +1142,7 @@
    {
     "formula": "abs(capex) / depreciation",
     "inputs": {
-     "capex": null,
+     "capex": -483040.0,
      "depreciation": null
     },
     "key": "capex_to_depreciation",
@@ -1153,7 +1154,7 @@
    {
     "formula": "abs(capex) / depreciation",
     "inputs": {
-     "capex": null,
+     "capex": -248910.0,
      "depreciation": null
     },
     "key": "capex_to_depreciation",
@@ -1165,26 +1166,26 @@
    {
     "formula": "abs(capex) / revenue * 100",
     "inputs": {
-     "capex": null,
+     "capex": -483040.0,
      "revenue": 16279766.0
     },
     "key": "capex_to_revenue",
     "name": "資本支出率",
     "period": "current",
     "unit": "%",
-    "value": null
+    "value": 2.967118814852744
    },
    {
     "formula": "abs(capex) / revenue * 100",
     "inputs": {
-     "capex": null,
+     "capex": -248910.0,
      "revenue": 8182933.0
     },
     "key": "capex_to_revenue",
     "name": "資本支出率",
     "period": "prior",
     "unit": "%",
-    "value": null
+    "value": 3.041818868613491
    },
    {
     "formula": "(accounts_receivable + accounts_receivable_related) / revenue * days",
