@@ -82,7 +82,7 @@ def test_real_fixture_numbers_and_missing_tables(env) -> None:
     assert sorted(bundle["missing_tables"]) == ["T1", "T2", "T3", "T6"]
     assert tuple(bundle["consolidated_key_lines"]["營業成本"]) == (11841587, 8912721)
     assert bundle["parent_cost_coverage"] is None
-    assert len(re.findall(r"^## ", text, flags=re.M)) == 12  # 8 主節 + 附錄 A–D
+    assert len(re.findall(r"^## ", text, flags=re.M)) == 13  # 8 主節 + 附錄 A–E
     for heading in ("## 1. ", "## 2. ", "## 3. ", "## 4. ", "## 5. ", "## 6. ", "## 7. ",
                     "## 8. ", "## 附錄 A", "## 附錄 B", "## 附錄 C"):
         assert heading in text

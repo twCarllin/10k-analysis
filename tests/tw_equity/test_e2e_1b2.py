@@ -28,7 +28,7 @@ from runtime.tw_equity.tw_pipeline import run_tw_equity_pipeline  # noqa: E402
 
 _FIX = ROOT / "tests/fixtures/tw_equity"
 _HEADINGS = ("## 1. ", "## 2. ", "## 3. ", "## 4. ", "## 5. ", "## 6. ", "## 7. ",
-             "## 8. ", "## 附錄 A", "## 附錄 B", "## 附錄 C", "## 附錄 D")
+             "## 8. ", "## 附錄 A", "## 附錄 B", "## 附錄 C", "## 附錄 D", "## 附錄 E")
 
 
 def _load(name: str):
@@ -122,7 +122,7 @@ def test_no_ocr_cross_year_and_report(env) -> None:
     checks = [c for c in raw["cross_year"]["overlap_checks"]
               if c["table"] == "T7b" and c["label"] == "營業收入" and c["year"] == "113年度"]
     assert len(checks) == 1 and checks[0]["match"] is True
-    assert len(re.findall(r"^## ", text, flags=re.M)) == 12  # 8 主節 + 附錄 A–D
+    assert len(re.findall(r"^## ", text, flags=re.M)) == 13  # 8 主節 + 附錄 A–E
     for h in _HEADINGS:
         assert h in text
 
@@ -148,7 +148,7 @@ def test_no_prior_degrades_without_raising(env) -> None:
     assert raw["prior"] is None
     assert raw["cross_year"] is None
     assert raw["cross_year_compare"] is None
-    assert len(re.findall(r"^## ", text, flags=re.M)) == 12  # 8 主節 + 附錄 A–D
+    assert len(re.findall(r"^## ", text, flags=re.M)) == 13  # 8 主節 + 附錄 A–E
     for h in _HEADINGS:
         assert h in text
     assert "本節未執行" in _section(text, "8.")

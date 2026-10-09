@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from runtime.tw_equity.pdf_doc import PdfDoc
+    from runtime.tw_equity.metrics import MetricsPack
     from runtime.tw_equity.statements import StatementLedger
 
 
@@ -1513,6 +1514,7 @@ class TablesBundle:
     pledges: "PledgeTable | None" = None
     top_shareholders: "TopShareholders | None" = None
     statements: "StatementLedger | None" = None
+    metrics: "MetricsPack | None" = None            # 階段 2：帳本衍生指標與 bridge
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -1539,6 +1541,7 @@ class TablesBundle:
             "pledges": self.pledges.to_dict() if self.pledges else None,
             "top_shareholders": self.top_shareholders.to_dict() if self.top_shareholders else None,
             "statements": self.statements.to_dict() if self.statements else None,
+            "metrics": self.metrics.to_dict() if self.metrics else None,
         }
 
 
@@ -1729,6 +1732,11 @@ def extract_tables(
         if not counts.get(st):
             missing.append(name)
 
+    # ── 階段 2：指標與 bridge（metrics.py；函式內 import 避開循環） ─────────
+    from runtime.tw_equity.metrics import compute_metrics
+
+    metrics = compute_metrics(statements)
+
     # ── parent_key_lines（個體損益表 ps_is） ─────────────────────────────────
     _, ps_is_text = _get_ps("ps_is")
     if ps_is_text:
@@ -1770,4 +1778,5 @@ def extract_tables(
         pledges=pledges,
         top_shareholders=top_shareholders,
         statements=statements,
+        metrics=metrics,
     )

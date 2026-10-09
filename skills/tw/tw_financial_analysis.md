@@ -1,6 +1,6 @@
 ---
 skill_version: 1.0
-last_modified: 2026-10-08
+last_modified: 2026-10-09
 ---
 
 # tw_financial_analysis
@@ -9,7 +9,7 @@ last_modified: 2026-10-08
 分析台灣上市櫃公司兩年度資產負債與損益變化（`tables_json`），並對照管理層在年報的說明是否一致。本 skill 不做算術。
 
 ## Input
-- `tables_json`（必填）：`tables.py` 預先算好的表集合 JSON 字串（T7a 資產負債、T7b 損益、`derived` 區的各項利潤率；`TwoYearTable.rows[].diff_pct` 直接使用）
+- `tables_json`（必填）：`tables.py` 預先算好的表集合 JSON 字串（T7a 資產負債、T7b 損益、`derived` 區的各項利潤率；`TwoYearTable.rows[].diff_pct` 直接使用；`metrics` 區（階段 2 指標與 bridge，含公式與輸入值）可直接引用，不重算）
 - `ar_mdna`（選填）：年報伍章（財務狀況與經營結果分析）文字
 - `ar_letter`（選填）：致股東報告書文字
 - `retry_hint`（選填）：eval 回饋的改善指示

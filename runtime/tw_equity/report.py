@@ -646,6 +646,32 @@ def _appendix_d(bundle: TablesBundle) -> list[str]:
     return L
 
 
+def _appendix_e(bundle: TablesBundle) -> list[str]:
+    mp = bundle.metrics
+    if mp is None:
+        return ["無帳本，未計算指標"]
+    d = mp.to_dict()
+    cur, pri = _t(d["period_current"]), _t(d["period_prior"])
+    L = ["### 指標", "", f"期間：本期 {cur}、上期 {pri}；金額單位仟元，比率 %，天數天，倍數 x", ""]
+    idx = d["index"]
+    seen: list[tuple[str, str, str, str]] = []
+    for m in d["metrics"]:
+        if m["period"] == "current":
+            seen.append((m["key"], m["name"], m["formula"], m["unit"]))
+    L += _md_table(["指標", "公式", "本期", "上期", "單位"],
+                   [[f"{name}（{key}）", formula, idx[key]["current"], idx[key]["prior"], unit]
+                    for key, name, formula, unit in seen])
+    L += ["", "### 變動歸因（bridge）", ""]
+    for b in d["bridges"]:
+        L += [f"#### {_t(b['name'])}（{b['target']}）：本期 {_num(b['target_current'])}、上期 "
+              f"{_num(b['target_prior'])}、Δ {_num(b['target_delta'])}；主要驅動：{_t('、'.join(b['top_drivers'])) or _NA}", ""]
+        rows = [[f"{_t(c['name'])}（{c['key']}）", c["current"], c["prior"], c["delta"],
+                 None if c["share"] is None else c["share"] * 100] for c in b["components"]]
+        rows.append(["殘差", None, None, b["residual"], None])
+        L += _md_table(["組成項", "本期", "上期", "Δ", "占比%"], rows) + [""]
+    return L
+
+
 # ── 主函式 ────────────────────────────────────────────────────────────────────
 
 
@@ -696,6 +722,7 @@ def save_tw_equity_report(
                                                 garbled_pages, ocr_pages, ocr_checks, prior), "",
         "## 附錄 C：跨年表格比對", "", *_appendix_c(cross_year), "",
         "## 附錄 D：合併財報三表勾稽", "", *_appendix_d(bundle), "",
+        "## 附錄 E：關鍵指標與變動歸因", "", *_appendix_e(bundle), "",
     ]
     md_text = "\n".join(lines)
 
