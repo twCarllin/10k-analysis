@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import unicodedata
 from dataclasses import dataclass
@@ -16,6 +17,8 @@ if TYPE_CHECKING:
     from runtime.tw_equity.fy_income import FyIncome
     from runtime.tw_equity.metrics import MetricsPack
     from runtime.tw_equity.statements import StatementLedger
+
+log = logging.getLogger(__name__)
 
 
 # ── 內部常數 ──────────────────────────────────────────────────────────────────
@@ -1517,6 +1520,7 @@ class TablesBundle:
     statements: "StatementLedger | None" = None
     metrics: "MetricsPack | None" = None            # 階段 2：帳本衍生指標與 bridge
     fy_income: "FyIncome | None" = None             # FY 損益表（年報財務績效比較分析表；TTM 用）
+    fy_income_error: str | None = None             # FY 損益表解析例外（`<類型>: <訊息>`）；成功 → None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -1545,6 +1549,7 @@ class TablesBundle:
             "statements": self.statements.to_dict() if self.statements else None,
             "metrics": self.metrics.to_dict() if self.metrics else None,
             "fy_income": self.fy_income.to_dict() if self.fy_income else None,
+            "fy_income_error": self.fy_income_error,
         }
 
 
@@ -1739,7 +1744,16 @@ def extract_tables(
     from runtime.tw_equity.fy_income import extract_fy_income
     from runtime.tw_equity.metrics import compute_metrics
 
-    fy_income = extract_fy_income(ar, ar_anchors, roc_year=roc_year)
+    # 單份年報格式異常不中斷 pipeline：FY 損益表改為 None（TTM 不可用），並在終端機與報告警示
+    fy_income_error: str | None = None
+    try:
+        fy_income = extract_fy_income(ar, ar_anchors, roc_year=roc_year)
+    except Exception as e:
+        fy_income = None
+        fy_income_error = f"{type(e).__name__}: {e}"
+        msg = f"[tw-equity 警示] FY 損益表解析失敗：{fy_income_error}；TTM 不可用"
+        print(msg)
+        log.warning(msg)
     metrics = compute_metrics(statements, fy_income=fy_income)
 
     # ── parent_key_lines（個體損益表 ps_is） ─────────────────────────────────
@@ -1785,4 +1799,5 @@ def extract_tables(
         statements=statements,
         metrics=metrics,
         fy_income=fy_income,
+        fy_income_error=fy_income_error,
     )

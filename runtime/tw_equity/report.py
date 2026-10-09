@@ -673,15 +673,19 @@ def _appendix_e(bundle: TablesBundle) -> list[str]:
                  None if c["share"] is None else c["share"] * 100] for c in b["components"]]
         rows.append(["殘差", None, None, b["residual"], None])
         L += _md_table(["組成項", "本期", "上期", "Δ", "占比%"], rows) + [""]
-    L += _ttm_section(d["ttm_vs_fy"])
+    L += _ttm_section(d["ttm_vs_fy"], bundle.fy_income_error)
     return L
 
 
-def _ttm_section(t: dict | None) -> list[str]:
-    """「### TTM vs FY」小節；ttm 為 None（FY 帳本）不輸出。"""
-    if t is None:
+def _ttm_section(t: dict | None, fy_error: str | None = None) -> list[str]:
+    """「### TTM vs FY」小節；ttm 為 None（FY 帳本）且無解析錯誤時不輸出；FY 損益表解析失敗時加一行警示。"""
+    if t is None and fy_error is None:
         return []
     L = ["### TTM vs FY", ""]
+    if fy_error is not None:
+        L += [f"⚠️ FY 損益表解析失敗：{_t(fy_error)}", ""]
+    if t is None:
+        return L
     if t["status"] != "ok":
         return L + [f"TTM 不可用：{_t(t['reason'])}"]
     L += [f"TTM 期間迄 {_t(t['period_ttm'])}；FY {_t(t['period_fy'])}（年報第 {_num(t['source_page'])} 頁）；"

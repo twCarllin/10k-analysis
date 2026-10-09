@@ -93,3 +93,24 @@ def test_appendix_e_ttm_unavailable_one_line(tmp_path):
 def test_appendix_e_no_ttm_section_for_fy_ledger(tmp_path):
     text, _ = _run(tmp_path, _bundle(compute_metrics(_ttm_ledger(basis="FY"), _ttm_fy())))
     assert "TTM vs FY" not in text
+
+
+# ── run 2026-10-09-tw-equity-fy-income-guard item 1.1：FY 損益表解析失敗警示。契約 row：
+#   G3: bundle.fy_income_error 非 None → 附錄 E 的 TTM 小節含「⚠️ FY 損益表解析失敗：<錯誤>」、raw.json 記 fy_income_error
+#   G4: [邊界] fy_income_error None → 附錄 E 無警示行
+
+
+def test_appendix_e_shows_fy_income_error(tmp_path):
+    b = _bundle(compute_metrics(_ttm_ledger(), None))
+    b.fy_income_error = "ValueError: boom"
+    text, raw = _run(tmp_path, b)
+    t = _ttm_section(text)
+    assert "⚠️ FY 損益表解析失敗：ValueError: boom" in t
+    assert "fy_income_missing" in t
+    assert raw["bundle"]["fy_income_error"] == "ValueError: boom"
+
+
+def test_appendix_e_no_warning_without_error(tmp_path):
+    text, raw = _run(tmp_path, _bundle(compute_metrics(_ttm_ledger(), None)))
+    assert "FY 損益表解析失敗" not in text
+    assert raw["bundle"]["fy_income_error"] is None
