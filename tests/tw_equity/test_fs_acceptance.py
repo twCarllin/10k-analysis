@@ -72,3 +72,26 @@ def test_constant_list_excludes_2330_3711_and_holdings() -> None:
     tickers = {n.split("_")[0] for n in fs_acceptance.ACCEPTANCE_FILES}
     assert not tickers & ({"2330", "3711"} | _HOLDINGS)
     assert len(fs_acceptance.ACCEPTANCE_FILES) == 29
+
+
+def test_ocr_cache_flag_adds_ocr_files_and_never_calls_api(monkeypatch, tmp_path) -> None:
+    """D2b item 1.3：--ocr-cache 另驗 2330／3711；OCR 函式只拒絕（快取未命中 → ocr_cache_miss）。"""
+    out = _setup(monkeypatch, tmp_path)
+    for name in fs_acceptance.OCR_FILES:
+        (tmp_path / "tw_report" / name).write_bytes(b"%PDF")
+    seen: list = []
+
+    def fake_load(path, ocr=None):
+        seen.append(ocr)
+        if ocr is not None and path.name.startswith("3711"):
+            ocr(path, [4])  # 模擬快取未命中：load_pdf 呼叫 OCR
+        return SimpleNamespace(pages=[])
+
+    monkeypatch.setattr(fs_acceptance.pdf_doc, "load_pdf", fake_load)
+    fs_acceptance.main(["--out", str(out), "--ocr-cache"])
+    result = json.loads(out.read_text(encoding="utf-8"))
+    by_name = {f["file"]: f for f in result["files"]}
+    assert result["total_files"] == 31
+    assert by_name["3711_2026Q2財報.pdf"]["error"] == "ocr_cache_miss"
+    assert "error" not in by_name["2330_2026Q2財報.pdf"]
+    assert seen.count(fs_acceptance._cache_only_ocr) == 2 and seen.count(None) == 29

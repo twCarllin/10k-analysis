@@ -3,6 +3,7 @@
 CLI：./.venv/bin/python -m runtime.tw_equity.fs_acceptance [--out run/fs_acceptance.json]
 讀 29 份驗收文件（28 檔 2026Q2 半年報＋3653 年度財報），每份跑
 load_pdf → find_heading_sections(FS_HEADING_ANCHORS) → extract_statements。不打外部 API。
+`--ocr-cache`：另驗 OCR_FILES（三表為圖片頁），OCR 只讀既有 .ocr.json 快取；未命中記 error `ocr_cache_miss`。
 """
 
 from __future__ import annotations
@@ -29,13 +30,29 @@ ACCEPTANCE_FILES: tuple[str, ...] = tuple(
     f"{t}_2026Q2財報.pdf" for t in H1_TICKERS
 ) + ("3653_2025Q4合併財報.pdf",)
 
+OCR_FILES: tuple[str, ...] = ("2330_2026Q2財報.pdf", "3711_2026Q2財報.pdf")
 
-def _check_one(name: str, report_dir: Path) -> dict:
+
+class OcrCacheMiss(Exception):
+    pass
+
+
+def _cache_only_ocr(path, pages):
+    """load_pdf 快取未命中才會呼叫 OCR → 一律拒絕，保證不打 API。"""
+    raise OcrCacheMiss(f"pages={pages}")
+
+
+def _check_one(name: str, report_dir: Path, *, ocr_cache: bool = False) -> dict:
     path = report_dir / name
     if not path.exists():
         return {"file": name, "error": "missing"}
     try:
-        doc = pdf_doc.load_pdf(path)
+        doc = pdf_doc.load_pdf(path, ocr=_cache_only_ocr) if ocr_cache else pdf_doc.load_pdf(path)
+    except OcrCacheMiss:
+        return {"file": name, "error": "ocr_cache_miss"}
+    except Exception as e:  # 單檔失敗不中斷全量
+        return {"file": name, "error": f"{type(e).__name__}: {e}"}
+    try:
         anchors = find_heading_sections(doc, FS_HEADING_ANCHORS, required=set())
         led = extract_statements(doc, anchors)
     except Exception as e:  # 單檔失敗不中斷全量
@@ -70,10 +87,12 @@ def _all_pass(rec: dict) -> bool:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="台股財報三表解析驗收")
     ap.add_argument("--out", default="run/fs_acceptance.json")
+    ap.add_argument("--ocr-cache", action="store_true", help="另驗 OCR_FILES（只讀 OCR 快取，不打 API）")
     args = ap.parse_args(argv)
-    result = {"files": [], "all_pass_files": 0, "total_files": len(ACCEPTANCE_FILES)}
-    for name in ACCEPTANCE_FILES:
-        rec = _check_one(name, _REPORT_DIR)
+    jobs = [(n, False) for n in ACCEPTANCE_FILES] + ([(n, True) for n in OCR_FILES] if args.ocr_cache else [])
+    result = {"files": [], "all_pass_files": 0, "total_files": len(jobs)}
+    for name, ocr_cache in jobs:
+        rec = _check_one(name, _REPORT_DIR, ocr_cache=ocr_cache)
         result["files"].append(rec)
         if "error" in rec:
             print(f"{name}: ERROR {rec['error']}", flush=True)

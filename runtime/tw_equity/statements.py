@@ -24,7 +24,7 @@ from runtime.tw_equity.tables import _norm_line, line_amounts, parse_amount  # n
 
 if TYPE_CHECKING:
     from runtime.tw_equity.doc_anchor import PageRange
-    from runtime.tw_equity.pdf_doc import PdfDoc
+    from runtime.tw_equity.pdf_doc import Page, PdfDoc
 
 
 # ── 資料模型（Spec §1） ───────────────────────────────────────────────────────
@@ -285,7 +285,7 @@ _BS_KEYS = _build({
     "net_defined_benefit_liabilities": ("淨確定福利負債-非流動",),
     "guarantee_deposits_received": ("存入保證金",),
     "total_noncurrent_liabilities": ("非流動負債合計", "非流動負債總計"),
-    "total_liabilities": ("負債總計",),
+    "total_liabilities": ("負債總計", "負債合計"),
     "common_stock": ("普通股股本",),
     "advance_receipts_for_stock": ("預收股本",),
     "capital_surplus": ("資本公積", "資本公積總計"),
@@ -313,7 +313,7 @@ _IS_KEYS = _build({
     "admin_expenses": ("管理費用", "管理(費用)"),
     "rd_expenses": ("研究發展費用", "研究發展(費用)"),
     "total_opex": ("營業費用合計", "營業(費用)合計"),
-    "other_operating_net": ("其他收益及費損淨額",),  # 位於營業費用之後、營業利益之前者屬營業項目
+    "other_operating_net": ("其他收益及費損淨額", "其他營業收益及費損淨額"),  # 位於營業費用之後、營業利益之前者屬營業項目
     "operating_income": (
         "營業利益", "營業淨利", "營業利益(損失)", "營業淨利(損)", "營業利益(損)",
     ),
@@ -429,6 +429,7 @@ _CF_KEYS = _build({
         "現金及約當現金淨增加數", "現金及約當現金淨增加(減少)", "現金及約當現金淨(減少)增加",
         "現金及約當現金增加(減少)數", "本期現金及約當現金淨增加(減少)數",
         "本期現金及約當現金(減少)增加數", "現金及約當現金淨(減少)增加數",
+        "本期現金及約當現金淨增加數", "現金及約當現金淨減少",
     ),
     "cash_beginning": ("期初現金及約當現金餘額",),
     "cash_ending": ("期末現金及約當現金餘額",),
@@ -495,6 +496,8 @@ def map_key(
         nl = _FH_LESS_PREFIX_RE.sub("", nl)
     if statement == "is" and nl in _IS_SECTION_TOTAL_LABELS and "營業外" in (section or ""):
         return "nonoperating_total"  # 營業外收入及支出區塊自己的小計（只寫「合計」「淨額」）
+    if statement == "is" and nl == "合計" and "營業費用" in (section or ""):
+        return "total_opex"  # 營業費用區塊自己的小計（2330 只寫「合計」）
     split_labels = _IS_SPLIT_LABELS
     if schema == "fh":  # 金控：「本公司業主」＝母公司業主；區段標題去掉 `(淨損)`／`本期稅後` 等變體字樣
         split_labels = {**_IS_SPLIT_LABELS, "本公司業主": _IS_SPLIT_LABELS["母公司業主"]}
@@ -740,7 +743,7 @@ def _is_skip(cmp: str) -> bool:
         or cmp.startswith("~")
         or "(續次頁)" in cmp
         or cmp.startswith("後附合併財務報表附註")
-        or cmp.startswith("董事長")
+        or cmp.startswith(("董事長", "經理人", "會計主管"))  # 頁尾簽名列
         or cmp.startswith("單位:")
         or "附註金額" in cmp  # 欄位標題列（資產 附註 金額 % 金額 %）
         or ("金額%" in cmp and not any(c.isdigit() for c in cmp))  # 並排頁欄位標題列
@@ -1177,6 +1180,39 @@ def _is_continuation(head: str, title_kw: str) -> bool:
     return not any(kw in head for kw in others) and "權益變動表" not in head
 
 
+_OCR_CODE_RE = re.compile(r"^(\d{4}|[A-H]\d{5})(?!\S)")
+_OCR_CF_KW = ("營業活動之現金流量", "投資活動之現金流量", "籌資活動之現金流量", "期末現金及約當現金餘額")
+_OCR_MIN_SCORE = 3
+
+
+def _ocr_statement_of(page: "Page") -> str | None:
+    """OCR 頁依內容辨認表別（表名列遺失或讀錯時用）：列首 4 位數代碼首碼 1–3 計 bs、4–9 計 is，
+    `[A-H]` 加 5 位數計 cf；含 CF 區段關鍵字者 cf 加權。最高分 ≥3 才歸表；權益變動表的短碼（A1／B1）不計分。"""
+    score = {"bs": 0, "is": 0, "cf": 0}
+    for ln in page.lines:
+        m = _OCR_CODE_RE.match(ln)
+        if m:
+            code = m.group(1)
+            score["cf" if code[0].isalpha() else "bs" if code[0] in "123" else "is"] += 1
+    text = _norm_label(page.text or "")
+    if any(kw in text for kw in _OCR_CF_KW):
+        score["cf"] += _OCR_MIN_SCORE
+    best = max(score, key=lambda k: score[k])
+    return best if score[best] >= _OCR_MIN_SCORE else None
+
+
+def ocr_statement_pages(doc: "PdfDoc", statement: str) -> list[int]:
+    """OCR 頁中依內容辨認為 statement 的頁（首段連續頁；ocr_pages 為空 → []）。"""
+    pages_by_no = {p.number: p for p in doc.pages}
+    out: list[int] = []
+    for n in sorted(getattr(doc, "ocr_pages", None) or []):
+        if n in pages_by_no and _ocr_statement_of(pages_by_no[n]) == statement:
+            if out and n != out[-1] + 1:
+                break
+            out.append(n)
+    return out
+
+
 def statement_pages(doc: "PdfDoc", rng: "PageRange | None", title_kw: str) -> list[int]:
     """範圍內頁首 5 列含 title_kw 的連續頁（§2.4 由 3 列放寬），含承前頁續頁；首個不符頁即停。"""
     if rng is None:
@@ -1464,6 +1500,8 @@ def extract_statements(
     unit = ""
     for st in ("bs", "is", "cf"):
         pages = statement_pages(fs, fs_anchors.get(_FS_ANCHOR_KEY[st]), _TITLE_KW[st])
+        if not pages:  # 表名比對無頁 → OCR 頁改依內容辨認（2330／3711 圖片頁表名遺失或讀錯）
+            pages = ocr_statement_pages(fs, st)
         if not pages:
             continue
         triples = [
