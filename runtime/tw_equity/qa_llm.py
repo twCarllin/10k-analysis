@@ -65,6 +65,13 @@ def _topic_view(t: dict[str, Any]) -> dict[str, Any]:
                 "inputs": [{"label": i["label"], "current": fmt_value(i["current"], i["unit"]),
                             "prior": fmt_value(i["prior"], i["unit"]), "page": i["page"]}
                            for i in t["inputs"]]}
+    if t["kind"] == "margin_bridge":
+        return {"name": t["name"], "formula": t["formula"], "current": fmt_value(t["current"], "%"),
+                "prior": fmt_value(t["prior"], "%"), "delta": fmt_delta(t["delta"], "%"),
+                "components": [{"label": c["label"], "delta": fmt_delta(c["value"], "%"),
+                                "share_of_delta": _share(c["share"])} for c in t["components"]],
+                "inputs": [{"label": i["label"], "current": _amt(i["current"]), "prior": _amt(i["prior"]),
+                            "page": i["page"]} for i in t["inputs"]]}
     return {"name": t["name"], "current": _amt(t["current"]), "prior": _amt(t["prior"]),
             "delta": _amt(t["delta"]), "page": t["page"], "residual": _amt(t["residual"]),
             "components": [{"label": c["label"], "current": _amt(c["current"]), "prior": _amt(c["prior"]),

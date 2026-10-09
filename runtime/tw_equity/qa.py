@@ -1,5 +1,6 @@
 """qa.py — tw-equity 會計問答（G1：FCF 事實包＋模板答案＋數字核對；G2：主題事實包（FCF＋指標＋bridge）＋LLM 問答；
-task/2026-10-09-tw-equity-qa-fcf.md、task/2026-10-09-tw-equity-qa-llm.md）。
+G3a：萬元／兆／pp 單位、方向詞核對、毛利 bridge 與毛利率拆解；
+task/2026-10-09-tw-equity-qa-fcf.md、task/2026-10-09-tw-equity-qa-llm.md、task/2026-10-10-tw-equity-qa-g3a.md）。
 
 CLI：./.venv/bin/python -m runtime.tw_equity.qa --ticker 2317 --ask "本季影響 FCF 最多的是什麼？" [--json] [--llm]
 只讀本地財報 PDF 與 OCR 快取；加 --llm 才呼叫 Azure（qa_llm.py）。FCF＝cfo＋capex（同 metrics 的 fcf）。
@@ -17,7 +18,7 @@ from typing import Any
 
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_heading_sections
-from runtime.tw_equity.metrics import compute_metrics
+from runtime.tw_equity.metrics import _build_bridge, _label_of, _value, compute_metrics
 from runtime.tw_equity.statements import StatementLedger, StatementRow, extract_statements
 
 _YI = 100_000  # 仟元 → 億元
@@ -209,6 +210,44 @@ def _row_label(ledger: StatementLedger, key: str, fallback: str) -> str:
     return next((r.label for r in ledger.rows if r.key == key), fallback)
 
 
+def _bridge_topic(ledger: StatementLedger, b) -> dict[str, Any]:
+    return {"kind": "bridge", "name": b.name, "current": b.target_current, "prior": b.target_prior,
+            "delta": b.target_delta, "residual": b.residual, "page": _row_page(ledger, b.target),
+            "components": [{"key": c.key, "label": c.name, "current": c.current, "prior": c.prior,
+                            "delta": c.delta, "share": c.share, "page": _row_page(ledger, c.key)}
+                           for c in b.components]}
+
+
+GROSS_KEYS = ("revenue", "cogs", "gross_profit")
+
+
+def _gross_topics(ledger: StatementLedger, mp) -> dict[str, dict[str, Any]]:
+    """G3a：毛利金額 bridge（營收＋成本）與毛利率拆解（營收效果＋成本效果，百分點）；三者兩期皆有值才加。"""
+    def get(key: str, which: str) -> float | None:
+        return _value(ledger, mp, key, "current" if which == "cur" else "prior")
+
+    v = {k: (get(k, "cur"), get(k, "pri")) for k in GROSS_KEYS}
+    if any(x is None for pair in v.values() for x in pair):
+        return {}
+    out = {"bridge:gross_profit": _bridge_topic(ledger, _build_bridge(
+        "gross_profit", "毛利變動", ("revenue", "cogs"), get, lambda k: _label_of(ledger, k)))}
+    (r1, r0), (c1, c0) = v["revenue"], (abs(v["cogs"][0]), abs(v["cogs"][1]))  # type: ignore[arg-type]
+    if not r1 or not r0:
+        return out
+    gm1, gm0 = (r1 - c1) / r1 * 100, (r0 - c0) / r0 * 100
+    d = gm1 - gm0
+    effects = (("revenue_effect", "營收變動效果", (c0 / r0 - c0 / r1) * 100),
+               ("cost_effect", "成本變動效果", (c0 - c1) / r1 * 100))
+    out["bridge:gross_margin"] = {
+        "kind": "margin_bridge", "name": "毛利率變動拆解", "unit": "%",
+        "formula": "毛利率＝（營業收入 − |營業成本|）／營業收入 × 100",
+        "current": gm1, "prior": gm0, "delta": d,
+        "components": [{"key": k, "label": lb, "value": x, "share": x / d if d else None} for k, lb, x in effects],
+        "inputs": [{"key": k, "label": _row_label(ledger, k, k), "unit": "仟元", "current": v[k][0],
+                    "prior": v[k][1], "page": _row_page(ledger, k)} for k in ("revenue", "cogs")]}
+    return out
+
+
 def topic_pack(ledger: StatementLedger | None, group: str | None = None) -> dict[str, Any]:
     """主題事實包：fcf_analysis（G1 事實包；金控不提供）＋ 指標 key ＋ bridge:<target>。ledger None → 不可答。"""
     if ledger is None:
@@ -231,94 +270,172 @@ def topic_pack(ledger: StatementLedger | None, group: str | None = None) -> dict
                         "current": cur.inputs.get(k), "prior": pri.inputs.get(k), "page": _row_page(ledger, k)}
                        for k in cur.inputs]}
     for b in mp.bridges:
-        topics[f"bridge:{b.target}"] = {
-            "kind": "bridge", "name": b.name, "current": b.target_current, "prior": b.target_prior,
-            "delta": b.target_delta, "residual": b.residual, "page": _row_page(ledger, b.target),
-            "components": [{"key": c.key, "label": c.name, "current": c.current, "prior": c.prior,
-                            "delta": c.delta, "share": c.share, "page": _row_page(ledger, c.key)}
-                           for c in b.components]}
+        topics[f"bridge:{b.target}"] = _bridge_topic(ledger, b)
+    if group != "fh":
+        topics.update(_gross_topics(ledger, mp))
     return {"answerable": True, "unit": ledger.unit, "basis": ledger.basis, "assurance": ledger.assurance,
             "periods": dict(ledger.periods), "ifrs17_break": bool(mp.ifrs17_break), "topics": topics}
 
 
 # ── 數字核對 ─────────────────────────────────────────────────────────────────
 
-_NUM_UNIT_RE = re.compile(r"(-?\d[\d,]*(?:\.\d+)?)\s*(億|%|％|百分點|仟元|千元|百萬元|天|倍|x(?![A-Za-z]))")
-_UNIT_SCALE = {"億": _YI, "仟元": 1, "千元": 1, "百萬元": 1_000}
-_UNIT_KIND = {"%": "pct", "％": "pct", "百分點": "pct", "天": "day", "倍": "x", "x": "x"}  # 其餘＝金額（amt，仟元）
+_NUM_UNIT_PAT = r"(-?\d[\d,]*(?:\.\d+)?)\s*(億|%|％|百分點|仟元|千元|百萬元|萬元|兆元?|天|倍|pp(?![A-Za-z])|x(?![A-Za-z]))"
+_NUM_UNIT_RE = re.compile(_NUM_UNIT_PAT)
+_UNIT_SCALE = {"億": _YI, "仟元": 1, "千元": 1, "百萬元": 1_000, "萬元": 10, "兆": 1_000_000_000, "兆元": 1_000_000_000}
+_UNIT_KIND = {"%": "pct", "％": "pct", "百分點": "pct", "pp": "pct", "天": "day", "倍": "x", "x": "x"}  # 其餘＝金額（amt，仟元）
 _METRIC_KIND = {"仟元": "amt", "%": "pct", "天": "day", "x": "x"}
+
+# 方向詞（G3a）：詞後略過空白與「了／約／達」，緊接數字＋單位才檢查；接「至／到／為」（期末水準）不檢查
+_POS_WORDS = ("增加", "上升", "提高", "成長", "增長", "擴大", "回升")
+_NEG_WORDS = ("減少", "下降", "降低", "衰退", "縮小", "下滑", "減")
+_DIR_RE = re.compile("(" + "|".join(sorted(_POS_WORDS + _NEG_WORDS, key=len, reverse=True)) + ")[\\s了約達]*"
+                     + _NUM_UNIT_PAT)
+
+Levels = dict[str, list[float]]
+Delta = tuple[str, float, set[int]]  # (單位類別, 變動值, 可接受的方向 {+1／-1})
 
 
 def _vals(*vs: float | None) -> list[float]:
     return [v for v in vs if v is not None]
 
 
-def _fact_amounts(facts: dict[str, Any]) -> tuple[list[float], list[float]]:
-    """→ (金額集合（仟元）, 比例集合（小數）)。"""
-    amounts: list[float] = []
-    shares: list[float] = []
-    items = [facts["fcf"], *facts["level1"], *facts["level2"], *facts["inflows"], *facts["outflows"]]
-    for it in items:
-        amounts += [v for k in ("current", "prior", "delta") if (v := it.get(k)) is not None]
+def _sgn(v: float) -> set[int]:
+    return {1} if v > 0 else {-1} if v < 0 else {1, -1}
+
+
+def _dir(kind: str, cur: float | None, pri: float | None, delta: float | None,
+         component: bool = False) -> list[Delta]:
+    """變動值與可接受方向。組成項兩期皆負（成本、流出）→ delta 或絕對值變化任一方向皆可（使用者 2026-10-10 裁示）。"""
+    if delta is None:
+        return []
+    signs = _sgn(delta)
+    if component and cur is not None and pri is not None and cur < 0 and pri < 0:
+        signs |= _sgn(abs(cur) - abs(pri))
+    return [(kind, delta, signs)]
+
+
+def _new_levels() -> Levels:
+    return {"amt": [], "pct": [], "day": [], "x": []}
+
+
+def _fact_values(facts: dict[str, Any]) -> tuple[Levels, list[Delta]]:
+    """FCF 事實包 → (非變動值, 變動值)；金額單位仟元、比例為百分數。"""
+    levels, deltas = _new_levels(), []
+    f = facts["fcf"]
+    levels["amt"] += _vals(f["current"], f["prior"])
+    deltas += _dir("amt", f["current"], f["prior"], f["delta"])
+    for it in [*facts["level1"], *facts["level2"], *facts["inflows"], *facts["outflows"]]:
+        levels["amt"] += _vals(it.get("current"), it.get("prior"))
+        deltas += _dir("amt", it.get("current"), it.get("prior"), it.get("delta"), component=True)
         if it.get("share") is not None:
-            shares.append(it["share"])
-    amounts += [facts["cfo_delta"], facts["residual"], *facts["group_deltas"].values()]
-    return amounts, shares
+            levels["pct"].append(it["share"] * 100)
+    deltas += _dir("amt", None, None, facts["cfo_delta"])
+    for v in facts["group_deltas"].values():
+        deltas += _dir("amt", None, None, v)
+    levels["amt"] += _vals(facts["residual"])
+    return levels, deltas
 
 
-def _topic_allowed(t: dict[str, Any]) -> dict[str, list[float]]:
-    """主題 → 各單位類別的允許值（amt＝仟元、pct＝百分數、day＝天、x＝倍）。"""
-    out: dict[str, list[float]] = {"amt": [], "pct": [], "day": [], "x": []}
+def _input_values(inputs: list[dict[str, Any]], levels: Levels, deltas: list[Delta]) -> None:
+    for i in inputs:
+        kind = _METRIC_KIND.get(i["unit"], "amt")
+        levels[kind] += _vals(i["current"], i["prior"])
+        deltas += _dir(kind, i["current"], i["prior"], _delta(i["current"], i["prior"]), component=True)
+
+
+def _topic_values(t: dict[str, Any]) -> tuple[Levels, list[Delta]]:
+    """主題 → (非變動值, 變動值)；單位類別 amt＝仟元、pct＝百分數、day＝天、x＝倍。"""
     if t["kind"] == "fcf":
-        amounts, shares = _fact_amounts(t["facts"])
-        out["amt"] += amounts
-        out["pct"] += [s * 100 for s in shares]
-    elif t["kind"] == "metric":
+        return _fact_values(t["facts"])
+    levels, deltas = _new_levels(), []
+    if t["kind"] == "metric":
         kind = _METRIC_KIND.get(t["unit"])
         if kind:
-            out[kind] += _vals(t["current"], t["prior"], t["delta"])
-        for i in t["inputs"]:
-            out[_METRIC_KIND.get(i["unit"], "amt")] += _vals(i["current"], i["prior"])
-    else:
-        out["amt"] += _vals(t["current"], t["prior"], t["delta"], t["residual"])
+            levels[kind] += _vals(t["current"], t["prior"])
+            deltas += _dir(kind, t["current"], t["prior"], t["delta"])
+        _input_values(t["inputs"], levels, deltas)
+    elif t["kind"] == "margin_bridge":
+        levels["pct"] += _vals(t["current"], t["prior"])
+        deltas += _dir("pct", t["current"], t["prior"], t["delta"])
         for c in t["components"]:
-            out["amt"] += _vals(c["current"], c["prior"], c["delta"])
-            out["pct"] += _vals(None if c["share"] is None else c["share"] * 100)
+            deltas += _dir("pct", None, None, c["value"])
+            levels["pct"] += _vals(None if c["share"] is None else c["share"] * 100)
+        _input_values(t["inputs"], levels, deltas)
+    else:
+        levels["amt"] += _vals(t["current"], t["prior"], t["residual"])
+        deltas += _dir("amt", t["current"], t["prior"], t["delta"])
+        for c in t["components"]:
+            levels["amt"] += _vals(c["current"], c["prior"])
+            deltas += _dir("amt", c["current"], c["prior"], c["delta"], component=True)
+            levels["pct"] += _vals(None if c["share"] is None else c["share"] * 100)
+    return levels, deltas
+
+
+def _allowed(levels: Levels, deltas: list[Delta]) -> Levels:
+    out = {k: list(v) for k, v in levels.items()}
+    for kind, v, _ in deltas:
+        out[kind].append(v)
     return out
 
 
-def _unmatched(text: str, allowed: dict[str, list[float]]) -> list[str]:
+def _parse(raw: str, unit: str) -> tuple[float, float, str, float]:
+    """→ (數值, 容差（該數字小數位的半個單位）, 單位類別, 換算倍數)。"""
+    dec = len(raw.split(".")[1]) if "." in raw else 0
+    return (float(raw.replace(",", "")), 0.5 * 10 ** -dec + 1e-9, _UNIT_KIND.get(unit, "amt"), _UNIT_SCALE.get(unit, 1))
+
+
+def _hit(x: float, tol: float, scale: float, v: float) -> bool:
+    return abs(abs(x) - abs(v / scale)) <= tol
+
+
+def _unmatched(text: str, allowed: Levels) -> list[str]:
     """答案中帶單位的數字，比對允許值（取絕對值）；容差＝該數字小數位的半個單位。回傳對不上的原文。"""
     bad: list[str] = []
     for m in _NUM_UNIT_RE.finditer(text):
-        raw, unit = m.group(1), m.group(2)
-        x = float(raw.replace(",", ""))
-        dec = len(raw.split(".")[1]) if "." in raw else 0
-        tol = 0.5 * 10 ** -dec + 1e-9
-        kind = _UNIT_KIND.get(unit, "amt")
-        scale = _UNIT_SCALE.get(unit, 1)
-        if not any(abs(abs(x) - abs(a / scale)) <= tol for a in allowed.get(kind, [])):
+        x, tol, kind, scale = _parse(m.group(1), m.group(2))
+        if not any(_hit(x, tol, scale, a) for a in allowed.get(kind, [])):
             bad.append(m.group(0))
     return bad
 
 
+def _wrong_direction(text: str, levels: Levels, deltas: list[Delta]) -> list[str]:
+    """方向詞＋緊接數字：數字對到的變動值全部與方向詞反向、且不等於任何非變動值 → 回傳原文（方向與帳本不符）。"""
+    bad: list[str] = []
+    for m in _DIR_RE.finditer(text):
+        word = m.group(1)
+        x, tol, kind, scale = _parse(m.group(2), m.group(3))
+        want = 1 if word in _POS_WORDS else -1
+        hits = [signs for k, v, signs in deltas if k == kind and _hit(x, tol, scale, v)]
+        if not hits or any(want in signs for signs in hits):
+            continue
+        if any(_hit(x, tol, scale, a) for a in levels.get(kind, [])):
+            continue
+        bad.append(f"{m.group(0)}（方向與帳本不符）")
+    return bad
+
+
+def _check_text(text: str, levels: Levels, deltas: list[Delta]) -> list[str]:
+    return _unmatched(text, _allowed(levels, deltas)) + _wrong_direction(text, levels, deltas)
+
+
 def verify_numbers(text: str, facts: dict[str, Any]) -> list[str]:
-    """答案中帶單位的數字比對 FCF 事實包（G1）；回傳對不上的原文。"""
+    """答案中帶單位的數字比對 FCF 事實包（G1）＋方向詞核對（G3a）；回傳對不上的原文。"""
     if not facts.get("answerable"):
         return [m.group(0) for m in _NUM_UNIT_RE.finditer(text)]
-    amounts, shares = _fact_amounts(facts)
-    return _unmatched(text, {"amt": amounts, "pct": [s * 100 for s in shares]})
+    return _check_text(text, *_fact_values(facts))
 
 
 def verify_topics(text: str, pack: dict[str, Any], topics: list[str]) -> list[str]:
-    """答案中帶單位的數字只准來自 topics 所列主題；不存在的主題不提供允許值。回傳對不上的原文。"""
-    allowed: dict[str, list[float]] = {"amt": [], "pct": [], "day": [], "x": []}
+    """答案中帶單位的數字只准來自 topics 所列主題＋方向詞核對（G3a）；不存在的主題不提供允許值。回傳對不上的原文。"""
+    levels, deltas = _new_levels(), []
     for key in topics:
         t = (pack.get("topics") or {}).get(key)
         if t is not None:
-            for k, v in _topic_allowed(t).items():
-                allowed[k] += v
-    return _unmatched(text, allowed)
+            lv, dl = _topic_values(t)
+            for k, v in lv.items():
+                levels[k] += v
+            deltas += dl
+    return _check_text(text, levels, deltas)
 
 
 # ── 主題模板答案（G2；也是 LLM 未通過核對時的退回答案） ─────────────────────
@@ -364,6 +481,18 @@ def _render_bridge(t: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _render_margin(t: dict[str, Any]) -> list[str]:
+    ins = "、".join(f"{i['label']} 本期 {fmt_value(i['current'], '仟元')}、去年同期 {fmt_value(i['prior'], '仟元')}"
+                   f"{_page(i['page'])}" for i in t["inputs"])
+    return [f"■ {t['name']}：本期 {fmt_value(t['current'], '%')}，去年同期 {fmt_value(t['prior'], '%')}，"
+            f"變動 {fmt_delta(t['delta'], '%')}",
+            *[f"  - {c['label']}：{fmt_delta(c['value'], '%')}，占 {_pct(c['share'])}%" for c in t["components"]],
+            f"  輸入：{ins}",
+            f"  拆解方式：{t['formula']}。營收變動效果＝成本維持去年同期金額、只換入本期營收的毛利率變動；"
+            "成本變動效果＝再換入本期成本的毛利率變動；兩者合計＝毛利率變動。此毛利率未含未實現銷貨損益等調整，"
+            "可能與財報營業毛利算出的毛利率略有差異。"]
+
+
 def _fcf_sections(facts: dict[str, Any], company: str, source: str) -> list[str]:
     """與其他主題並用時只取 FCF 答案的結論與一、二節（期間與出處由 render_topics_answer 統一列）。"""
     lines = render_fcf_answer(facts, company=company, source=source).splitlines()[2:]
@@ -380,7 +509,8 @@ def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: st
     for k in known:
         t = pack["topics"][k]
         lines += [""] + (_fcf_sections(t["facts"], company, source)
-                         if t["kind"] == "fcf" else _render_metric(t) if t["kind"] == "metric" else _render_bridge(t))
+                         if t["kind"] == "fcf" else _render_metric(t) if t["kind"] == "metric"
+                         else _render_margin(t) if t["kind"] == "margin_bridge" else _render_bridge(t))
     per = pack["periods"]
     lines += ["", "期間與限制",
               f"  - 本期 {_period_text(per.get('flow_current'))}（資產負債表 {per.get('bs_current') or '—'}），"
