@@ -387,11 +387,248 @@ def _detect_basis(lines: list[str]) -> str:
         return "parent"
     return "unknown"
 
+# ── 金控候選頁與欄序（Spec fh-schema §6.2；task 4.2 骨架 C） ─────────────────────
+
+_FH_HEADER_MAX_LEN = 40  # 表頭列去空白後的長度上限（排除含兩個年度字樣的說明散文列）
+_FH_AMOUNT_RUN_RE = re.compile(r"\d{1,3}(?:,\d{3})+")
+_FH_BREAK_RE = re.compile(
+    r"就差異金額|重大變動|前後期變動|^(?:說明|註\d*[:：]|單位|\([一二三四五六七八九十]+\)|[一二三四五六七八九十]+、|\d+[.、]|\(\d+\))"
+)
+_FH_TITLE_MAX_LEN = 40
+_FH_TITLE_WINDOW = 5
+_FH_CONSOL_KEYS = frozenset({"net_interest_income", "non_interest_income", "insurance_reserve_change", "provision"})
+
+
+@dataclass(frozen=True)
+class FhTable:
+    """金控 FY 損益比較表的定位結果（列對照與 FyIncome 由後續 item 在此基礎上做）。
+
+    start／end 為頁內列 index 的半開區間 [start, end)，start 為表頭列；
+    current_col／prior_col 為該列「金額 token」中本期／上期的 index（已含 `金額 %` 並排的 stride）。
+    """
+
+    page: int
+    scope_hint: str       # "consolidated" | "parent_only"（最終 scope 判定屬 item 4.3）
+    family: str           # "roc"（114年度）| "west"（2025年度）
+    current_col: int
+    prior_col: int
+    start: int
+    end: int
+    n_rows: int           # 區段內可辨識的 IS 列數（排序用）
+
+
+def _fh_marks(norm_line: str, roc_year: int) -> tuple[str, list[int]] | None:
+    """表頭列 → (family, 年度依標記出現位置由左至右排序)；兩個標記未同現 → None。"""
+    for family, cur in (("roc", roc_year), ("west", roc_year + 1911)):
+        found: dict[int, int] = {}
+        for y in (cur, cur - 1):
+            m = re.search(rf"(?<!\d){y}年", norm_line)
+            if m:
+                found[y] = m.start()
+        if len(found) == 2:
+            return family, sorted(found, key=found.__getitem__)
+    return None
+
+
+def _fh_row_kinds(label: str) -> set[str]:
+    nl = _PREFIX_RE.sub("", _norm_label(label))
+    kinds: set[str] = set()
+    if "稅前" in nl:
+        kinds.add("pretax")
+    if (
+        map_key("is", nl, None, schema="fh") == "net_income"
+        or re.search(r"(?:本期|本年度|稅後)(?:稅後)?(?:淨利|純益|淨損|\(損\)益|損益)", nl)  # search：容忍左側直排文字黏字（`及及本期(損)益`）
+    ):
+        kinds.add("net")
+    if map_key("is", nl, None, schema="fh") in _FH_CONSOL_KEYS:
+        kinds.add("consol")
+    if "採權益法" in nl or "採用權益法" in nl:
+        kinds.add("equity")
+    return kinds
+
+
+def _fh_tables_in_page(page_no: int, lines: list[str], roc_year: int) -> list[FhTable]:
+    nos = [re.sub(r"\s+", "", _norm_line(ln)) for ln in lines]
+    headers: list[tuple[int, str, list[int]]] = []  # (列 index, family, 欄序年度)
+    for i, nl in enumerate(nos):
+        if len(nl) > _FH_HEADER_MAX_LEN or _FH_AMOUNT_RUN_RE.search(nl):
+            continue
+        mk = _fh_marks(nl, roc_year)
+        if mk is not None:
+            headers.append((i, mk[0], mk[1]))
+    out: list[FhTable] = []
+    for h, (start, family, years) in enumerate(headers):
+        limit = headers[h + 1][0] if h + 1 < len(headers) else len(lines)
+        end = limit
+        for j in range(start + 1, limit):
+            if _FH_BREAK_RE.search(nos[j]):
+                end = j
+                break
+        kinds: set[str] = set()
+        n_rows = 0
+        for j in range(start + 1, end):
+            for label, amts in _split_segments(lines[j]):
+                if len(amts) >= 2:
+                    k = _fh_row_kinds(label)
+                    kinds |= k
+                    n_rows += 1
+        if not {"pretax", "net"} <= kinds:
+            continue
+        cur = roc_year if family == "roc" else roc_year + 1911
+        pos = sorted(nos[start].find(f"{y}年") for y in (cur, cur - 1))
+        between = nos[start][pos[0] : pos[1]]  # 兩個年度標記之間有 `%`／`金額%金額%` → 每年度佔 2 個金額 token
+        stride = 2 if ("%" in between or "金額%金額%" in nos[start]) else 1
+        cur_i, prior_i = years.index(cur), years.index(cur - 1)
+        scope = _fh_scope_hint(lines, nos, start, h and headers[h - 1][0], kinds)
+        out.append(FhTable(page_no, scope, family, cur_i * stride, prior_i * stride, start, end, n_rows))
+    return out
+
+
+def _fh_scope_hint(lines: list[str], nos: list[str], start: int, floor: int, kinds: set[str]) -> str:
+    """表題（表頭列＋其前 5 列內最近的短列）含「合併」→ consolidated、含「個體」→ parent_only；
+    表題無字樣時依列內容：有權益法列 → parent_only、有利息／保險負債列 → consolidated，其餘 parent_only。"""
+    for j in range(start, max(floor, start - _FH_TITLE_WINDOW) - 1, -1):
+        t = nos[j]
+        if j != start and (len(t) > _FH_TITLE_MAX_LEN or re.search(r"[，。]", t)):
+            continue
+        if "合併" in t or "及子公司" in t:
+            return "consolidated"
+        if "個體" in t:
+            return "parent_only"
+    if "equity" in kinds:
+        return "parent_only"
+    return "consolidated" if "consol" in kinds else "parent_only"
+
+
+def fh_candidate_tables(ar: "PdfDoc", ar_anchors: dict | None, roc_year: int) -> list[FhTable]:
+    """§6.2：候選表依優先序排列（錨點範圍內優先；合併先於個體；列數多者先；頁碼小者先）。"""
+    tables: list[FhTable] = []
+    for pg in ar.pages:
+        tables.extend(_fh_tables_in_page(pg.number, pg.lines, roc_year))
+    pool = [t for t in tables if _in_ranges(t.page, ar_anchors)] or tables
+    return sorted(pool, key=lambda t: (t.scope_hint != "consolidated", -t.n_rows, t.page, t.start))
+
+
+def fh_select_table(ar: "PdfDoc", ar_anchors: dict | None, roc_year: int) -> FhTable | None:
+    cands = fh_candidate_tables(ar, ar_anchors, roc_year)
+    return cands[0] if cands else None
+
+
+_FH_PARENT_NI = frozenset(_norm_label(x) for x in ("稅後純益", "本期(損)益", "稅後淨利", "本期淨利"))
+_FH_OWNER_RE = re.compile(r"^(.*?(?:淨利|淨損|綜合損益總額)(?:\([^)]*\))?)歸屬於(.+)$")
+
+
+def _fh_key(label: str, consolidated: bool) -> str | None:
+    """Spec §6.3：合併表 → map_key(schema="fh")（含「…歸屬於母公司業主」→ net_income_parent）；個體表只認淨利列。"""
+    nl = _norm_label(label)
+    if not consolidated:
+        return "net_income_parent" if nl in _FH_PARENT_NI else None
+    m = _FH_OWNER_RE.match(nl)
+    if m:
+        return map_key("is", m.group(2), m.group(1) + "歸屬於", schema="fh")
+    return map_key("is", nl, None, schema="fh")
+
+
+def _fh_resolve(label: str, consolidated: bool) -> tuple[str, str | None]:
+    """整串對不到時取最長的可對照後綴（容忍左側直排文字黏字，如 `況利息收入`、`及及本期(損)益`）。"""
+    key = _fh_key(label, consolidated)
+    if key is not None:
+        return label, key
+    for i in range(1, len(label)):
+        key = _fh_key(label[i:], consolidated)
+        if key is not None:
+            return label[i:], key
+    return label, None
+
+
+def _parse_fh_rows(lines: list[str], tbl: FhTable) -> list[dict]:
+    """區段內有 ≥2 個金額 token 的列 → {"label","key","current","prior"}（未乘 scale；費用維持原號）。
+
+    合併表 key 取 FH 對照；個體表只有淨利列有 key（net_income_parent），其餘 key=None、label 保留原文。
+    直排殘字等無金額的列忽略。
+    """
+    consolidated = tbl.scope_hint == "consolidated"
+    rows: list[dict] = []
+    for ln in lines[tbl.start + 1 : tbl.end]:
+        for label, amts in _split_segments(ln):
+            need = max(tbl.current_col, tbl.prior_col) + 1
+            if len(amts) < need or not label:
+                continue
+            label, key = _fh_resolve(label, consolidated)
+            rows.append({"label": label, "key": key, "current": amts[tbl.current_col], "prior": amts[tbl.prior_col]})
+    return rows
+
+
+def _fh_val(rows: list[dict], key: str, period: str) -> float | None:
+    row = _first_row(rows, key)
+    return None if row is None else row.get(period)
+
+
+def run_fh_fy_checks(rows: list[dict]) -> list[dict]:
+    """Spec §6.4：合併表 `is_net_income`（pretax＋income_tax＝net_income，所得稅沿用原號）、
+    `is_pretax`（net_revenue − |provision| − |insurance_reserve_change| − |total_opex|＝pretax_income，IFRS 4 年報格式）。
+
+    name 形如 `is_net_income_current`；任一項缺值 → lhs None、passed None。
+    """
+    out: list[dict] = []
+    for period in ("current", "prior"):
+        def v(key: str) -> float | None:
+            return _fh_val(rows, key, period)
+
+        pre, tax, ni = v("pretax_income"), v("income_tax"), v("net_income")
+        out.append(_fh_check(f"is_net_income_{period}", None if None in (pre, tax) else pre + tax, ni))
+        rev, prov, rsv, opex = v("net_revenue"), v("provision"), v("insurance_reserve_change"), v("total_opex")
+        lhs = None if None in (rev, prov, rsv, opex) else rev - abs(prov) - abs(rsv) - abs(opex)
+        out.append(_fh_check(f"is_pretax_{period}", lhs, pre))
+    return out
+
+
+def _fh_check(name: str, lhs: float | None, rhs: float | None) -> dict:
+    passed = None if lhs is None or rhs is None else _approx(lhs, rhs)
+    return {"name": name, "lhs": lhs, "rhs": rhs, "passed": passed}
+
+
+def compute_fh_usable(scale: float | None, scope: str, rows: list[dict]) -> bool:
+    """Spec §6.4：合併 → 本期 net_revenue、pretax_income、net_income 皆有值；個體 → 本期 net_income_parent 有值（另需 scale 可辨識）。"""
+    if scale is None:
+        return False
+    need = ("net_revenue", "pretax_income", "net_income") if scope == "consolidated" else ("net_income_parent",)
+    return all(_fh_val(rows, k, "current") is not None for k in need)
+
+
+def _extract_fh(ar: "PdfDoc", ar_anchors: dict | None, roc_year: int) -> "FyIncome | None":
+    """Spec §6.2–§6.4：金控候選表 → 列解析（乘 scale）→ FyIncome(schema="fh")。"""
+    tbl = fh_select_table(ar, ar_anchors, roc_year)
+    if tbl is None:
+        return None
+    pg = next(p for p in ar.pages if p.number == tbl.page)
+    unit = next(
+        (u for u in (_detect_unit([ln]) for ln in reversed(pg.lines[max(0, tbl.start - 6) : tbl.start + 1])) if u), ""
+    )
+    scale = scale_for_unit(unit) if unit else None
+    warns = [] if scale is not None else [f"單位無法辨識：{unit!r}"]
+    rows = _parse_fh_rows(pg.lines, tbl)
+    if scale is not None:
+        for r in rows:
+            for f in ("current", "prior"):
+                if r[f] is not None:
+                    r[f] = r[f] * scale
+    return FyIncome(
+        roc_year=roc_year, page=tbl.page, unit=unit, scale=scale,
+        basis="consolidated" if tbl.scope_hint == "consolidated" else "parent",
+        rows=rows, warnings=warns, scope=tbl.scope_hint, schema="fh",
+    ).finalize()
+
 
 def extract_fy_income(
-    ar: "PdfDoc", ar_anchors: dict | None, *, roc_year: int
+    ar: "PdfDoc", ar_anchors: dict | None, *, roc_year: int, group: str | None = None
 ) -> "FyIncome | None":
-    """Spec §2.1／§2.2：掃全份年報找 FY 損益比較頁並解析；無候選頁 → None。"""
+    """Spec §2.1／§2.2：掃全份年報找 FY 損益比較頁並解析；無候選頁 → None。
+
+    group == "fh" → 金控路徑（§6.2）；其他（含 None）行為不變。
+    """
+    if group == "fh":
+        return _extract_fh(ar, ar_anchors, roc_year)
     parsed: list[tuple[int, list[dict], list[str], list[str]]] = []  # (頁碼, rows, lines, warnings)
     for pg in ar.pages:
         if not _is_candidate(pg.lines, roc_year):
@@ -452,6 +689,8 @@ class FyIncome:
     usable: bool = False
     warnings: list[str] = field(default_factory=list)
     net_income_basis: str = "total"                   # "total" | "parent"（§2.7.6）
+    scope: str = "consolidated"                       # "consolidated" | "parent_only"（fh-schema §6.4；工業恆 consolidated）
+    schema: str = "industrial"                        # "industrial" | "fh"
 
     def get(self, key: str) -> tuple[float | None, float | None]:
         """第一個相符列的 (current, prior)；無 → (None, None)。"""
@@ -469,11 +708,22 @@ class FyIncome:
 
     def finalize(self) -> "FyIncome":
         """依 rows 填入 checks 與 usable。"""
+        if self.schema == "fh":
+            self.checks = run_fh_fy_checks(self.rows) if self.scope == "consolidated" else []
+            self.usable = compute_fh_usable(self.scale, self.scope, self.rows)
+            return self
         self.checks = run_fy_checks(self.rows)
         self.usable = compute_usable(self.scale, self.basis, self.rows, self.checks)
         return self
 
     def to_dict(self) -> dict[str, Any]:
+        d = self._base_dict()
+        if self.schema == "fh":  # 新鍵只在金控輸出；工業 to_dict 與本 run 前逐值相同
+            d["scope"] = self.scope
+            d["schema"] = self.schema
+        return d
+
+    def _base_dict(self) -> dict[str, Any]:
         return {
             "roc_year": self.roc_year,
             "page": self.page,

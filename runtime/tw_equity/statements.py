@@ -12,6 +12,14 @@ from dataclasses import asdict, dataclass, field
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
+from runtime.tw_equity.fh_schema import (
+    FH_CANONICAL_KEYS,
+    FH_CHECK_SPECS,
+    FH_EXPENSE_KEYS,
+    FH_NON_INTEREST_COMPONENT_KEYS,
+    FH_OPTIONAL_KEYS,
+    FH_SECTION_HEADERS,
+)
 from runtime.tw_equity.tables import _norm_line, line_amounts, parse_amount  # noqa: F401
 
 if TYPE_CHECKING:
@@ -82,6 +90,7 @@ class StatementLedger:
     periods: dict[str, str | None] = field(default_factory=lambda: dict.fromkeys(_PERIOD_TAGS))
     days: dict[str, int | None] = field(default_factory=lambda: {"current": None, "prior": None})
     assurance: str | None = None  # "reviewed" | "audited" | None
+    schema: str = "industrial"  # "industrial" | "fh"（fh-schema Spec §2.5）
 
     def get(
         self, key: str, statement: str | None = None
@@ -133,6 +142,7 @@ class StatementLedger:
             "periods": dict(self.periods),
             "days": dict(self.days),
             "assurance": self.assurance,
+            "schema": self.schema,
         }
 
 
@@ -168,6 +178,20 @@ _CODE_STD_RE = re.compile(r"^[0-9][0-9Xx]{3}$")  # 含 `11xx`／`1xxx` 小寫 x 
 _CODE_ALPHA_RE = re.compile(r"^(?:[A-Z]\d{4,5}|[A-Z]{4})$")
 _CODE_GLUE_RE = re.compile(r"^([A-Z]{1,4}\d{0,6}|\d{4})(?=[\u4e00-\u9fff])")
 _RIGHT_CODE_RE = re.compile(r"^[23][0-9Xx]{3}$")  # 並排頁右半（負債／權益）的代碼
+# 金控（group == "fh"）專用（fh-schema Spec §2.1）：5 位數代碼；右半 `2xxxx`／`3xxxx`；`減：` 前綴
+_FH_CODE_RE = re.compile(r"^(?:\d{5}|\d[Xx]{4})$")  # `4xxxx`＝無實碼的合計列（如 `4xxxx 淨收益`）
+_FH_CODE_GLUE_RE = re.compile(r"^(\d{5}|\d[Xx]{4})(?=[\u4e00-\u9fff])")
+# 並排頁左半附註換行後的殘片黏在右半單邊列首：`(十四)及八)負債總計`
+_FH_LEAD_NOTE_FRAG_RE = re.compile(r"^(?:\([一二三四五六七八九十廿卅〇]+\))?(?:[及、]?[一二三四五六七八九十廿卅〇]+\))+")
+# 金控 IS 歸屬區段標題變體：`淨利(淨損)歸屬於`、`淨利(損)歸屬於`、`本期稅後淨利(損失)歸屬於`…
+_FH_SPLIT_SEC_NOISE_RE = re.compile(r"\((?:淨損|損失|損)\)|本期稅後|本期")
+_FH_RIGHT_CODE_RE = re.compile(r"^[23](?:\d{4}|[0-9Xx]{3})$")  # 5 位數；亦容許工業 4 位數（fh 為工業的超集）
+_FH_LESS_PREFIX_RE = re.compile(r"^減[:：]")
+# 金控並排 BS 的左右半各自有「股本：」「保留盈餘：」無金額標題（FH_SECTION_HEADERS 未列），否則會與下一列科目合併
+_FH_EXTRA_SECTION_HEADERS: dict[str, frozenset[str]] = {
+    "bs": frozenset({"股本", "保留盈餘"}),
+}
+_FH_DANGLING_NOTE_RE = re.compile(r"\(附註?$")  # 並排頁右半附註被切在續行：`…金融負債(附`
 
 _TITLE_KW = {"bs": "資產負債表", "is": "綜合損益表", "cf": "現金流量表"}
 _FS_ANCHOR_KEY = {"bs": "fs_bs", "is": "fs_is", "cf": "fs_cf"}
@@ -450,18 +474,38 @@ def _apply_conditional_aliases(rows: list["StatementRow"]) -> None:
 _IS_SECTION_TOTAL_LABELS = frozenset({"合計", "淨額"})
 
 
-def map_key(statement: str, label: str, section: str | None) -> str | None:
-    """label → 標準代號；對不到 → None。IS 的母公司業主／非控制權益依 section 分流。"""
+_FH_KEYS: dict[str, dict[str, str]] = {
+    "bs": FH_CANONICAL_KEYS["bs"],
+    "is": FH_CANONICAL_KEYS["is"],
+    "cf": {**_CF_KEYS, **FH_CANONICAL_KEYS["cf"]},  # 金控 CF＝沿用工業 CF 鍵＋金控特有 3 鍵
+}
+
+
+def map_key(
+    statement: str, label: str, section: str | None, schema: str = "industrial"
+) -> str | None:
+    """label → 標準代號；對不到 → None。IS 的母公司業主／非控制權益依 section 分流。
+
+    schema == "fh" → 金控對照表，且對照前移除 `減：` 前綴；其餘值一律走工業全域表（行為不變）。
+    """
     nl = _norm_label(label)
+    if schema == "fh":
+        nl = _FH_LESS_PREFIX_RE.sub("", nl)
     if statement == "is" and nl in _IS_SECTION_TOTAL_LABELS and "營業外" in (section or ""):
         return "nonoperating_total"  # 營業外收入及支出區塊自己的小計（只寫「合計」「淨額」）
-    if statement == "is" and nl in _IS_SPLIT_LABELS:
+    split_labels = _IS_SPLIT_LABELS
+    if schema == "fh":  # 金控：「本公司業主」＝母公司業主；區段標題去掉 `(淨損)`／`本期稅後` 等變體字樣
+        split_labels = {**_IS_SPLIT_LABELS, "本公司業主": _IS_SPLIT_LABELS["母公司業主"]}
+        section = _FH_SPLIT_SEC_NOISE_RE.sub("", section) if section else section
+    if statement == "is" and nl in split_labels:
         sec = section or ""
         if "淨利歸屬於" in sec:
-            return _IS_SPLIT_LABELS[nl][0]
+            return split_labels[nl][0]
         if "綜合損益總額歸屬於" in sec:
-            return _IS_SPLIT_LABELS[nl][1]
+            return split_labels[nl][1]
         return None
+    if schema == "fh":
+        return _FH_KEYS.get(statement, {}).get(nl)
     return CANONICAL_KEYS.get(statement, {}).get(nl)
 
 
@@ -556,10 +600,34 @@ def _periods_from_text(text: str) -> list[str]:
     return [_period(y, m1, d1, *e) for (y, m1, d1), e in zip(dates, ends)]
 
 
-def detect_header(lines: list[str]) -> StatementHeader:
+_DOT_DATE_LINE_RE = re.compile(r"^\d{2,3}\.\d{1,2}\.\d{1,2}(?: \d{2,3}\.\d{1,2}\.\d{1,2})*$")
+
+
+def _fh_reorder_two_line_periods(periods: list[str]) -> list[str]:
+    """金控雙行表頭：第一行是上年（`114年…（追溯適用後）`）、第二行才是本年，但資料欄序為本年在前。
+
+    期間依年份非遞減（先上年後本年，且至少兩個年份）時，改回資料欄序：
+    本年與上年數量相等 → 兩兩交錯（本年_i、上年_i）；本年只有 1 欄（BS）→ 本年置首；其餘維持原樣。
+    """
+    years = [int(p[:3]) for p in periods]
+    if len(set(years)) < 2 or years != sorted(years):
+        return periods
+    newest = max(years)
+    new = [p for p, y in zip(periods, years) if y == newest]
+    old = [p for p, y in zip(periods, years) if y != newest]
+    if len(new) == len(old):
+        return [x for pair in zip(new, old) for x in pair]
+    if len(new) == 1:
+        return new + old
+    return periods
+
+
+def detect_header(lines: list[str], fh: bool = False) -> StatementHeader:
     """單頁表頭偵測：掃頁首至第一個資料列（含千分位金額或 `$`）為止，最多 14 列。
 
     含「民國」的列是表題（`民國115年…`），不當欄標題；其餘列合併後抽期間。
+    fh=True（金控）：整列皆 `115.6.30 114.12.31 …` 點分日期時以 `|` 分隔各日期，
+    避免去空白後 `114.1.1` 與下一個 `115.6.30` 黏成 `114.1.1115.6.30`（並排頁左右兩半各 4 欄）。
     """
     texts: list[str] = []
     skip: set[int] = set()
@@ -569,6 +637,8 @@ def detect_header(lines: list[str]) -> StatementHeader:
         cmp = _norm_label(raw)
         if _AMOUNT_RE.search(cmp) or "$" in cmp:
             break
+        if fh and _DOT_DATE_LINE_RE.match(unicodedata.normalize("NFKC", raw).strip()):
+            cmp = "|".join(unicodedata.normalize("NFKC", raw).split())
         all_text.append(cmp)
         if "民國" in cmp:
             skip.add(idx)
@@ -582,6 +652,8 @@ def detect_header(lines: list[str]) -> StatementHeader:
             skip.add(idx)
             texts.append(ar)
     periods = _periods_from_text("".join(texts))
+    if fh and len(texts) >= 2:
+        periods = _fh_reorder_two_line_periods(periods)
     joined = "".join(all_text)
     if end_dates and len(end_dates) == len(periods) and "日至" in joined and all("~" not in p for p in periods):
         periods = [
@@ -622,12 +694,12 @@ def select_cols(statement: str, periods: list[str]) -> tuple[int | None, int | N
     return (0, 1)
 
 
-def _page_headers(lines: list[tuple[int, int, str]]) -> dict[int, StatementHeader]:
+def _page_headers(lines: list[tuple[int, int, str]], fh: bool = False) -> dict[int, StatementHeader]:
     """依頁分組，每頁重新偵測表頭。"""
     by_page: dict[int, list[str]] = {}
     for page, _idx, text in lines:
         by_page.setdefault(page, []).append(text)
-    return {page: detect_header(texts) for page, texts in by_page.items()}
+    return {page: detect_header(texts, fh) for page, texts in by_page.items()}
 
 
 def detect_unit(lines: list[str]) -> str:
@@ -674,8 +746,10 @@ def _is_skip(cmp: str) -> bool:
     )
 
 
-def _split_line(text: str) -> tuple[str, str, str | None, list[float | None]]:
+def _split_line(text: str, fh: bool = False) -> tuple[str, str, str | None, list[float | None]]:
     """→ (label, note, code, amounts)；label／note 已去空白，code 為剝除的會計代碼（F2）。
+
+    fh=True（金控）另剝 5 位數代碼（列首 token 或黏著於中文前）；fh=False 行為不變。
 
     label 之後的單獨中文數字 token（`七`、`十一`）亦視為 note。
     """
@@ -685,10 +759,13 @@ def _split_line(text: str) -> tuple[str, str, str | None, list[float | None]]:
     toks = _norm_line(text).split()
     code: str | None = None
     if toks:
-        if len(toks) > 1 and (_CODE_STD_RE.match(toks[0]) or _CODE_ALPHA_RE.match(toks[0])):
+        if len(toks) > 1 and (
+            _CODE_STD_RE.match(toks[0]) or _CODE_ALPHA_RE.match(toks[0])
+            or (fh and _FH_CODE_RE.match(toks[0]))
+        ):
             code, toks = toks[0], toks[1:]
         else:
-            m = _CODE_GLUE_RE.match(toks[0])
+            m = (fh and _FH_CODE_GLUE_RE.match(toks[0])) or _CODE_GLUE_RE.match(toks[0])
             if m:
                 code, toks[0] = m.group(1), toks[0][m.end():]
     for tok in toks:
@@ -785,30 +862,33 @@ def _columns(
     return [None] * n, None, k
 
 
-def _tok_amount_count(tok: str) -> int:
+def _tok_amount_count(tok: str, fh: bool = False) -> int:
     if _CODE_STD_RE.match(tok) or _NOTE_RE.match(tok) or _NOTE_CONT_RE.match(tok):
+        return 0
+    if fh and _FH_CODE_RE.match(tok):
         return 0
     return len(line_amounts(tok))
 
 
-def _is_right_label(toks: list[str]) -> bool:
+def _is_right_label(toks: list[str], fh: bool = False) -> bool:
     """並排頁無代碼的單邊列：科目含負債／權益（權益法、權益工具除外）→ 右半。"""
-    label = "".join(t for t in toks if _tok_amount_count(t) == 0)
+    label = "".join(t for t in toks if _tok_amount_count(t, fh) == 0)
     label = label.replace("權益法", "").replace("權益工具", "")
     return "負債" in label or "權益" in label
 
 
-def _split_sides(text: str, h: int) -> tuple[str, str]:
+def _split_sides(text: str, h: int, fh: bool = False) -> tuple[str, str]:
     """並排頁一列 → (左半文字, 右半文字)（§2.2）；h＝單邊金額 token 數。
 
     切點：右半代碼 token（`^[23]\\d{3}$`）為主；無代碼 → 左半金額 token 達 h 為界；
     單邊列（總計列、標題）依科目名判左右。
     """
     toks = _norm_line(text).split()
+    right_code_re = _FH_RIGHT_CODE_RE if fh else _RIGHT_CODE_RE
     for j, t in enumerate(toks):
-        if _RIGHT_CODE_RE.match(t):
+        if right_code_re.match(t):
             return " ".join(toks[:j]), " ".join(toks[j:])
-    counts = [_tok_amount_count(t) for t in toks]
+    counts = [_tok_amount_count(t, fh) for t in toks]
     total = sum(counts)
     if total >= h > 0:
         acc, cut = 0, len(toks)
@@ -818,14 +898,14 @@ def _split_sides(text: str, h: int) -> tuple[str, str]:
                 cut = i + 1
                 break
         head, rest = toks[:cut], toks[cut:]
-        if total == h and _is_right_label(head):
+        if total == h and _is_right_label(head, fh):
             return "", " ".join(head)
         return " ".join(head), " ".join(rest)
     if total == 0:
         colon = [i for i, t in enumerate(toks) if t.endswith(":") or t.endswith("：")]
         if len(colon) >= 2:
             return " ".join(toks[: colon[0] + 1]), " ".join(toks[colon[0] + 1:])
-    if _is_right_label(toks):
+    if _is_right_label(toks, fh):
         return "", " ".join(toks)
     return " ".join(toks), ""
 
@@ -837,9 +917,10 @@ def _make_entry(
     page: int,
     idx: int,
     text: str,
+    fh: bool = False,
 ) -> tuple | None:
     """單一（半）列 → (page, idx, label, note, code, cols)；備忘／雜訊列 → None。"""
-    label, note, code, amounts = _split_line(text)
+    label, note, code, amounts = _split_line(text, fh)
     label = _strip_note_parens(label)
     cols = _columns(statement, n, amounts)
     is_hdr = _is_header(label, section_headers)
@@ -860,13 +941,15 @@ def parse_statement_lines(
     *,
     section_headers: frozenset[str],
     warnings: list[str] | None = None,
+    schema: str = "industrial",
 ) -> tuple[list[StatementRow], str, str]:
     """逐列解析單張報表 → (rows, period_current, period_prior)；解析警告 append 到 `warnings`。"""
     rows: list[StatementRow] = []
     period = ("", "")
+    fh = schema == "fh"
 
     # 每頁重新偵測表頭；首個解析得出期間的頁決定 period（取 §1.3 的 current／prior 欄之年）
-    headers = _page_headers(lines)
+    headers = _page_headers(lines, fh)
     stmt_hdr: StatementHeader | None = None
     for hdr in headers.values():
         if hdr.periods and stmt_hdr is None:
@@ -901,10 +984,10 @@ def parse_statement_lines(
             continue
         segs = [text]
         if side:
-            segs = list(_split_sides(text, half))
+            segs = list(_split_sides(text, half, fh))
         for st, seg in zip(streams, segs):
             if seg.strip():
-                st.append(_make_entry(statement, section_headers, n, page, idx, seg))
+                st.append(_make_entry(statement, section_headers, n, page, idx, seg, fh))
 
     for parsed in streams:
         section: str | None = None
@@ -927,7 +1010,22 @@ def parse_statement_lines(
                 code = code or nxt[4]
                 cols = nxt[5]
                 i += 1
+            if fh and side and code is not None:
+                # 並排頁（僅 side）左半科目名換行後、續行落在金額之後（`12150 …金融資 <金額> ` ／下一列 `產(附註…`）：
+                # 下一筆無代碼無金額、且再下一筆不是「以它為前綴」的帶金額列 → 續行，併入科目名
+                nxt = parsed[i] if i < len(parsed) else None
+                nn = parsed[i + 1] if i + 1 < len(parsed) else None
+                if (
+                    nxt is not None and nxt[4] is None and nxt[5] is None and nxt[2]
+                    and not _is_header(nxt[2], section_headers)
+                    and (nn is None or nn[4] is not None or nn[5] is None)
+                ):
+                    label = label + nxt[2]
+                    i += 1
             label = _strip_note_parens(label, final=True)
+            if fh:
+                label = _FH_DANGLING_NOTE_RE.sub("", label)
+                label = _FH_LEAD_NOTE_FRAG_RE.sub("", label)
             label, glued = _strip_glued_note(label)  # 跨列合併後才完整的黏著附註
             note = glued + note
             if not label and code is None:
@@ -943,7 +1041,7 @@ def parse_statement_lines(
                 statement=statement,
                 section=section,
                 label=label,
-                key=map_key(statement, label, section),
+                key=map_key(statement, label, section, schema),
                 note=note or None,
                 current=cur,
                 prior=pri,
@@ -954,7 +1052,7 @@ def parse_statement_lines(
                 code=code,
                 columns=list(columns),
             ))
-    if statement == "is":
+    if statement == "is" and not fh:
         _apply_conditional_aliases(rows)
     return rows, period[0], period[1]
 
@@ -1028,10 +1126,71 @@ _CHECK_SPECS: list[tuple[str, tuple[str, ...], tuple[str, ...]]] = [
 ]
 
 
+_FH_NON_INTEREST_FALLBACK_WARNING = "無「利息以外淨收益」合計列，以各組成項加總代替（is_net_revenue 勾稽）"
+
+
+def _run_fh_cross_checks(rows: list[StatementRow], warnings: list[str] | None) -> list[CrossCheck]:
+    """金控勾稽（fh-schema Spec §2.4）：9 項 × (current, prior)。
+
+    費用類（FH_EXPENSE_KEYS）一律 −|v|；insurance_other_cost 缺列以 0 計，其餘缺列 → passed=None；
+    income_tax 沿用工業符號規則；無 non_interest_income 列 → 以組成項加總代替並寫 warnings。
+    """
+    first: dict[str, StatementRow] = {}
+    for r in rows:
+        if r.key is not None and r.key not in first:
+            first[r.key] = r
+
+    def val(k: str, idx: int) -> float | None:
+        row = first.get(k)
+        return None if row is None else (row.current if idx == 0 else row.prior)
+
+    def side(keys: tuple[str, ...], idx: int) -> float | None:
+        total = 0.0
+        for k in keys:
+            if k == "non_interest_income" and k not in first:
+                parts = [v for c in FH_NON_INTEREST_COMPONENT_KEYS if (v := val(c, idx)) is not None]
+                if not parts:
+                    return None
+                if warnings is not None and _FH_NON_INTEREST_FALLBACK_WARNING not in warnings:
+                    warnings.append(_FH_NON_INTEREST_FALLBACK_WARNING)
+                total += sum(parts)
+                continue
+            if k not in first and k in FH_OPTIONAL_KEYS:
+                continue
+            v = val(k, idx)
+            if v is None:
+                return None
+            if k == "income_tax":
+                lab = _norm_label(first[k].label)
+                total += v if "(費用)" in lab else -v if "(利益)" in lab else -abs(v)
+            elif k in FH_EXPENSE_KEYS:
+                total += -abs(v)
+            else:
+                total += v
+        return total
+
+    out: list[CrossCheck] = []
+    for name, lhs_keys, rhs_keys in FH_CHECK_SPECS:
+        for idx, period in enumerate(("current", "prior")):
+            lhs, rhs = side(lhs_keys, idx), side(rhs_keys, idx)
+            passed = None if lhs is None or rhs is None else abs(lhs - rhs) <= _CHECK_TOLERANCE
+            out.append(CrossCheck(name=name, period=period, lhs=lhs, rhs=rhs, passed=passed))
+    return out
+
+
 def run_cross_checks(
-    rows: list[StatementRow], column_periods: dict[str, list[str]] | None = None
+    rows: list[StatementRow],
+    column_periods: dict[str, list[str]] | None = None,
+    *,
+    schema: str = "industrial",
+    warnings: list[str] | None = None,
 ) -> list[CrossCheck]:
-    """Spec §2.4 勾稽：11 項 × (current, prior)，name 為主序；任一輸入 None → passed=None。"""
+    """Spec §2.4 勾稽：11 項 × (current, prior)，name 為主序；任一輸入 None → passed=None。
+
+    schema == "fh" → 改走金控 9 項（_run_fh_cross_checks）。
+    """
+    if schema == "fh":
+        return _run_fh_cross_checks(rows, warnings)
     first: dict[str, StatementRow] = {}
     for r in rows:
         if r.key is not None and (r.key not in first or r.key in _LAST_WINS_KEYS):
@@ -1176,11 +1335,20 @@ def _assurance_of(fs: "PdfDoc") -> str | None:
 
 
 def extract_statements(
-    fs: "PdfDoc | None", fs_anchors: dict | None
+    fs: "PdfDoc | None", fs_anchors: dict | None, *, group: str | None = None
 ) -> StatementLedger | None:
-    """三表篩頁→解析→對照→帳本；fs／fs_anchors 為 None 或三表皆 0 列 → None。"""
+    """三表篩頁→解析→對照→帳本；fs／fs_anchors 為 None 或三表皆 0 列 → None。
+
+    group == "fh" → 金控 schema（FH_CANONICAL_KEYS／FH_SECTION_HEADERS、5 位數代碼、`減：`）；
+    其他值（含 None）走工業流程，行為不變。fh 帳本的 checks 走 FH_CHECK_SPECS（9 項）。
+    """
     if fs is None or fs_anchors is None:
         return None
+    schema = "fh" if group == "fh" else "industrial"
+    section_map = (
+        {st: FH_SECTION_HEADERS[st] | _FH_EXTRA_SECTION_HEADERS.get(st, frozenset()) for st in FH_SECTION_HEADERS}
+        if schema == "fh" else SECTION_HEADERS
+    )
     pages_by_no = {p.number: p for p in fs.pages}
     rows: list[StatementRow] = []
     periods: dict[str, tuple[str, str]] = {}
@@ -1199,13 +1367,13 @@ def extract_statements(
         if not unit:
             unit = detect_unit(pages_by_no[pages[0]].lines)
         for n in pages:  # 首個解析得出期間的頁代表該表欄位期間
-            hdr = detect_header(pages_by_no[n].lines)
+            hdr = detect_header(pages_by_no[n].lines, schema == "fh")
             if hdr.periods:
                 column_periods[st] = hdr.periods
                 current_col[st], prior_col[st] = select_cols(st, hdr.periods)
                 break
         st_rows, pc, pp = parse_statement_lines(
-            triples, st, section_headers=SECTION_HEADERS[st], warnings=parse_warnings
+            triples, st, section_headers=section_map[st], warnings=parse_warnings, schema=schema
         )
         periods[st] = (pc, pp)
         rows.extend(st_rows)
@@ -1226,7 +1394,7 @@ def extract_statements(
         period_current=pc,
         period_prior=pp,
         rows=rows,
-        checks=run_cross_checks(rows, column_periods),
+        checks=run_cross_checks(rows, column_periods, schema=schema, warnings=parse_warnings),
         unmapped_labels=unmapped,
         column_periods=column_periods,
         current_col=current_col,
@@ -1236,4 +1404,5 @@ def extract_statements(
         periods=_periods_of(column_periods, current_col, prior_col),
         days={"current": _days_between(flow_cur), "prior": _days_between(flow_pri)},
         assurance=_assurance_of(fs),
+        schema=schema,
     )

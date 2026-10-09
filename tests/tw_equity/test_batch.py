@@ -12,7 +12,7 @@ from runtime.tw_equity import batch
 
 REPO = Path(__file__).resolve().parents[2]
 TOP_KEYS = {
-    "schema_version", "ticker", "company_name", "group", "fs_period", "status", "error",
+    "schema", "ifrs17_break", "schema_version", "ticker", "company_name", "group", "fs_period", "status", "error",
     "elapsed_seconds", "inputs", "basis", "assurance", "periods", "checks", "n_unmapped",
     "values", "metrics", "ttm", "fy_income_usable", "bridges",
 }
@@ -66,7 +66,7 @@ def test_record_keys_fixed(tmp_path, fake_pipeline):
     _write_input(tmp_path, "good")
     rec = batch.run_company("good", base_dir=tmp_path)
     assert set(rec) == TOP_KEYS
-    assert rec["schema_version"] == 1
+    assert rec["schema_version"] == 2
     assert rec["inputs"]["annual_report"]["sha256_16"] is not None
     assert set(batch.run_company("nope", base_dir=tmp_path)) == TOP_KEYS
 

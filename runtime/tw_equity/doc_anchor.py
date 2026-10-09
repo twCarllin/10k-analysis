@@ -307,12 +307,59 @@ AR_HEADING_FALLBACK: dict[str, HeadingAnchor] = {
 }
 
 
+# ── 金控年報章名補充（fh-schema 4.1，Spec §5；只增不改上面既有關鍵字）──────────────
+# 與 ANNUAL_REPORT_ANCHORS 的差異：比對時去除所有空白、並額外嘗試「疊字還原」
+# （2887 為「伍伍、、財財務務…」雙寫、2886 為「財 務狀況」字距）；僅在既有掃描
+# 找不到（None）或只命中目錄續頁（含 ≥5 個點／連字號引導線）時才採用，
+# 且只在 group=="fh" 時執行（分流依輸入檔 group，不依文件內容推測；Spec §1），
+# 因此 group 非 fh（含 None）的結果與本 run 前完全相同。順序即解析順序（ar_fin_performance 須 ≥ ar_mdna 起頁）。
+FH_ANNUAL_REPORT_ANCHORS: dict[str, list[str]] = {
+    "ar_business":        ["4.1本公司營運概況", "肆、營運概況"],
+    "ar_mdna":            ["財務狀況及財務績效檢討分析", "財務狀況及財務績效之檢討分析與風險管理"],
+    "ar_fin_performance": ["5.2財務績效", "二、財務績效", "二、個體財務績效"],
+}
+
+_LEADER_RE = re.compile(r"[-.·…─—_]{5,}")
+_DOUBLED_RE = re.compile(r"([\u4e00-\u9fff、，：])\1")
+
+
+def _head_variants(text: str) -> list[str]:
+    """頁首 300 字（NFKC）去空白後的比對字串；另附疊字還原版本。"""
+    head = _nfkc(text[:300])
+    flat = re.sub(r"\s+", "", head)
+    return [flat, _DOUBLED_RE.sub(r"\1", flat)]
+
+
+def _is_toc_like(text: str) -> bool:
+    return bool(_LEADER_RE.search(_nfkc(text[:300])))
+
+
+def _fh_starts(doc: PdfDoc, starts: dict[str, int]) -> None:
+    """就地補／校正 starts：僅 None 或只命中目錄續頁的 key 才採金控章名關鍵字。"""
+    pages = sorted(doc.pages, key=lambda p: p.number)
+    by_no = {p.number: p for p in pages}
+    toc_pages = [p.number for p in pages if _count_keys_in_text(ANNUAL_REPORT_ANCHORS, p.text) >= 3]
+    toc_cutoff = min(toc_pages) if toc_pages else 0
+    for key, kws in FH_ANNUAL_REPORT_ANCHORS.items():
+        cur = starts.get(key)
+        if cur is not None and not _is_toc_like(by_no[cur].text):
+            continue
+        floor = max(toc_cutoff + 1, starts.get("ar_mdna", 0) if key == "ar_fin_performance" else 0)
+        norm_kws = [re.sub(r"\s+", "", _nfkc(k)) for k in kws]
+        for p in pages:
+            if p.number < floor or _is_toc_like(p.text):
+                continue
+            if any(k in v for v in _head_variants(p.text) for k in norm_kws):
+                starts[key] = p.number
+                break
+
+
 # key 的起頁必須 ≥ 另一 key 的起頁：泛用關鍵字（「風險事項」）在前段章節被交叉引用時改往後找
 _AR_START_AFTER: dict[str, str] = {"ar_risk": "ar_mdna"}
 
 
 def find_annual_report_sections(
-    doc: PdfDoc, *, required: set[str]
+    doc: PdfDoc, *, required: set[str], group: str | None = None
 ) -> dict[str, PageRange | None]:
     """年報錨定：先走 find_sections（頁首 300 字），None 的 key 再以標題行備援。
 
@@ -322,6 +369,9 @@ def find_annual_report_sections(
     order = list(ANNUAL_REPORT_ANCHORS)
     first = find_sections(doc, ANNUAL_REPORT_ANCHORS, required=set(), order=order)
     starts: dict[str, int] = {k: r.start for k, r in first.items() if r is not None}
+
+    if group == "fh":
+        _fh_starts(doc, starts)
 
     pages_sorted = sorted(doc.pages, key=lambda p: p.number)
     for key, after in _AR_START_AFTER.items():
@@ -336,7 +386,7 @@ def find_annual_report_sections(
             starts[key] = hit
 
     for key, anchor in AR_HEADING_FALLBACK.items():
-        if first.get(key) is not None:
+        if first.get(key) is not None or key in starts:
             continue
         sub = {key: anchor}
         if anchor.after and anchor.after in AR_HEADING_FALLBACK:

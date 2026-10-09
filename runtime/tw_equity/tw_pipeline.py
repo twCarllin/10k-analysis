@@ -106,6 +106,7 @@ def _analyze_year(
     ocr_fn,
     ar_required: set[str],
     label: str = "tw-equity",
+    group: str | None = None,
 ) -> YearResult:
     """Phase 2–7：載入、錨定、抽表、組段、跑 skill、eval loop。"""
     kw = {"ocr": ocr_fn} if ocr_fn is not None else {}
@@ -116,7 +117,7 @@ def _analyze_year(
     ps = pdf_doc.load_pdf(ps_path, **kw) if ps_path else None
 
     print(f"[{label} Phase 3] find sections")
-    ar_anchors = find_annual_report_sections(ar, required=ar_required)
+    ar_anchors = find_annual_report_sections(ar, required=ar_required, group=group)
     gov_anchors = find_heading_sections(ar, GOVERNANCE_HEADING_ANCHORS, required=set())
     fs_anchors = (find_heading_sections(fs, FS_HEADING_ANCHORS, required=_FS_REQUIRED)
                   if fs is not None else None)
@@ -126,7 +127,7 @@ def _analyze_year(
 
     print(f"[{label} Phase 4] extract tables")
     bundle = extract_tables(ar, ar_anchors, fs, fs_anchors, ps, ps_anchors,
-                            roc_year=roc_year, gov_anchors=gov_anchors)
+                            roc_year=roc_year, gov_anchors=gov_anchors, group=group)
 
     print(f"[{label} Phase 5] build sections")
     empty = pdf_doc.PdfDoc(path=Path(""), pages=[])
@@ -226,6 +227,7 @@ def run_tw_equity_pipeline(
         roc_year=inputs.roc_year,
         ocr_fn=ocr_fn,
         ar_required=_AR_REQUIRED,
+        group=inputs.group,
     )
 
     prior_year: YearResult | None = None

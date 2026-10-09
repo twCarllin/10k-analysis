@@ -24,11 +24,14 @@ from runtime.tw_equity.doc_anchor import (
     find_heading_sections,
 )
 from runtime.tw_equity.inputs import load_inputs
-from runtime.tw_equity.metrics import _ledger_value
+from runtime.tw_equity.metrics import _fh_bridge_value, _ledger_value
 from runtime.tw_equity.tables import extract_tables
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 VALUE_KEYS = ("revenue", "gross_profit", "operating_income", "net_income", "cfo")
+FH_VALUE_KEYS = ("net_interest_income", "non_interest_income", "net_revenue", "provision", "total_opex",
+                 "pretax_income", "net_income", "net_income_parent", "total_assets", "total_equity",
+                 "loans_net", "deposits")
 
 
 def _sha16(path: Path | None) -> str | None:
@@ -41,18 +44,46 @@ def _sha16(path: Path | None) -> str | None:
     return h.hexdigest()[:16]
 
 
-def _empty_record(ticker: str) -> dict:
-    return {
+def _empty_record(ticker: str, schema: str = "industrial") -> dict:
+    rec = {
         "schema_version": SCHEMA_VERSION, "ticker": ticker, "company_name": None, "group": None,
         "fs_period": None, "status": "error", "error": None, "elapsed_seconds": None, "inputs": None,
         "basis": None, "assurance": None, "periods": None, "checks": None, "n_unmapped": None,
         "values": None, "metrics": None, "ttm": None, "fy_income_usable": None, "bridges": None,
+        "schema": schema, "ifrs17_break": None,
     }
+    if schema == "fh":  # 金控專屬鍵只出現在 fh 記錄（工業鍵集合只多 schema／ifrs17_break）
+        rec["fh_notes"] = None
+        rec["fh_notes_error"] = None
+    return rec
+
+
+def _fh_value(led, key: str, period: str):
+    # non_interest_income 無合計列 → 組成項加總代用（與勾稽／bridge 一致）
+    return _fh_bridge_value(led, key, period) if key == "non_interest_income" else _ledger_value(led, key, period)
+
+
+def _fh_metrics(mp_dict: dict, mp) -> dict:
+    """fh 13 項：{key: {current, prior[, source: {current, prior}]}}；有附註出處者帶 source。"""
+    out = {k: dict(v) for k, v in mp_dict["index"].items()}
+    for m in mp.metrics:
+        if m.source is not None:
+            out[m.key].setdefault("source", {})[m.period] = dict(m.source)
+    return out
 
 
 def _fill(rec: dict, bundle) -> None:
     led, mp, fy = bundle.statements, bundle.metrics, bundle.fy_income
     rec["fy_income_usable"] = None if fy is None else fy.usable
+    if led is not None:
+        rec["schema"] = led.schema
+    fh = rec["schema"] == "fh"
+    if fh:
+        rec.setdefault("fh_notes", None)
+        rec.setdefault("fh_notes_error", None)
+        notes = getattr(bundle, "fh_notes", None)
+        rec["fh_notes"] = None if notes is None else notes.to_dict()
+        rec["fh_notes_error"] = getattr(bundle, "fh_notes_error", None)
     if led is None:
         return
     checks = [c.to_dict() for c in led.checks]
@@ -64,13 +95,20 @@ def _fill(rec: dict, bundle) -> None:
         "not_passed": [f"{c['name']}/{c['period']}" for c in checks if c["passed"] is not True],
     }
     rec["n_unmapped"] = len(led.unmapped_labels)
-    rec["values"] = {k: {p: _ledger_value(led, k, p) for p in ("current", "prior")} for k in VALUE_KEYS}
+    if fh:
+        rec["values"] = {k: {p: _fh_value(led, k, p) for p in ("current", "prior")} for k in FH_VALUE_KEYS}
+    else:
+        rec["values"] = {k: {p: _ledger_value(led, k, p) for p in ("current", "prior")} for k in VALUE_KEYS}
     if mp is None:
         return
     d = mp.to_dict()
-    rec["metrics"] = d["index"]
+    rec["metrics"] = _fh_metrics(d, mp) if fh else d["index"]
+    if fh:
+        rec["ifrs17_break"] = mp.ifrs17_break
     t = d["ttm_vs_fy"]
     rec["ttm"] = None if t is None else {"status": t["status"], "reason": t["reason"], "values": t["values"]}
+    if fh and t is not None:
+        rec["ttm"].update(scope=t.get("scope"), comparability=t.get("comparability"))
     rec["bridges"] = [{"target": b["target"], "target_delta": b["target_delta"],
                        "top_drivers": b["top_drivers"]} for b in d["bridges"]]
 
@@ -82,6 +120,8 @@ def run_company(ticker: str, *, base_dir: Path | None = None) -> dict:
     t0 = time.monotonic()
     try:
         raw = json.loads((base / "tw_equity_inputs" / f"{ticker}.json").read_text(encoding="utf-8"))
+        if raw.get("group") == "fh":
+            rec = _empty_record(ticker, "fh")
         rec["group"], rec["fs_period"] = raw.get("group"), raw.get("fs_period")
         inp = load_inputs(ticker, base_dir=base_dir)
         rec["company_name"] = inp.company_name
@@ -91,11 +131,11 @@ def run_company(ticker: str, *, base_dir: Path | None = None) -> dict:
                                              "sha256_16": _sha16(fs_path)}}
         ar = pdf_doc.load_pdf(ar_path)
         fs = pdf_doc.load_pdf(fs_path) if fs_path else None
-        ar_anchors = find_annual_report_sections(ar, required=set())
+        ar_anchors = find_annual_report_sections(ar, required=set(), **({"group": "fh"} if inp.group == "fh" else {}))
         gov_anchors = find_heading_sections(ar, GOVERNANCE_HEADING_ANCHORS, required=set())
         fs_anchors = find_heading_sections(fs, FS_HEADING_ANCHORS, required=set()) if fs else None
         bundle = extract_tables(ar, ar_anchors, fs, fs_anchors, None, None,
-                                roc_year=inp.roc_year, gov_anchors=gov_anchors)
+                                roc_year=inp.roc_year, gov_anchors=gov_anchors, group=inp.group)
         _fill(rec, bundle)
         rec["status"] = "ok"
     except Exception as e:  # 失敗隔離：單家任何例外只記錄

@@ -653,6 +653,8 @@ def _appendix_e(bundle: TablesBundle) -> list[str]:
     d = mp.to_dict()
     cur, pri = _t(d["period_current"]), _t(d["period_prior"])
     days = d["days"]
+    if getattr(bundle.statements, "schema", None) == "fh":
+        return _appendix_e_fh(bundle, d)
     L = ["### 指標", "", f"期間：本期 {cur}、上期 {pri}；金額單位仟元，比率 %，天數天，倍數 x", "",
          f"期間模型：基準 {_t(d['basis'])}；本期 {_t(d['periods'].get('flow_current'))}、"
          f"上期 {_t(d['periods'].get('flow_prior'))}；天數 {_num(days.get('current'))}／{_num(days.get('prior'))}；"
@@ -677,6 +679,80 @@ def _appendix_e(bundle: TablesBundle) -> list[str]:
     return L
 
 
+_FH_UNAVAILABLE = "不可得"
+
+
+def _fh_source_text(src: dict | None) -> str:
+    """附註來源欄：頁／期間／主體；stale → 標註非本期末；無來源或有 reason → 不可得／原因。"""
+    if not src:
+        return _FH_UNAVAILABLE
+    if src.get("page") is None:
+        return _t(src.get("reason")) if src.get("reason") else _FH_UNAVAILABLE
+    parts = [f"p{src['page']}", _t(src.get("period"))]
+    if src.get("entity"):
+        parts.append(_t(src["entity"]))
+    txt = " ".join(parts)
+    return txt + "（stale：非本期末，取最新可得期）" if src.get("stale") else txt
+
+
+def _appendix_e_fh(bundle: TablesBundle, d: dict) -> list[str]:
+    """金控附錄 E（fh-schema Spec §8.3）：指標（附註含來源）、bridge、IFRS 17 標記、TTM、不可得清單。"""
+    from runtime.tw_equity.metrics import _FH_NOTE_METRICS
+
+    cur, pri = _t(d["period_current"]), _t(d["period_prior"])
+    L = ["### 指標", "", f"期間：本期 {cur}、上期 {pri}；金額單位仟元，比率 %；H1 指標未年化，不可與 FY 直接比較", "",
+         f"期間模型：基準 {_t(d['basis'])}；確信等級 {_t(d['assurance'])}", ""]
+    if bundle.fh_notes_error:
+        L += [f"⚠️ 附註抽取失敗：{_t(bundle.fh_notes_error)}", ""]
+    idx = d["index"]
+    src_of = {(m["key"], m["period"]): m.get("source") for m in d["metrics"]}
+    rows, seen = [], set()
+    for m in d["metrics"]:
+        if m["period"] != "current":
+            continue
+        seen.add(m["key"])
+        k = m["key"]
+        note = k in {n[0] for n in _FH_NOTE_METRICS}
+        v = [_FH_UNAVAILABLE if idx[k][p] is None else idx[k][p] for p in ("current", "prior")]
+        rows.append([f"{m['name']}（{k}）", m["formula"], v[0], v[1], m["unit"],
+                     _fh_source_text(src_of.get((k, "current"))) if note else _NA])
+    for k, name, formula in _FH_NOTE_METRICS:  # 附註抽取失敗等原因整批缺 → 仍列行並標不可得
+        if k not in seen:
+            rows.append([f"{name}（{k}）", formula, _FH_UNAVAILABLE, _FH_UNAVAILABLE, "%", _FH_UNAVAILABLE])
+    L += _md_table(["指標", "公式", "本期", "上期", "單位", "來源（附註）"], rows)
+    L += ["", "### IFRS 17 標記", ""]
+    if d.get("ifrs17_break"):
+        ev = d.get("ifrs17_evidence") or {}
+        L.append("IFRS 17 斷層：是。FY 為 IFRS 4、H1 為 IFRS 17，TTM 與年度數字混用兩套準則，不可直接與 FY 比較"
+                 + (f"（依據：IS 含「{_t(ev.get('label'))}」列）" if ev.get("label") else ""))
+    else:
+        L.append("IFRS 17 斷層：否")
+    L += ["", "### 變動歸因（bridge）", ""]
+    for b in d["bridges"]:
+        L += [f"#### {_t(b['name'])}（{b['target']}）：本期 {_num(b['target_current'])}、上期 "
+              f"{_num(b['target_prior'])}、Δ {_num(b['target_delta'])}；主要驅動：{_t('、'.join(b['top_drivers'])) or _NA}", ""]
+        brows = [[f"{_t(c['name'])}（{c['key']}）", c["current"], c["prior"], c["delta"],
+                  None if c["share"] is None else c["share"] * 100] for c in b["components"]]
+        brows.append(["殘差", None, None, b["residual"], None])
+        L += _md_table(["組成項", "本期", "上期", "Δ", "占比%"], brows) + [""]
+    t = d["ttm_vs_fy"]
+    ttm = _ttm_section(t, bundle.fy_income_error)
+    if t is not None and t.get("scope") is not None and len(ttm) >= 2:
+        scope = "僅歸母淨利（個體年報，無合併 FY）" if t["scope"] == "parent_only" else "合併"
+        ttm[2:2] = [f"TTM 範圍：{scope}" + (f"；可比性：{_t(t.get('comparability_note') or t.get('comparability'))}"
+                                            if t.get("comparability") else ""), ""]
+    L += ttm
+    L += ["", "### 不可得項目", ""]
+    notes = bundle.fh_notes
+    if notes is None:
+        L.append("附註未取得（抽取失敗或未執行），附註指標與下列清單皆不可得")
+    elif not notes.unavailable:
+        L.append("無")
+    else:
+        L += [f"- {_t(u['item'])}：{_t(u['reason'])}" for u in notes.unavailable]
+    return L
+
+
 def _ttm_section(t: dict | None, fy_error: str | None = None) -> list[str]:
     """「### TTM vs FY」小節；ttm 為 None（FY 帳本）且無解析錯誤時不輸出；FY 損益表解析失敗時加一行警示。"""
     if t is None and fy_error is None:
@@ -695,9 +771,10 @@ def _ttm_section(t: dict | None, fy_error: str | None = None) -> list[str]:
                      v["fy"], v["h1_current"], v["h1_prior"], v["ttm"]] for k, v in t["values"].items()])
     idx = t["index"]
     seen = [(m["key"], m["name"], m["unit"]) for m in t["metrics"] if m["period"] == "ttm"]
-    L += ["", "#### TTM 指標", ""]
-    L += _md_table(["指標", "TTM", "FY", "單位"],
-                   [[f"{name}（{key}）", idx[key]["ttm"], idx[key]["fy"], unit] for key, name, unit in seen])
+    if seen or t.get("scope") is None:  # 金控（有 scope）無 TTM 指標時略過空表；工業輸出不變
+        L += ["", "#### TTM 指標", ""]
+        L += _md_table(["指標", "TTM", "FY", "單位"],
+                       [[f"{name}（{key}）", idx[key]["ttm"], idx[key]["fy"], unit] for key, name, unit in seen])
     for b in t["bridges"]:
         L += ["", f"#### TTM {_t(b['name'])}（{b['target']}）：TTM {_num(b['target_current'])}、FY "
               f"{_num(b['target_prior'])}、Δ {_num(b['target_delta'])}；主要驅動：{_t('、'.join(b['top_drivers'])) or _NA}", ""]

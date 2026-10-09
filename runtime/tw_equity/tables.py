@@ -1521,8 +1521,18 @@ class TablesBundle:
     metrics: "MetricsPack | None" = None            # 階段 2：帳本衍生指標與 bridge
     fy_income: "FyIncome | None" = None             # FY 損益表（年報財務績效比較分析表；TTM 用）
     fy_income_error: str | None = None             # FY 損益表解析例外（`<類型>: <訊息>`）；成功 → None
+    fh_notes_error: str | None = None               # 金控附註抽取例外（`<類型>: <訊息>`）；僅 fh 且失敗時 to_dict 輸出
+    fh_notes: Any = None                            # 金控附註抽取（FhNotes；僅 group=="fh"）；其餘 None、to_dict 不輸出
 
     def to_dict(self) -> dict[str, Any]:
+        d = self._base_dict()
+        if self.fh_notes is not None:
+            d["fh_notes"] = self.fh_notes.to_dict()
+        if self.fh_notes_error is not None:
+            d["fh_notes_error"] = self.fh_notes_error
+        return d
+
+    def _base_dict(self) -> dict[str, Any]:
         return {
             "fin_position": self.fin_position.to_dict() if self.fin_position else None,
             "fin_performance": self.fin_performance.to_dict() if self.fin_performance else None,
@@ -1563,6 +1573,7 @@ def extract_tables(
     *,
     roc_year: int,
     gov_anchors: dict | None = None,
+    group: str | None = None,
 ) -> TablesBundle:
     """彙整年報、合併財報、個體財報的所有表格解析結果。
 
@@ -1575,6 +1586,7 @@ def extract_tables(
         ps_anchors: 個體財報錨點 dict；ps=None 時傳 None。
         roc_year: 民國年（例：114）。
         gov_anchors: 年報治理錨點 dict（ar_pledge／ar_top10）；None 時兩個 T10 表皆缺。
+        group: 公司類別；"fh" 走金控三表 schema，其餘（含 None）走工業流程。
 
     Returns:
         TablesBundle 彙整結果；缺檔時對應表進 missing_tables，不 raise。
@@ -1734,7 +1746,7 @@ def extract_tables(
     # ── 合併財報三表帳本（statements.py；函式內 import 避開與 tables 的循環） ──
     from runtime.tw_equity.statements import extract_statements
 
-    statements = extract_statements(fs, fs_anchors)
+    statements = extract_statements(fs, fs_anchors, group=group)
     counts = statements.to_dict()["row_counts"] if statements is not None else {}
     for st, name in (("bs", _MISS_FS_BS), ("is", _MISS_FS_IS), ("cf", _MISS_FS_CF)):
         if not counts.get(st):
@@ -1747,14 +1759,36 @@ def extract_tables(
     # 單份年報格式異常不中斷 pipeline：FY 損益表改為 None（TTM 不可用），並在終端機與報告警示
     fy_income_error: str | None = None
     try:
-        fy_income = extract_fy_income(ar, ar_anchors, roc_year=roc_year)
+        fy_income = extract_fy_income(ar, ar_anchors, roc_year=roc_year, group=group)
     except Exception as e:
         fy_income = None
         fy_income_error = f"{type(e).__name__}: {e}"
         msg = f"[tw-equity 警示] FY 損益表解析失敗：{fy_income_error}；TTM 不可用"
         print(msg)
         log.warning(msg)
-    metrics = compute_metrics(statements, fy_income=fy_income)
+    fh_notes = None
+    fh_notes_error: str | None = None
+    if group == "fh" and fs is not None:
+        from runtime.tw_equity.fh_notes import extract_fh_notes
+
+        bs_cur = None
+        if statements is not None:
+            ci = statements.current_col.get("bs")
+            cols = statements.column_periods.get("bs") or []
+            bs_cur = cols[ci] if ci is not None and ci < len(cols) else None
+        try:
+            fh_notes = extract_fh_notes(fs, bs_current_period=bs_cur)
+        except Exception as e:
+            fh_notes_error = f"{type(e).__name__}: {e}"
+            msg = f"[tw-equity 警示] 附註抽取失敗：{fh_notes_error}；附註指標不可用"
+            print(msg)
+            log.warning(msg)
+    metrics_notes = fh_notes
+    if fh_notes_error is not None:  # 附註指標走「無附註」的 None 路徑（value None、source.reason）
+        from runtime.tw_equity.fh_notes import CarResult, FhNotes
+
+        metrics_notes = FhNotes(group_car=CarResult(value=None, reason="附註抽取失敗"), npl=None)
+    metrics = compute_metrics(statements, fy_income=fy_income, group=group, notes=metrics_notes)
 
     # ── parent_key_lines（個體損益表 ps_is） ─────────────────────────────────
     _, ps_is_text = _get_ps("ps_is")
@@ -1800,4 +1834,6 @@ def extract_tables(
         metrics=metrics,
         fy_income=fy_income,
         fy_income_error=fy_income_error,
+        fh_notes=fh_notes,
+        fh_notes_error=fh_notes_error,
     )

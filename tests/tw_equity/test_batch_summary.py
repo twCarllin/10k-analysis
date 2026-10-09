@@ -58,7 +58,7 @@ def test_fh_and_error_excluded():
     s = build_summary([_rec("2881", group="fh", metrics={"fcf": {"current": -1}}),
                        _rec("9999", status="error", error="ValueError: boom"), _rec("1111")])
     assert [r["ticker"] for r in s["rows"]] == ["1111"]
-    assert [u["ticker"] for u in s["unsupported"]] == ["2881"]
+    assert s["unsupported"] == [] and [r["ticker"] for r in s["fh_ranking"]] == ["2881"]
     assert s["failed"] == [{"ticker": "9999", "company_name": "公司9999", "group": "industrial",
                             "error": "ValueError: boom"}]
     assert all(f["ticker"] == "1111" for f in s["flags"])

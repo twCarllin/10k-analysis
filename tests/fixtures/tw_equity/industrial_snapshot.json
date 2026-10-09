@@ -1,0 +1,8025 @@
+{
+ "2059_H1": {
+  "_source": "tests/fixtures/tw_equity/fs_h1_pages.json[2059]（HEAD 12cadec 行為）",
+  "checks": [
+   {
+    "lhs": 47110680.0,
+    "name": "bs_assets_eq_liab_equity",
+    "passed": true,
+    "period": "current",
+    "rhs": 47110680.0
+   },
+   {
+    "lhs": 35083436.0,
+    "name": "bs_assets_eq_liab_equity",
+    "passed": true,
+    "period": "prior",
+    "rhs": 35083436.0
+   },
+   {
+    "lhs": 47110680.0,
+    "name": "bs_assets_sum",
+    "passed": true,
+    "period": "current",
+    "rhs": 47110680.0
+   },
+   {
+    "lhs": 35083436.0,
+    "name": "bs_assets_sum",
+    "passed": true,
+    "period": "prior",
+    "rhs": 35083436.0
+   },
+   {
+    "lhs": 47110680.0,
+    "name": "bs_liab_equity_sum",
+    "passed": true,
+    "period": "current",
+    "rhs": 47110680.0
+   },
+   {
+    "lhs": 35083436.0,
+    "name": "bs_liab_equity_sum",
+    "passed": true,
+    "period": "prior",
+    "rhs": 35083436.0
+   },
+   {
+    "lhs": 13704500.0,
+    "name": "is_gross_profit",
+    "passed": true,
+    "period": "current",
+    "rhs": 13704500.0
+   },
+   {
+    "lhs": 6284439.0,
+    "name": "is_gross_profit",
+    "passed": true,
+    "period": "prior",
+    "rhs": 6284439.0
+   },
+   {
+    "lhs": 12544145.0,
+    "name": "is_operating_income",
+    "passed": true,
+    "period": "current",
+    "rhs": 12544145.0
+   },
+   {
+    "lhs": 5689415.0,
+    "name": "is_operating_income",
+    "passed": true,
+    "period": "prior",
+    "rhs": 5689415.0
+   },
+   {
+    "lhs": 13470254.0,
+    "name": "is_pretax",
+    "passed": true,
+    "period": "current",
+    "rhs": 13470254.0
+   },
+   {
+    "lhs": 4032934.0,
+    "name": "is_pretax",
+    "passed": true,
+    "period": "prior",
+    "rhs": 4032934.0
+   },
+   {
+    "lhs": 10573871.0,
+    "name": "is_net_income",
+    "passed": true,
+    "period": "current",
+    "rhs": 10573871.0
+   },
+   {
+    "lhs": 3125576.0,
+    "name": "is_net_income",
+    "passed": true,
+    "period": "prior",
+    "rhs": 3125576.0
+   },
+   {
+    "lhs": 5304559.0,
+    "name": "cf_net_change",
+    "passed": true,
+    "period": "current",
+    "rhs": 5304559.0
+   },
+   {
+    "lhs": 2216738.0,
+    "name": "cf_net_change",
+    "passed": true,
+    "period": "prior",
+    "rhs": 2216738.0
+   },
+   {
+    "lhs": 29384179.0,
+    "name": "cf_ending",
+    "passed": true,
+    "period": "current",
+    "rhs": 29384179.0
+   },
+   {
+    "lhs": 19705092.0,
+    "name": "cf_ending",
+    "passed": true,
+    "period": "prior",
+    "rhs": 19705092.0
+   },
+   {
+    "lhs": 29384179.0,
+    "name": "cf_ending_eq_bs_cash",
+    "passed": true,
+    "period": "current",
+    "rhs": 29384179.0
+   },
+   {
+    "lhs": 19705092.0,
+    "name": "cf_ending_eq_bs_cash",
+    "passed": true,
+    "period": "prior",
+    "rhs": 19705092.0
+   },
+   {
+    "lhs": 13470254.0,
+    "name": "cf_pretax_eq_is",
+    "passed": true,
+    "period": "current",
+    "rhs": 13470254.0
+   },
+   {
+    "lhs": 4032934.0,
+    "name": "cf_pretax_eq_is",
+    "passed": true,
+    "period": "prior",
+    "rhs": 4032934.0
+   }
+  ],
+  "rows": [
+   {
+    "code": "1100",
+    "columns": [
+     29384179.0,
+     24079620.0,
+     19705092.0
+    ],
+    "current": 29384179.0,
+    "current_pct": 62.0,
+    "key": "cash",
+    "label": "現金及約當現金",
+    "line_idx": 7,
+    "note": null,
+    "page": 4,
+    "prior": 24079620.0,
+    "prior_pct": 69.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1136",
+    "columns": [
+     23435.0,
+     4490.0,
+     6122.0
+    ],
+    "current": 23435.0,
+    "current_pct": null,
+    "key": null,
+    "label": "按攤銷後成本衡量之金融資產-流動",
+    "line_idx": 8,
+    "note": null,
+    "page": 4,
+    "prior": 4490.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1151",
+    "columns": [
+     34274.0,
+     39489.0,
+     39655.0
+    ],
+    "current": 34274.0,
+    "current_pct": null,
+    "key": "notes_receivable",
+    "label": "應收票據",
+    "line_idx": 10,
+    "note": null,
+    "page": 4,
+    "prior": 39489.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1170",
+    "columns": [
+     10443402.0,
+     4590182.0,
+     3700026.0
+    ],
+    "current": 10443402.0,
+    "current_pct": 22.0,
+    "key": "accounts_receivable",
+    "label": "應收帳款淨額",
+    "line_idx": 11,
+    "note": null,
+    "page": 4,
+    "prior": 4590182.0,
+    "prior_pct": 13.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1200",
+    "columns": [
+     71533.0,
+     57305.0,
+     47034.0
+    ],
+    "current": 71533.0,
+    "current_pct": null,
+    "key": "other_receivables",
+    "label": "其他應收款",
+    "line_idx": 12,
+    "note": null,
+    "page": 4,
+    "prior": 57305.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1310",
+    "columns": [
+     1653826.0,
+     1165252.0,
+     1092147.0
+    ],
+    "current": 1653826.0,
+    "current_pct": 4.0,
+    "key": "inventories",
+    "label": "存貨",
+    "line_idx": 13,
+    "note": null,
+    "page": 4,
+    "prior": 1165252.0,
+    "prior_pct": 3.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1479",
+    "columns": [
+     48073.0,
+     53630.0,
+     38075.0
+    ],
+    "current": 48073.0,
+    "current_pct": null,
+    "key": "other_current_assets",
+    "label": "其他流動資產",
+    "line_idx": 14,
+    "note": null,
+    "page": 4,
+    "prior": 53630.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "11XX",
+    "columns": [
+     41658722.0,
+     29989968.0,
+     24628151.0
+    ],
+    "current": 41658722.0,
+    "current_pct": 88.0,
+    "key": "total_current_assets",
+    "label": "流動資產總計",
+    "line_idx": 15,
+    "note": null,
+    "page": 4,
+    "prior": 29989968.0,
+    "prior_pct": 85.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1600",
+    "columns": [
+     4110261.0,
+     3881605.0,
+     3349239.0
+    ],
+    "current": 4110261.0,
+    "current_pct": 9.0,
+    "key": "ppe",
+    "label": "不動產、廠房及設備",
+    "line_idx": 17,
+    "note": null,
+    "page": 4,
+    "prior": 3881605.0,
+    "prior_pct": 11.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1755",
+    "columns": [
+     1186747.0,
+     1129421.0,
+     1146931.0
+    ],
+    "current": 1186747.0,
+    "current_pct": 3.0,
+    "key": "right_of_use_assets",
+    "label": "使用權資產",
+    "line_idx": 18,
+    "note": null,
+    "page": 4,
+    "prior": 1129421.0,
+    "prior_pct": 4.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1801",
+    "columns": [
+     6993.0,
+     6038.0,
+     5640.0
+    ],
+    "current": 6993.0,
+    "current_pct": null,
+    "key": null,
+    "label": "電腦軟體",
+    "line_idx": 19,
+    "note": null,
+    "page": 4,
+    "prior": 6038.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1840",
+    "columns": [
+     47065.0,
+     51432.0,
+     279670.0
+    ],
+    "current": 47065.0,
+    "current_pct": null,
+    "key": "deferred_tax_assets",
+    "label": "遞延所得稅資產",
+    "line_idx": 20,
+    "note": null,
+    "page": 4,
+    "prior": 51432.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1915",
+    "columns": [
+     93249.0,
+     18161.0,
+     4756.0
+    ],
+    "current": 93249.0,
+    "current_pct": null,
+    "key": "prepaid_equipment",
+    "label": "預付設備款",
+    "line_idx": 21,
+    "note": null,
+    "page": 4,
+    "prior": 18161.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1920",
+    "columns": [
+     7643.0,
+     6811.0,
+     6271.0
+    ],
+    "current": 7643.0,
+    "current_pct": null,
+    "key": "refundable_deposits",
+    "label": "存出保證金",
+    "line_idx": 22,
+    "note": null,
+    "page": 4,
+    "prior": 6811.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "15XX",
+    "columns": [
+     5451958.0,
+     5093468.0,
+     4792507.0
+    ],
+    "current": 5451958.0,
+    "current_pct": 12.0,
+    "key": "total_noncurrent_assets",
+    "label": "非流動資產總計",
+    "line_idx": 23,
+    "note": null,
+    "page": 4,
+    "prior": 5093468.0,
+    "prior_pct": 15.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1XXX",
+    "columns": [
+     47110680.0,
+     35083436.0,
+     29420658.0
+    ],
+    "current": 47110680.0,
+    "current_pct": 100.0,
+    "key": "total_assets",
+    "label": "資產總計",
+    "line_idx": 24,
+    "note": null,
+    "page": 4,
+    "prior": 35083436.0,
+    "prior_pct": 100.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "2150",
+    "columns": [
+     591194.0,
+     483618.0,
+     406029.0
+    ],
+    "current": 591194.0,
+    "current_pct": 1.0,
+    "key": "notes_payable",
+    "label": "應付票據",
+    "line_idx": 27,
+    "note": null,
+    "page": 4,
+    "prior": 483618.0,
+    "prior_pct": 1.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2170",
+    "columns": [
+     279682.0,
+     225216.0,
+     168440.0
+    ],
+    "current": 279682.0,
+    "current_pct": 1.0,
+    "key": "accounts_payable",
+    "label": "應付帳款",
+    "line_idx": 28,
+    "note": null,
+    "page": 4,
+    "prior": 225216.0,
+    "prior_pct": 1.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2216",
+    "columns": [
+     4860151.0,
+     null,
+     3068566.0
+    ],
+    "current": 4860151.0,
+    "current_pct": 11.0,
+    "key": null,
+    "label": "應付股利",
+    "line_idx": 29,
+    "note": null,
+    "page": 4,
+    "prior": null,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2219",
+    "columns": [
+     2405427.0,
+     1898158.0,
+     1209834.0
+    ],
+    "current": 2405427.0,
+    "current_pct": 5.0,
+    "key": "other_payables",
+    "label": "其他應付款",
+    "line_idx": 30,
+    "note": null,
+    "page": 4,
+    "prior": 1898158.0,
+    "prior_pct": 6.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2230",
+    "columns": [
+     3337389.0,
+     2552911.0,
+     1277624.0
+    ],
+    "current": 3337389.0,
+    "current_pct": 7.0,
+    "key": "current_tax_liabilities",
+    "label": "本期所得稅負債",
+    "line_idx": 31,
+    "note": null,
+    "page": 4,
+    "prior": 2552911.0,
+    "prior_pct": 7.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2280",
+    "columns": [
+     28811.0,
+     26807.0,
+     26559.0
+    ],
+    "current": 28811.0,
+    "current_pct": null,
+    "key": "lease_liabilities_current",
+    "label": "租賃負債-流動",
+    "line_idx": 32,
+    "note": null,
+    "page": 4,
+    "prior": 26807.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2320",
+    "columns": [
+     72525.0,
+     99078.0,
+     127367.0
+    ],
+    "current": 72525.0,
+    "current_pct": null,
+    "key": "long_term_borrowings_current",
+    "label": "一年內到期之長期借款",
+    "line_idx": 33,
+    "note": null,
+    "page": 4,
+    "prior": 99078.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2365",
+    "columns": [
+     55903.0,
+     23578.0,
+     42757.0
+    ],
+    "current": 55903.0,
+    "current_pct": null,
+    "key": null,
+    "label": "退款負債-流動",
+    "line_idx": 34,
+    "note": null,
+    "page": 4,
+    "prior": 23578.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2399",
+    "columns": [
+     66801.0,
+     57579.0,
+     52938.0
+    ],
+    "current": 66801.0,
+    "current_pct": null,
+    "key": "other_current_liabilities",
+    "label": "其他流動負債",
+    "line_idx": 35,
+    "note": null,
+    "page": 4,
+    "prior": 57579.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "21XX",
+    "columns": [
+     11697883.0,
+     5366945.0,
+     6380114.0
+    ],
+    "current": 11697883.0,
+    "current_pct": 25.0,
+    "key": "total_current_liabilities",
+    "label": "流動負債總計",
+    "line_idx": 36,
+    "note": null,
+    "page": 4,
+    "prior": 5366945.0,
+    "prior_pct": 15.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2540",
+    "columns": [
+     238735.0,
+     377150.0,
+     550718.0
+    ],
+    "current": 238735.0,
+    "current_pct": null,
+    "key": "long_term_borrowings",
+    "label": "長期借款",
+    "line_idx": 38,
+    "note": null,
+    "page": 4,
+    "prior": 377150.0,
+    "prior_pct": 1.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2570",
+    "columns": [
+     186040.0,
+     138677.0,
+     48275.0
+    ],
+    "current": 186040.0,
+    "current_pct": null,
+    "key": "deferred_tax_liabilities",
+    "label": "遞延所得稅負債",
+    "line_idx": 39,
+    "note": null,
+    "page": 4,
+    "prior": 138677.0,
+    "prior_pct": 1.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2580",
+    "columns": [
+     1206207.0,
+     1146401.0,
+     1159867.0
+    ],
+    "current": 1206207.0,
+    "current_pct": 3.0,
+    "key": "lease_liabilities_noncurrent",
+    "label": "租賃負債-非流動",
+    "line_idx": 40,
+    "note": null,
+    "page": 4,
+    "prior": 1146401.0,
+    "prior_pct": 3.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2630",
+    "columns": [
+     17457.0,
+     17784.0,
+     18110.0
+    ],
+    "current": 17457.0,
+    "current_pct": null,
+    "key": null,
+    "label": "長期遞延收入",
+    "line_idx": 41,
+    "note": null,
+    "page": 4,
+    "prior": 17784.0,
+    "prior_pct": null,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2640",
+    "columns": [
+     10520.0,
+     10520.0,
+     6447.0
+    ],
+    "current": 10520.0,
+    "current_pct": null,
+    "key": null,
+    "label": "淨確定福利負債",
+    "line_idx": 42,
+    "note": null,
+    "page": 4,
+    "prior": 10520.0,
+    "prior_pct": null,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "25XX",
+    "columns": [
+     1658959.0,
+     1690532.0,
+     1783417.0
+    ],
+    "current": 1658959.0,
+    "current_pct": 3.0,
+    "key": "total_noncurrent_liabilities",
+    "label": "非流動負債總計",
+    "line_idx": 43,
+    "note": null,
+    "page": 4,
+    "prior": 1690532.0,
+    "prior_pct": 5.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2XXX",
+    "columns": [
+     13356842.0,
+     7057477.0,
+     8163531.0
+    ],
+    "current": 13356842.0,
+    "current_pct": 28.0,
+    "key": "total_liabilities",
+    "label": "負債總計",
+    "line_idx": 44,
+    "note": null,
+    "page": 4,
+    "prior": 7057477.0,
+    "prior_pct": 20.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "3110",
+    "columns": [
+     952971.0,
+     952971.0,
+     952971.0
+    ],
+    "current": 952971.0,
+    "current_pct": 2.0,
+    "key": "common_stock",
+    "label": "普通股股本",
+    "line_idx": 46,
+    "note": null,
+    "page": 4,
+    "prior": 952971.0,
+    "prior_pct": 3.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "3200",
+    "columns": [
+     796691.0,
+     796691.0,
+     796691.0
+    ],
+    "current": 796691.0,
+    "current_pct": 2.0,
+    "key": "capital_surplus",
+    "label": "資本公積",
+    "line_idx": 47,
+    "note": null,
+    "page": 4,
+    "prior": 796691.0,
+    "prior_pct": 2.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "3310",
+    "columns": [
+     3918875.0,
+     2935583.0,
+     2935583.0
+    ],
+    "current": 3918875.0,
+    "current_pct": 8.0,
+    "key": "legal_reserve",
+    "label": "法定盈餘公積",
+    "line_idx": 49,
+    "note": null,
+    "page": 4,
+    "prior": 2935583.0,
+    "prior_pct": 8.0,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": "3320",
+    "columns": [
+     6221.0,
+     6221.0,
+     6221.0
+    ],
+    "current": 6221.0,
+    "current_pct": null,
+    "key": "special_reserve",
+    "label": "特別盈餘公積",
+    "line_idx": 50,
+    "note": null,
+    "page": 4,
+    "prior": 6221.0,
+    "prior_pct": null,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": "3350",
+    "columns": [
+     28052273.0,
+     23321845.0,
+     16614494.0
+    ],
+    "current": 28052273.0,
+    "current_pct": 60.0,
+    "key": "unappropriated_earnings",
+    "label": "未分配盈餘",
+    "line_idx": 51,
+    "note": null,
+    "page": 4,
+    "prior": 23321845.0,
+    "prior_pct": 67.0,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": "3300",
+    "columns": [
+     31977369.0,
+     26263649.0,
+     19556298.0
+    ],
+    "current": 31977369.0,
+    "current_pct": 68.0,
+    "key": "retained_earnings",
+    "label": "保留盈餘總計",
+    "line_idx": 52,
+    "note": null,
+    "page": 4,
+    "prior": 26263649.0,
+    "prior_pct": 75.0,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": "3410",
+    "columns": [
+     26807.0,
+     12648.0,
+     -48833.0
+    ],
+    "current": 26807.0,
+    "current_pct": null,
+    "key": null,
+    "label": "國外營運機構財務報表換算之兌換差額",
+    "line_idx": 54,
+    "note": null,
+    "page": 4,
+    "prior": 12648.0,
+    "prior_pct": null,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": "3XXX",
+    "columns": [
+     33753838.0,
+     28025959.0,
+     21257127.0
+    ],
+    "current": 33753838.0,
+    "current_pct": 72.0,
+    "key": "total_equity",
+    "label": "權益總計",
+    "line_idx": 55,
+    "note": null,
+    "page": 4,
+    "prior": 28025959.0,
+    "prior_pct": 80.0,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     47110680.0,
+     35083436.0,
+     29420658.0
+    ],
+    "current": 47110680.0,
+    "current_pct": 100.0,
+    "key": "total_liabilities_and_equity",
+    "label": "負債及權益總計",
+    "line_idx": 56,
+    "note": null,
+    "page": 4,
+    "prior": 35083436.0,
+    "prior_pct": 100.0,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": "4000",
+    "columns": [
+     10830041.0,
+     4228734.0,
+     16279766.0,
+     8182933.0
+    ],
+    "current": 16279766.0,
+    "current_pct": 100.0,
+    "key": "revenue",
+    "label": "營業收入",
+    "line_idx": 8,
+    "note": null,
+    "page": 5,
+    "prior": 8182933.0,
+    "prior_pct": 100.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": "5000",
+    "columns": [
+     1362156.0,
+     951653.0,
+     2575266.0,
+     1898494.0
+    ],
+    "current": 2575266.0,
+    "current_pct": 16.0,
+    "key": "cogs",
+    "label": "營業成本",
+    "line_idx": 9,
+    "note": null,
+    "page": 5,
+    "prior": 1898494.0,
+    "prior_pct": 23.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": "5900",
+    "columns": [
+     9467885.0,
+     3277081.0,
+     13704500.0,
+     6284439.0
+    ],
+    "current": 13704500.0,
+    "current_pct": 84.0,
+    "key": "gross_profit",
+    "label": "營業毛利",
+    "line_idx": 10,
+    "note": null,
+    "page": 5,
+    "prior": 6284439.0,
+    "prior_pct": 77.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": "6100",
+    "columns": [
+     183944.0,
+     82290.0,
+     500643.0,
+     145457.0
+    ],
+    "current": 500643.0,
+    "current_pct": 3.0,
+    "key": "selling_expenses",
+    "label": "推銷費用",
+    "line_idx": 12,
+    "note": null,
+    "page": 5,
+    "prior": 145457.0,
+    "prior_pct": 2.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6200",
+    "columns": [
+     175673.0,
+     76138.0,
+     298632.0,
+     177592.0
+    ],
+    "current": 298632.0,
+    "current_pct": 2.0,
+    "key": "admin_expenses",
+    "label": "管理費用",
+    "line_idx": 13,
+    "note": null,
+    "page": 5,
+    "prior": 177592.0,
+    "prior_pct": 2.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6300",
+    "columns": [
+     206767.0,
+     86081.0,
+     349238.0,
+     206688.0
+    ],
+    "current": 349238.0,
+    "current_pct": 2.0,
+    "key": "rd_expenses",
+    "label": "研究發展費用",
+    "line_idx": 14,
+    "note": null,
+    "page": 5,
+    "prior": 206688.0,
+    "prior_pct": 3.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6450",
+    "columns": [
+     11705.0,
+     66489.0,
+     11842.0,
+     65287.0
+    ],
+    "current": 11842.0,
+    "current_pct": null,
+    "key": null,
+    "label": "預期信用減損損失",
+    "line_idx": 15,
+    "note": null,
+    "page": 5,
+    "prior": 65287.0,
+    "prior_pct": 1.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6000",
+    "columns": [
+     578089.0,
+     310998.0,
+     1160355.0,
+     595024.0
+    ],
+    "current": 1160355.0,
+    "current_pct": 7.0,
+    "key": "total_opex",
+    "label": "營業費用合計",
+    "line_idx": 16,
+    "note": null,
+    "page": 5,
+    "prior": 595024.0,
+    "prior_pct": 8.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6900",
+    "columns": [
+     8889796.0,
+     2966083.0,
+     12544145.0,
+     5689415.0
+    ],
+    "current": 12544145.0,
+    "current_pct": 77.0,
+    "key": "operating_income",
+    "label": "營業淨利",
+    "line_idx": 17,
+    "note": null,
+    "page": 5,
+    "prior": 5689415.0,
+    "prior_pct": 69.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "7100",
+    "columns": [
+     234510.0,
+     170598.0,
+     439157.0,
+     337454.0
+    ],
+    "current": 439157.0,
+    "current_pct": 3.0,
+    "key": "interest_income",
+    "label": "利息收入",
+    "line_idx": 19,
+    "note": null,
+    "page": 5,
+    "prior": 337454.0,
+    "prior_pct": 4.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7020",
+    "columns": [
+     1260.0,
+     -2230530.0,
+     501656.0,
+     -1977037.0
+    ],
+    "current": 501656.0,
+    "current_pct": 3.0,
+    "key": "other_gains_losses",
+    "label": "其他利益及損失",
+    "line_idx": 20,
+    "note": null,
+    "page": 5,
+    "prior": -1977037.0,
+    "prior_pct": -24.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7050",
+    "columns": [
+     -7072.0,
+     -8369.0,
+     -14704.0,
+     -16898.0
+    ],
+    "current": -14704.0,
+    "current_pct": null,
+    "key": "finance_costs",
+    "label": "財務成本",
+    "line_idx": 21,
+    "note": null,
+    "page": 5,
+    "prior": -16898.0,
+    "prior_pct": null,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7000",
+    "columns": [
+     228698.0,
+     -2068301.0,
+     926109.0,
+     -1656481.0
+    ],
+    "current": 926109.0,
+    "current_pct": 6.0,
+    "key": "nonoperating_total",
+    "label": "合計",
+    "line_idx": 22,
+    "note": null,
+    "page": 5,
+    "prior": -1656481.0,
+    "prior_pct": -20.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7900",
+    "columns": [
+     9118494.0,
+     897782.0,
+     13470254.0,
+     4032934.0
+    ],
+    "current": 13470254.0,
+    "current_pct": 83.0,
+    "key": "pretax_income",
+    "label": "稅前淨利",
+    "line_idx": 23,
+    "note": null,
+    "page": 5,
+    "prior": 4032934.0,
+    "prior_pct": 49.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7950",
+    "columns": [
+     2030433.0,
+     283680.0,
+     2896383.0,
+     907358.0
+    ],
+    "current": 2896383.0,
+    "current_pct": 18.0,
+    "key": "income_tax",
+    "label": "所得稅費用",
+    "line_idx": 24,
+    "note": null,
+    "page": 5,
+    "prior": 907358.0,
+    "prior_pct": 11.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "8200",
+    "columns": [
+     7088061.0,
+     614102.0,
+     10573871.0,
+     3125576.0
+    ],
+    "current": 10573871.0,
+    "current_pct": 65.0,
+    "key": "net_income",
+    "label": "本期淨利",
+    "line_idx": 25,
+    "note": null,
+    "page": 5,
+    "prior": 3125576.0,
+    "prior_pct": 38.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "8361",
+    "columns": [
+     -3394.0,
+     -130097.0,
+     17699.0,
+     -115308.0
+    ],
+    "current": 17699.0,
+    "current_pct": null,
+    "key": "fx_translation_difference",
+    "label": "國外營運機構財務報表換算之兌換差額",
+    "line_idx": 29,
+    "note": null,
+    "page": 5,
+    "prior": -115308.0,
+    "prior_pct": -1.0,
+    "section": "其他綜合損益",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     679.0,
+     26020.0,
+     -3540.0,
+     23062.0
+    ],
+    "current": -3540.0,
+    "current_pct": null,
+    "key": null,
+    "label": "之項目相關之所得稅",
+    "line_idx": 32,
+    "note": null,
+    "page": 5,
+    "prior": 23062.0,
+    "prior_pct": null,
+    "section": "其他綜合損益",
+    "statement": "is"
+   },
+   {
+    "code": "8300",
+    "columns": [
+     -2715.0,
+     -104077.0,
+     14159.0,
+     -92246.0
+    ],
+    "current": 14159.0,
+    "current_pct": null,
+    "key": "oci",
+    "label": "本期其他綜合損益",
+    "line_idx": 34,
+    "note": null,
+    "page": 5,
+    "prior": -92246.0,
+    "prior_pct": -1.0,
+    "section": "其他綜合損益",
+    "statement": "is"
+   },
+   {
+    "code": "8500",
+    "columns": [
+     7085346.0,
+     510025.0,
+     10588030.0,
+     3033330.0
+    ],
+    "current": 10588030.0,
+    "current_pct": 65.0,
+    "key": "total_comprehensive_income",
+    "label": "本期綜合損益總額",
+    "line_idx": 35,
+    "note": null,
+    "page": 5,
+    "prior": 3033330.0,
+    "prior_pct": 37.0,
+    "section": "其他綜合損益",
+    "statement": "is"
+   },
+   {
+    "code": "8610",
+    "columns": [
+     7088061.0,
+     614102.0,
+     10573871.0,
+     3125576.0
+    ],
+    "current": 10573871.0,
+    "current_pct": 65.0,
+    "key": null,
+    "label": "本公司業主",
+    "line_idx": 37,
+    "note": null,
+    "page": 5,
+    "prior": 3125576.0,
+    "prior_pct": 38.0,
+    "section": "淨利歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "8710",
+    "columns": [
+     7085346.0,
+     510025.0,
+     10588030.0,
+     3033330.0
+    ],
+    "current": 10588030.0,
+    "current_pct": 65.0,
+    "key": null,
+    "label": "本公司業主",
+    "line_idx": 39,
+    "note": null,
+    "page": 5,
+    "prior": 3033330.0,
+    "prior_pct": 37.0,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "9710",
+    "columns": [
+     74.38,
+     6.45,
+     110.96,
+     32.8
+    ],
+    "current": 110.96,
+    "current_pct": null,
+    "key": null,
+    "label": "基本",
+    "line_idx": 41,
+    "note": null,
+    "page": 5,
+    "prior": 32.8,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "9810",
+    "columns": [
+     73.22,
+     6.42,
+     107.77,
+     32.24
+    ],
+    "current": 107.77,
+    "current_pct": null,
+    "key": null,
+    "label": "稀釋",
+    "line_idx": 42,
+    "note": null,
+    "page": 5,
+    "prior": 32.24,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "A00010",
+    "columns": [
+     13470254.0,
+     4032934.0
+    ],
+    "current": 13470254.0,
+    "current_pct": null,
+    "key": "pretax_income_cf",
+    "label": "稅前淨利",
+    "line_idx": 7,
+    "note": null,
+    "page": 7,
+    "prior": 4032934.0,
+    "prior_pct": null,
+    "section": "營業活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "A20100",
+    "columns": [
+     205116.0,
+     173569.0
+    ],
+    "current": 205116.0,
+    "current_pct": null,
+    "key": null,
+    "label": "折舊",
+    "line_idx": 9,
+    "note": null,
+    "page": 7,
+    "prior": 173569.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A20200",
+    "columns": [
+     1769.0,
+     1101.0
+    ],
+    "current": 1769.0,
+    "current_pct": null,
+    "key": null,
+    "label": "攤銷",
+    "line_idx": 10,
+    "note": null,
+    "page": 7,
+    "prior": 1101.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A20300",
+    "columns": [
+     11842.0,
+     65287.0
+    ],
+    "current": 11842.0,
+    "current_pct": null,
+    "key": "impairment_loss_receivables",
+    "label": "預期信用減損損失",
+    "line_idx": 11,
+    "note": null,
+    "page": 7,
+    "prior": 65287.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A20900",
+    "columns": [
+     14704.0,
+     16898.0
+    ],
+    "current": 14704.0,
+    "current_pct": null,
+    "key": "finance_costs_adj",
+    "label": "財務成本",
+    "line_idx": 12,
+    "note": null,
+    "page": 7,
+    "prior": 16898.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A21200",
+    "columns": [
+     -439157.0,
+     -337454.0
+    ],
+    "current": -439157.0,
+    "current_pct": null,
+    "key": "interest_income_adj",
+    "label": "利息收入",
+    "line_idx": 13,
+    "note": null,
+    "page": 7,
+    "prior": -337454.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A22500",
+    "columns": [
+     -459.0,
+     -76.0
+    ],
+    "current": -459.0,
+    "current_pct": null,
+    "key": null,
+    "label": "處分不動產、廠房及設備利益",
+    "line_idx": 14,
+    "note": null,
+    "page": 7,
+    "prior": -76.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A23700",
+    "columns": [
+     null,
+     2928.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": null,
+    "label": "存貨跌價損失",
+    "line_idx": 15,
+    "note": null,
+    "page": 7,
+    "prior": 2928.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A23800",
+    "columns": [
+     -2998.0,
+     null
+    ],
+    "current": -2998.0,
+    "current_pct": null,
+    "key": null,
+    "label": "存貨跌價回升利益",
+    "line_idx": 16,
+    "note": null,
+    "page": 7,
+    "prior": null,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A24100",
+    "columns": [
+     -207174.0,
+     1671395.0
+    ],
+    "current": -207174.0,
+    "current_pct": null,
+    "key": null,
+    "label": "未實現外幣兌換損失(利益)",
+    "line_idx": 17,
+    "note": null,
+    "page": 7,
+    "prior": 1671395.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A29900",
+    "columns": [
+     36349.0,
+     6578.0
+    ],
+    "current": 36349.0,
+    "current_pct": null,
+    "key": null,
+    "label": "提列退款負債",
+    "line_idx": 18,
+    "note": null,
+    "page": 7,
+    "prior": 6578.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A29900",
+    "columns": [
+     -327.0,
+     -327.0
+    ],
+    "current": -327.0,
+    "current_pct": null,
+    "key": null,
+    "label": "長期遞延收入攤銷",
+    "line_idx": 19,
+    "note": null,
+    "page": 7,
+    "prior": -327.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A31130",
+    "columns": [
+     5215.0,
+     12016.0
+    ],
+    "current": 5215.0,
+    "current_pct": null,
+    "key": "change_notes_receivable",
+    "label": "應收票據",
+    "line_idx": 21,
+    "note": null,
+    "page": 7,
+    "prior": 12016.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A31150",
+    "columns": [
+     -5865062.0,
+     -690111.0
+    ],
+    "current": -5865062.0,
+    "current_pct": null,
+    "key": "change_receivables",
+    "label": "應收帳款",
+    "line_idx": 22,
+    "note": null,
+    "page": 7,
+    "prior": -690111.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A31180",
+    "columns": [
+     -9290.0,
+     3051.0
+    ],
+    "current": -9290.0,
+    "current_pct": null,
+    "key": "change_other_receivables",
+    "label": "其他應收款",
+    "line_idx": 23,
+    "note": null,
+    "page": 7,
+    "prior": 3051.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A31200",
+    "columns": [
+     -485576.0,
+     135906.0
+    ],
+    "current": -485576.0,
+    "current_pct": null,
+    "key": "change_inventories",
+    "label": "存貨",
+    "line_idx": 24,
+    "note": null,
+    "page": 7,
+    "prior": 135906.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A31240",
+    "columns": [
+     5557.0,
+     4628.0
+    ],
+    "current": 5557.0,
+    "current_pct": null,
+    "key": "change_other_current_assets",
+    "label": "其他流動資產",
+    "line_idx": 25,
+    "note": null,
+    "page": 7,
+    "prior": 4628.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A32130",
+    "columns": [
+     108895.0,
+     42083.0
+    ],
+    "current": 108895.0,
+    "current_pct": null,
+    "key": "change_notes_payable",
+    "label": "應付票據",
+    "line_idx": 26,
+    "note": null,
+    "page": 7,
+    "prior": 42083.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A32150",
+    "columns": [
+     54466.0,
+     37228.0
+    ],
+    "current": 54466.0,
+    "current_pct": null,
+    "key": "change_payables",
+    "label": "應付帳款",
+    "line_idx": 27,
+    "note": null,
+    "page": 7,
+    "prior": 37228.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A32180",
+    "columns": [
+     507547.0,
+     -117557.0
+    ],
+    "current": 507547.0,
+    "current_pct": null,
+    "key": "change_other_payables",
+    "label": "其他應付款",
+    "line_idx": 28,
+    "note": null,
+    "page": 7,
+    "prior": -117557.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A32200",
+    "columns": [
+     -4024.0,
+     -1030.0
+    ],
+    "current": -4024.0,
+    "current_pct": null,
+    "key": null,
+    "label": "退款負債",
+    "line_idx": 29,
+    "note": null,
+    "page": 7,
+    "prior": -1030.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A32230",
+    "columns": [
+     9222.0,
+     20904.0
+    ],
+    "current": 9222.0,
+    "current_pct": null,
+    "key": "change_other_current_liabilities",
+    "label": "其他流動負債",
+    "line_idx": 30,
+    "note": null,
+    "page": 7,
+    "prior": 20904.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A32240",
+    "columns": [
+     3.0,
+     -125.0
+    ],
+    "current": 3.0,
+    "current_pct": null,
+    "key": null,
+    "label": "淨確定福利負債",
+    "line_idx": 31,
+    "note": null,
+    "page": 7,
+    "prior": -125.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A33000",
+    "columns": [
+     7416872.0,
+     5079826.0
+    ],
+    "current": 7416872.0,
+    "current_pct": null,
+    "key": "cash_from_operations_before_tax",
+    "label": "營運產生之現金流入",
+    "line_idx": 32,
+    "note": null,
+    "page": 7,
+    "prior": 5079826.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A33100",
+    "columns": [
+     434219.0,
+     340601.0
+    ],
+    "current": 434219.0,
+    "current_pct": null,
+    "key": "interest_received",
+    "label": "收取之利息",
+    "line_idx": 33,
+    "note": null,
+    "page": 7,
+    "prior": 340601.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A33300",
+    "columns": [
+     -13802.0,
+     -15153.0
+    ],
+    "current": -13802.0,
+    "current_pct": null,
+    "key": "interest_paid",
+    "label": "支付之利息",
+    "line_idx": 34,
+    "note": null,
+    "page": 7,
+    "prior": -15153.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "A33500",
+    "columns": [
+     -2063715.0,
+     -1079699.0
+    ],
+    "current": -2063715.0,
+    "current_pct": null,
+    "key": "income_tax_paid",
+    "label": "支付之所得稅",
+    "line_idx": 35,
+    "note": null,
+    "page": 7,
+    "prior": -1079699.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "AAAA",
+    "columns": [
+     5773574.0,
+     4325575.0
+    ],
+    "current": 5773574.0,
+    "current_pct": null,
+    "key": "cfo",
+    "label": "營業活動之淨現金流入",
+    "line_idx": 36,
+    "note": null,
+    "page": 7,
+    "prior": 4325575.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": "B00040",
+    "columns": [
+     -23435.0,
+     -6122.0
+    ],
+    "current": -23435.0,
+    "current_pct": null,
+    "key": null,
+    "label": "取得按攤銷後成本衡量之金融資產",
+    "line_idx": 4,
+    "note": null,
+    "page": 8,
+    "prior": -6122.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "B00050",
+    "columns": [
+     4490.0,
+     6715.0
+    ],
+    "current": 4490.0,
+    "current_pct": null,
+    "key": null,
+    "label": "處分按攤銷後成本衡量之金融資產",
+    "line_idx": 5,
+    "note": null,
+    "page": 8,
+    "prior": 6715.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "B02700",
+    "columns": [
+     -483040.0,
+     -248910.0
+    ],
+    "current": -483040.0,
+    "current_pct": null,
+    "key": null,
+    "label": "購置不動產、廠房及設備",
+    "line_idx": 6,
+    "note": null,
+    "page": 8,
+    "prior": -248910.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "B02800",
+    "columns": [
+     1054.0,
+     76.0
+    ],
+    "current": 1054.0,
+    "current_pct": null,
+    "key": "ppe_disposal_proceeds",
+    "label": "處分不動產、廠房及設備價款",
+    "line_idx": 7,
+    "note": null,
+    "page": 8,
+    "prior": 76.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "B03700",
+    "columns": [
+     -832.0,
+     -2232.0
+    ],
+    "current": -832.0,
+    "current_pct": null,
+    "key": null,
+    "label": "存出保證金增加",
+    "line_idx": 8,
+    "note": null,
+    "page": 8,
+    "prior": -2232.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "B04500",
+    "columns": [
+     -2724.0,
+     -4476.0
+    ],
+    "current": -2724.0,
+    "current_pct": null,
+    "key": "intangible_purchase",
+    "label": "購置無形資產",
+    "line_idx": 9,
+    "note": null,
+    "page": 8,
+    "prior": -4476.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "BBBB",
+    "columns": [
+     -504487.0,
+     -254949.0
+    ],
+    "current": -504487.0,
+    "current_pct": null,
+    "key": "cfi",
+    "label": "投資活動之淨現金流出",
+    "line_idx": 10,
+    "note": null,
+    "page": 8,
+    "prior": -254949.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "C01700",
+    "columns": [
+     -165953.0,
+     -64924.0
+    ],
+    "current": -165953.0,
+    "current_pct": null,
+    "key": "long_term_borrowings_repayment",
+    "label": "償還長期借款",
+    "line_idx": 12,
+    "note": null,
+    "page": 8,
+    "prior": -64924.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "C04020",
+    "columns": [
+     -14205.0,
+     -13096.0
+    ],
+    "current": -14205.0,
+    "current_pct": null,
+    "key": "lease_principal_repayment",
+    "label": "租賃負債本金償還",
+    "line_idx": 13,
+    "note": null,
+    "page": 8,
+    "prior": -13096.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "CCCC",
+    "columns": [
+     -180158.0,
+     -78020.0
+    ],
+    "current": -180158.0,
+    "current_pct": null,
+    "key": "cff",
+    "label": "籌資活動之淨現金流出",
+    "line_idx": 14,
+    "note": null,
+    "page": 8,
+    "prior": -78020.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "DDDD",
+    "columns": [
+     215630.0,
+     -1775868.0
+    ],
+    "current": 215630.0,
+    "current_pct": null,
+    "key": "fx_effect",
+    "label": "匯率變動對現金及約當現金之影響",
+    "line_idx": 15,
+    "note": null,
+    "page": 8,
+    "prior": -1775868.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "EEEE",
+    "columns": [
+     5304559.0,
+     2216738.0
+    ],
+    "current": 5304559.0,
+    "current_pct": null,
+    "key": "net_change_in_cash",
+    "label": "現金及約當現金增加數",
+    "line_idx": 16,
+    "note": null,
+    "page": 8,
+    "prior": 2216738.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "E00100",
+    "columns": [
+     24079620.0,
+     17488354.0
+    ],
+    "current": 24079620.0,
+    "current_pct": null,
+    "key": "cash_beginning",
+    "label": "期初現金及約當現金餘額",
+    "line_idx": 17,
+    "note": null,
+    "page": 8,
+    "prior": 17488354.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": "E00200",
+    "columns": [
+     29384179.0,
+     19705092.0
+    ],
+    "current": 29384179.0,
+    "current_pct": null,
+    "key": "cash_ending",
+    "label": "期末現金及約當現金餘額",
+    "line_idx": 18,
+    "note": null,
+    "page": 8,
+    "prior": 19705092.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   }
+  ],
+  "unmapped_labels": [
+   "按攤銷後成本衡量之金融資產-流動",
+   "電腦軟體",
+   "應付股利",
+   "退款負債-流動",
+   "長期遞延收入",
+   "淨確定福利負債",
+   "國外營運機構財務報表換算之兌換差額",
+   "預期信用減損損失",
+   "之項目相關之所得稅",
+   "本公司業主",
+   "基本",
+   "稀釋",
+   "折舊",
+   "攤銷",
+   "處分不動產、廠房及設備利益",
+   "存貨跌價損失",
+   "存貨跌價回升利益",
+   "未實現外幣兌換損失(利益)",
+   "提列退款負債",
+   "長期遞延收入攤銷",
+   "退款負債",
+   "取得按攤銷後成本衡量之金融資產",
+   "處分按攤銷後成本衡量之金融資產",
+   "購置不動產、廠房及設備",
+   "存出保證金增加"
+  ]
+ },
+ "2308_H1": {
+  "_source": "tests/fixtures/tw_equity/fs_h1_pages.json[2308]（HEAD 12cadec 行為）",
+  "checks": [
+   {
+    "lhs": 754433332.0,
+    "name": "bs_assets_eq_liab_equity",
+    "passed": true,
+    "period": "current",
+    "rhs": 754433332.0
+   },
+   {
+    "lhs": 639618600.0,
+    "name": "bs_assets_eq_liab_equity",
+    "passed": true,
+    "period": "prior",
+    "rhs": 639618600.0
+   },
+   {
+    "lhs": 754433332.0,
+    "name": "bs_assets_sum",
+    "passed": true,
+    "period": "current",
+    "rhs": 754433332.0
+   },
+   {
+    "lhs": 639618600.0,
+    "name": "bs_assets_sum",
+    "passed": true,
+    "period": "prior",
+    "rhs": 639618600.0
+   },
+   {
+    "lhs": 754433332.0,
+    "name": "bs_liab_equity_sum",
+    "passed": true,
+    "period": "current",
+    "rhs": 754433332.0
+   },
+   {
+    "lhs": 639618600.0,
+    "name": "bs_liab_equity_sum",
+    "passed": true,
+    "period": "prior",
+    "rhs": 639618600.0
+   },
+   {
+    "lhs": 124268821.0,
+    "name": "is_gross_profit",
+    "passed": true,
+    "period": "current",
+    "rhs": 124268821.0
+   },
+   {
+    "lhs": 81837285.0,
+    "name": "is_gross_profit",
+    "passed": true,
+    "period": "prior",
+    "rhs": 81837285.0
+   },
+   {
+    "lhs": 58987345.0,
+    "name": "is_operating_income",
+    "passed": true,
+    "period": "current",
+    "rhs": 58987345.0
+   },
+   {
+    "lhs": 32704774.0,
+    "name": "is_operating_income",
+    "passed": true,
+    "period": "prior",
+    "rhs": 32704774.0
+   },
+   {
+    "lhs": 66092437.0,
+    "name": "is_pretax",
+    "passed": true,
+    "period": "current",
+    "rhs": 66092437.0
+   },
+   {
+    "lhs": 35234087.0,
+    "name": "is_pretax",
+    "passed": true,
+    "period": "prior",
+    "rhs": 35234087.0
+   },
+   {
+    "lhs": 51003600.0,
+    "name": "is_net_income",
+    "passed": true,
+    "period": "current",
+    "rhs": 51003600.0
+   },
+   {
+    "lhs": 27377052.0,
+    "name": "is_net_income",
+    "passed": true,
+    "period": "prior",
+    "rhs": 27377052.0
+   },
+   {
+    "lhs": 31178029.0,
+    "name": "cf_net_change",
+    "passed": true,
+    "period": "current",
+    "rhs": 31178029.0
+   },
+   {
+    "lhs": 22068718.0,
+    "name": "cf_net_change",
+    "passed": true,
+    "period": "prior",
+    "rhs": 22068718.0
+   },
+   {
+    "lhs": 182350204.0,
+    "name": "cf_ending",
+    "passed": true,
+    "period": "current",
+    "rhs": 182350204.0
+   },
+   {
+    "lhs": 139527968.0,
+    "name": "cf_ending",
+    "passed": true,
+    "period": "prior",
+    "rhs": 139527968.0
+   },
+   {
+    "lhs": 182350204.0,
+    "name": "cf_ending_eq_bs_cash",
+    "passed": true,
+    "period": "current",
+    "rhs": 182350204.0
+   },
+   {
+    "lhs": 139527968.0,
+    "name": "cf_ending_eq_bs_cash",
+    "passed": true,
+    "period": "prior",
+    "rhs": 139527968.0
+   },
+   {
+    "lhs": 66092437.0,
+    "name": "cf_pretax_eq_is",
+    "passed": true,
+    "period": "current",
+    "rhs": 66092437.0
+   },
+   {
+    "lhs": 35234087.0,
+    "name": "cf_pretax_eq_is",
+    "passed": true,
+    "period": "prior",
+    "rhs": 35234087.0
+   }
+  ],
+  "rows": [
+   {
+    "code": "1100",
+    "columns": [
+     182350204.0,
+     151172175.0,
+     139527968.0
+    ],
+    "current": 182350204.0,
+    "current_pct": 24.0,
+    "key": "cash",
+    "label": "現金及約當現金",
+    "line_idx": 7,
+    "note": "六(一)",
+    "page": 7,
+    "prior": 151172175.0,
+    "prior_pct": 24.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1110",
+    "columns": [
+     3944461.0,
+     3724428.0,
+     3697138.0
+    ],
+    "current": 3944461.0,
+    "current_pct": 1.0,
+    "key": "fvtpl_current",
+    "label": "透過損益按公允價值衡量之金融資產-流動",
+    "line_idx": 8,
+    "note": "六(二)",
+    "page": 7,
+    "prior": 3724428.0,
+    "prior_pct": 1.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1136",
+    "columns": [
+     304394.0,
+     216270.0,
+     124286.0
+    ],
+    "current": 304394.0,
+    "current_pct": null,
+    "key": null,
+    "label": "按攤銷後成本衡量之金融資產-流動",
+    "line_idx": 10,
+    "note": "八",
+    "page": 7,
+    "prior": 216270.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1140",
+    "columns": [
+     7217051.0,
+     6729264.0,
+     6510210.0
+    ],
+    "current": 7217051.0,
+    "current_pct": 1.0,
+    "key": null,
+    "label": "合約資產-流動",
+    "line_idx": 12,
+    "note": null,
+    "page": 7,
+    "prior": 6729264.0,
+    "prior_pct": 1.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1150",
+    "columns": [
+     2935688.0,
+     2482652.0,
+     1677296.0
+    ],
+    "current": 2935688.0,
+    "current_pct": null,
+    "key": "notes_receivable",
+    "label": "應收票據淨額",
+    "line_idx": 13,
+    "note": "六(五)",
+    "page": 7,
+    "prior": 2482652.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1170",
+    "columns": [
+     140007907.0,
+     119225016.0,
+     89759182.0
+    ],
+    "current": 140007907.0,
+    "current_pct": 19.0,
+    "key": "accounts_receivable",
+    "label": "應收帳款淨額",
+    "line_idx": 14,
+    "note": "六(五)及八",
+    "page": 7,
+    "prior": 119225016.0,
+    "prior_pct": 19.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1180",
+    "columns": [
+     3179.0,
+     8896.0,
+     6675.0
+    ],
+    "current": 3179.0,
+    "current_pct": null,
+    "key": "accounts_receivable_related",
+    "label": "應收帳款-關係人淨額",
+    "line_idx": 15,
+    "note": "七",
+    "page": 7,
+    "prior": 8896.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1200",
+    "columns": [
+     3214554.0,
+     3303595.0,
+     1754161.0
+    ],
+    "current": 3214554.0,
+    "current_pct": null,
+    "key": "other_receivables",
+    "label": "其他應收款",
+    "line_idx": 16,
+    "note": "七",
+    "page": 7,
+    "prior": 3303595.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1220",
+    "columns": [
+     616184.0,
+     1544048.0,
+     1867014.0
+    ],
+    "current": 616184.0,
+    "current_pct": null,
+    "key": null,
+    "label": "本期所得稅資產",
+    "line_idx": 17,
+    "note": null,
+    "page": 7,
+    "prior": 1544048.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "130X",
+    "columns": [
+     139394174.0,
+     101478308.0,
+     81529671.0
+    ],
+    "current": 139394174.0,
+    "current_pct": 19.0,
+    "key": "inventories",
+    "label": "存貨",
+    "line_idx": 18,
+    "note": "六(六)",
+    "page": 7,
+    "prior": 101478308.0,
+    "prior_pct": 16.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1410",
+    "columns": [
+     6774720.0,
+     5548428.0,
+     5056108.0
+    ],
+    "current": 6774720.0,
+    "current_pct": 1.0,
+    "key": "prepayments",
+    "label": "預付款項",
+    "line_idx": 19,
+    "note": null,
+    "page": 7,
+    "prior": 5548428.0,
+    "prior_pct": 1.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1460",
+    "columns": [
+     null,
+     192877.0,
+     null
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": null,
+    "label": "待出售非流動資產淨額",
+    "line_idx": 20,
+    "note": null,
+    "page": 7,
+    "prior": 192877.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1470",
+    "columns": [
+     287084.0,
+     154830.0,
+     105549.0
+    ],
+    "current": 287084.0,
+    "current_pct": null,
+    "key": "other_current_assets",
+    "label": "其他流動資產",
+    "line_idx": 21,
+    "note": null,
+    "page": 7,
+    "prior": 154830.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "11XX",
+    "columns": [
+     487049600.0,
+     395780787.0,
+     331615258.0
+    ],
+    "current": 487049600.0,
+    "current_pct": 65.0,
+    "key": "total_current_assets",
+    "label": "流動資產合計",
+    "line_idx": 22,
+    "note": null,
+    "page": 7,
+    "prior": 395780787.0,
+    "prior_pct": 62.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1510",
+    "columns": [
+     3075782.0,
+     1617073.0,
+     1517658.0
+    ],
+    "current": 3075782.0,
+    "current_pct": null,
+    "key": null,
+    "label": "透過損益按公允價值衡量之金融資產-非流動",
+    "line_idx": 24,
+    "note": "六(二)",
+    "page": 7,
+    "prior": 1617073.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1517",
+    "columns": [
+     4554830.0,
+     1925901.0,
+     1750412.0
+    ],
+    "current": 4554830.0,
+    "current_pct": 1.0,
+    "key": "fvoci_noncurrent",
+    "label": "透過其他綜合損益按公允價值衡量之金融資產-非流動",
+    "line_idx": 26,
+    "note": "六(三)",
+    "page": 7,
+    "prior": 1925901.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1560",
+    "columns": [
+     771617.0,
+     323861.0,
+     367380.0
+    ],
+    "current": 771617.0,
+    "current_pct": null,
+    "key": null,
+    "label": "合約資產-非流動",
+    "line_idx": 28,
+    "note": null,
+    "page": 7,
+    "prior": 323861.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1550",
+    "columns": [
+     357045.0,
+     380269.0,
+     222129.0
+    ],
+    "current": 357045.0,
+    "current_pct": null,
+    "key": "equity_method_investments",
+    "label": "採用權益法之投資",
+    "line_idx": 29,
+    "note": null,
+    "page": 7,
+    "prior": 380269.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1600",
+    "columns": [
+     158397548.0,
+     142039843.0,
+     117057726.0
+    ],
+    "current": 158397548.0,
+    "current_pct": 21.0,
+    "key": "ppe",
+    "label": "不動產、廠房及設備",
+    "line_idx": 30,
+    "note": "六(七)及八",
+    "page": 7,
+    "prior": 142039843.0,
+    "prior_pct": 22.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1755",
+    "columns": [
+     4903607.0,
+     4559183.0,
+     4319248.0
+    ],
+    "current": 4903607.0,
+    "current_pct": 1.0,
+    "key": "right_of_use_assets",
+    "label": "使用權資產",
+    "line_idx": 31,
+    "note": "六(八)",
+    "page": 7,
+    "prior": 4559183.0,
+    "prior_pct": 1.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1760",
+    "columns": [
+     2165750.0,
+     2175655.0,
+     4697479.0
+    ],
+    "current": 2165750.0,
+    "current_pct": null,
+    "key": null,
+    "label": "投資性不動產淨額",
+    "line_idx": 32,
+    "note": "六(九)",
+    "page": 7,
+    "prior": 2175655.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1780",
+    "columns": [
+     74962513.0,
+     75326273.0,
+     71869905.0
+    ],
+    "current": 74962513.0,
+    "current_pct": 10.0,
+    "key": "intangible_assets",
+    "label": "無形資產",
+    "line_idx": 33,
+    "note": "六(十)",
+    "page": 7,
+    "prior": 75326273.0,
+    "prior_pct": 12.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1840",
+    "columns": [
+     10853075.0,
+     9723433.0,
+     9072147.0
+    ],
+    "current": 10853075.0,
+    "current_pct": 1.0,
+    "key": "deferred_tax_assets",
+    "label": "遞延所得稅資產",
+    "line_idx": 34,
+    "note": null,
+    "page": 7,
+    "prior": 9723433.0,
+    "prior_pct": 2.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1900",
+    "columns": [
+     7341965.0,
+     5766322.0,
+     3929574.0
+    ],
+    "current": 7341965.0,
+    "current_pct": 1.0,
+    "key": "other_noncurrent_assets",
+    "label": "其他非流動資產",
+    "line_idx": 35,
+    "note": "六(五)(十一)及八",
+    "page": 7,
+    "prior": 5766322.0,
+    "prior_pct": 1.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "15XX",
+    "columns": [
+     267383732.0,
+     243837813.0,
+     214803658.0
+    ],
+    "current": 267383732.0,
+    "current_pct": 35.0,
+    "key": "total_noncurrent_assets",
+    "label": "非流動資產合計",
+    "line_idx": 37,
+    "note": null,
+    "page": 7,
+    "prior": 243837813.0,
+    "prior_pct": 38.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "1XXX",
+    "columns": [
+     754433332.0,
+     639618600.0,
+     546418916.0
+    ],
+    "current": 754433332.0,
+    "current_pct": 100.0,
+    "key": "total_assets",
+    "label": "資產總計",
+    "line_idx": 38,
+    "note": null,
+    "page": 7,
+    "prior": 639618600.0,
+    "prior_pct": 100.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": "2100",
+    "columns": [
+     16301633.0,
+     2364109.0,
+     1609213.0
+    ],
+    "current": 16301633.0,
+    "current_pct": 2.0,
+    "key": "short_term_borrowings",
+    "label": "短期借款",
+    "line_idx": 7,
+    "note": "六(十二)",
+    "page": 8,
+    "prior": 2364109.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2120",
+    "columns": [
+     701899.0,
+     101290.0,
+     149314.0
+    ],
+    "current": 701899.0,
+    "current_pct": null,
+    "key": null,
+    "label": "透過損益按公允價值衡量之金融負債-流動",
+    "line_idx": 8,
+    "note": "六(二)",
+    "page": 8,
+    "prior": 101290.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2130",
+    "columns": [
+     13464002.0,
+     10686522.0,
+     10211443.0
+    ],
+    "current": 13464002.0,
+    "current_pct": 2.0,
+    "key": "contract_liabilities_current",
+    "label": "合約負債-流動",
+    "line_idx": 10,
+    "note": "六(二十)",
+    "page": 8,
+    "prior": 10686522.0,
+    "prior_pct": 2.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2150",
+    "columns": [
+     4527.0,
+     1724.0,
+     3554.0
+    ],
+    "current": 4527.0,
+    "current_pct": null,
+    "key": "notes_payable",
+    "label": "應付票據",
+    "line_idx": 11,
+    "note": null,
+    "page": 8,
+    "prior": 1724.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2170",
+    "columns": [
+     116627448.0,
+     94410785.0,
+     69418511.0
+    ],
+    "current": 116627448.0,
+    "current_pct": 16.0,
+    "key": "accounts_payable",
+    "label": "應付帳款",
+    "line_idx": 12,
+    "note": null,
+    "page": 8,
+    "prior": 94410785.0,
+    "prior_pct": 15.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2180",
+    "columns": [
+     23086.0,
+     38998.0,
+     26060.0
+    ],
+    "current": 23086.0,
+    "current_pct": null,
+    "key": "accounts_payable_related",
+    "label": "應付帳款-關係人",
+    "line_idx": 13,
+    "note": "七",
+    "page": 8,
+    "prior": 38998.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2200",
+    "columns": [
+     105116648.0,
+     64371070.0,
+     68454200.0
+    ],
+    "current": 105116648.0,
+    "current_pct": 14.0,
+    "key": "other_payables",
+    "label": "其他應付款",
+    "line_idx": 14,
+    "note": "六(十三)及七",
+    "page": 8,
+    "prior": 64371070.0,
+    "prior_pct": 10.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2230",
+    "columns": [
+     21099947.0,
+     15467726.0,
+     8241808.0
+    ],
+    "current": 21099947.0,
+    "current_pct": 3.0,
+    "key": "current_tax_liabilities",
+    "label": "本期所得稅負債",
+    "line_idx": 15,
+    "note": null,
+    "page": 8,
+    "prior": 15467726.0,
+    "prior_pct": 3.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2320",
+    "columns": [
+     6305263.0,
+     14960903.0,
+     20196167.0
+    ],
+    "current": 6305263.0,
+    "current_pct": 1.0,
+    "key": "long_term_borrowings_current",
+    "label": "一年或一營業週期內到期長期負債",
+    "line_idx": 16,
+    "note": "六(十四)(十五)",
+    "page": 8,
+    "prior": 14960903.0,
+    "prior_pct": 2.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2399",
+    "columns": [
+     24857739.0,
+     7261862.0,
+     5645549.0
+    ],
+    "current": 24857739.0,
+    "current_pct": 3.0,
+    "key": "other_current_liabilities",
+    "label": "其他流動負債-其他",
+    "line_idx": 18,
+    "note": null,
+    "page": 8,
+    "prior": 7261862.0,
+    "prior_pct": 1.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "21XX",
+    "columns": [
+     304502192.0,
+     209664989.0,
+     183955819.0
+    ],
+    "current": 304502192.0,
+    "current_pct": 41.0,
+    "key": "total_current_liabilities",
+    "label": "流動負債合計",
+    "line_idx": 19,
+    "note": null,
+    "page": 8,
+    "prior": 209664989.0,
+    "prior_pct": 33.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2500",
+    "columns": [
+     null,
+     null,
+     375333.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": null,
+    "label": "透過損益按公允價值衡量之金融負債-非流動",
+    "line_idx": 21,
+    "note": null,
+    "page": 8,
+    "prior": null,
+    "prior_pct": null,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2530",
+    "columns": [
+     30243710.0,
+     35560655.0,
+     23445265.0
+    ],
+    "current": 30243710.0,
+    "current_pct": 4.0,
+    "key": "bonds_payable",
+    "label": "應付公司債",
+    "line_idx": 23,
+    "note": "六(十四)",
+    "page": 8,
+    "prior": 35560655.0,
+    "prior_pct": 6.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2540",
+    "columns": [
+     17787634.0,
+     21142618.0,
+     35203095.0
+    ],
+    "current": 17787634.0,
+    "current_pct": 2.0,
+    "key": "long_term_borrowings",
+    "label": "長期借款",
+    "line_idx": 24,
+    "note": "六(十五)",
+    "page": 8,
+    "prior": 21142618.0,
+    "prior_pct": 3.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2570",
+    "columns": [
+     30601319.0,
+     28819022.0,
+     27056080.0
+    ],
+    "current": 30601319.0,
+    "current_pct": 4.0,
+    "key": "deferred_tax_liabilities",
+    "label": "遞延所得稅負債",
+    "line_idx": 25,
+    "note": null,
+    "page": 8,
+    "prior": 28819022.0,
+    "prior_pct": 4.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2580",
+    "columns": [
+     2713736.0,
+     2495985.0,
+     2377877.0
+    ],
+    "current": 2713736.0,
+    "current_pct": null,
+    "key": "lease_liabilities_noncurrent",
+    "label": "租賃負債-非流動",
+    "line_idx": 26,
+    "note": null,
+    "page": 8,
+    "prior": 2495985.0,
+    "prior_pct": null,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2600",
+    "columns": [
+     18359849.0,
+     16546328.0,
+     13107584.0
+    ],
+    "current": 18359849.0,
+    "current_pct": 3.0,
+    "key": null,
+    "label": "其他非流動負債",
+    "line_idx": 27,
+    "note": "六(十六)",
+    "page": 8,
+    "prior": 16546328.0,
+    "prior_pct": 3.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "25XX",
+    "columns": [
+     99706248.0,
+     104564608.0,
+     101565234.0
+    ],
+    "current": 99706248.0,
+    "current_pct": 13.0,
+    "key": "total_noncurrent_liabilities",
+    "label": "非流動負債合計",
+    "line_idx": 28,
+    "note": null,
+    "page": 8,
+    "prior": 104564608.0,
+    "prior_pct": 16.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "2XXX",
+    "columns": [
+     404208440.0,
+     314229597.0,
+     285521053.0
+    ],
+    "current": 404208440.0,
+    "current_pct": 54.0,
+    "key": "total_liabilities",
+    "label": "負債總計",
+    "line_idx": 29,
+    "note": null,
+    "page": 8,
+    "prior": 314229597.0,
+    "prior_pct": 49.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": "3110",
+    "columns": [
+     25975433.0,
+     25975433.0,
+     25975433.0
+    ],
+    "current": 25975433.0,
+    "current_pct": 3.0,
+    "key": "common_stock",
+    "label": "普通股股本",
+    "line_idx": 32,
+    "note": null,
+    "page": 8,
+    "prior": 25975433.0,
+    "prior_pct": 4.0,
+    "section": "股本",
+    "statement": "bs"
+   },
+   {
+    "code": "3200",
+    "columns": [
+     61035518.0,
+     55072097.0,
+     55104321.0
+    ],
+    "current": 61035518.0,
+    "current_pct": 8.0,
+    "key": "capital_surplus",
+    "label": "資本公積",
+    "line_idx": 34,
+    "note": null,
+    "page": 8,
+    "prior": 55072097.0,
+    "prior_pct": 9.0,
+    "section": "資本公積",
+    "statement": "bs"
+   },
+   {
+    "code": "3310",
+    "columns": [
+     48625708.0,
+     42601564.0,
+     42601564.0
+    ],
+    "current": 48625708.0,
+    "current_pct": 7.0,
+    "key": "legal_reserve",
+    "label": "法定盈餘公積",
+    "line_idx": 36,
+    "note": null,
+    "page": 8,
+    "prior": 42601564.0,
+    "prior_pct": 7.0,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": "3320",
+    "columns": [
+     527557.0,
+     527557.0,
+     527557.0
+    ],
+    "current": 527557.0,
+    "current_pct": null,
+    "key": "special_reserve",
+    "label": "特別盈餘公積",
+    "line_idx": 37,
+    "note": null,
+    "page": 8,
+    "prior": 527557.0,
+    "prior_pct": null,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": "3350",
+    "columns": [
+     149972748.0,
+     140397314.0,
+     104326720.0
+    ],
+    "current": 149972748.0,
+    "current_pct": 20.0,
+    "key": "unappropriated_earnings",
+    "label": "未分配盈餘",
+    "line_idx": 38,
+    "note": null,
+    "page": 8,
+    "prior": 140397314.0,
+    "prior_pct": 22.0,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": "3400",
+    "columns": [
+     7573776.0,
+     3484011.0,
+     -16337834.0
+    ],
+    "current": 7573776.0,
+    "current_pct": 1.0,
+    "key": "other_equity",
+    "label": "其他權益",
+    "line_idx": 40,
+    "note": null,
+    "page": 8,
+    "prior": 3484011.0,
+    "prior_pct": null,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     293710740.0,
+     268057976.0,
+     212197761.0
+    ],
+    "current": 293710740.0,
+    "current_pct": 39.0,
+    "key": null,
+    "label": "合計",
+    "line_idx": 42,
+    "note": null,
+    "page": 8,
+    "prior": 268057976.0,
+    "prior_pct": 42.0,
+    "section": "歸屬於母公司業主之權益",
+    "statement": "bs"
+   },
+   {
+    "code": "36XX",
+    "columns": [
+     56514152.0,
+     57331027.0,
+     48700102.0
+    ],
+    "current": 56514152.0,
+    "current_pct": 7.0,
+    "key": "noncontrolling_interests",
+    "label": "非控制權益",
+    "line_idx": 43,
+    "note": "四(三)",
+    "page": 8,
+    "prior": 57331027.0,
+    "prior_pct": 9.0,
+    "section": "歸屬於母公司業主之權益",
+    "statement": "bs"
+   },
+   {
+    "code": "3XXX",
+    "columns": [
+     350224892.0,
+     325389003.0,
+     260897863.0
+    ],
+    "current": 350224892.0,
+    "current_pct": 46.0,
+    "key": "total_equity",
+    "label": "權益總計",
+    "line_idx": 44,
+    "note": null,
+    "page": 8,
+    "prior": 325389003.0,
+    "prior_pct": 51.0,
+    "section": "歸屬於母公司業主之權益",
+    "statement": "bs"
+   },
+   {
+    "code": "3X2X",
+    "columns": [
+     754433332.0,
+     639618600.0,
+     546418916.0
+    ],
+    "current": 754433332.0,
+    "current_pct": 100.0,
+    "key": "total_liabilities_and_equity",
+    "label": "負債及權益總計",
+    "line_idx": 48,
+    "note": null,
+    "page": 8,
+    "prior": 639618600.0,
+    "prior_pct": 100.0,
+    "section": "歸屬於母公司業主之權益",
+    "statement": "bs"
+   },
+   {
+    "code": "4000",
+    "columns": [
+     183256080.0,
+     124035086.0,
+     342608732.0,
+     242954492.0
+    ],
+    "current": 342608732.0,
+    "current_pct": 100.0,
+    "key": "revenue",
+    "label": "營業收入",
+    "line_idx": 8,
+    "note": "六(二十)及七",
+    "page": 9,
+    "prior": 242954492.0,
+    "prior_pct": 100.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": "5000",
+    "columns": [
+     -117948130.0,
+     -79986223.0,
+     -218339911.0,
+     -161117207.0
+    ],
+    "current": -218339911.0,
+    "current_pct": -64.0,
+    "key": "cogs",
+    "label": "營業成本",
+    "line_idx": 9,
+    "note": "六(六)(二十五)(二十六)及七",
+    "page": 9,
+    "prior": -161117207.0,
+    "prior_pct": -66.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": "5950",
+    "columns": [
+     65307950.0,
+     44048863.0,
+     124268821.0,
+     81837285.0
+    ],
+    "current": 124268821.0,
+    "current_pct": 36.0,
+    "key": "gross_profit_net",
+    "label": "營業毛利淨額",
+    "line_idx": 11,
+    "note": null,
+    "page": 9,
+    "prior": 81837285.0,
+    "prior_pct": 34.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": "6100",
+    "columns": [
+     -10941061.0,
+     -7950345.0,
+     -21390676.0,
+     -15547743.0
+    ],
+    "current": -21390676.0,
+    "current_pct": -6.0,
+    "key": "selling_expenses",
+    "label": "推銷費用",
+    "line_idx": 13,
+    "note": null,
+    "page": 9,
+    "prior": -15547743.0,
+    "prior_pct": -6.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6200",
+    "columns": [
+     -6995319.0,
+     -5373043.0,
+     -13390599.0,
+     -10347947.0
+    ],
+    "current": -13390599.0,
+    "current_pct": -4.0,
+    "key": "admin_expenses",
+    "label": "管理費用",
+    "line_idx": 14,
+    "note": null,
+    "page": 9,
+    "prior": -10347947.0,
+    "prior_pct": -4.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6300",
+    "columns": [
+     -15781784.0,
+     -11845276.0,
+     -29438966.0,
+     -22908678.0
+    ],
+    "current": -29438966.0,
+    "current_pct": -9.0,
+    "key": "rd_expenses",
+    "label": "研究發展費用",
+    "line_idx": 15,
+    "note": null,
+    "page": 9,
+    "prior": -22908678.0,
+    "prior_pct": -10.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6450",
+    "columns": [
+     -1019744.0,
+     -211429.0,
+     -1061235.0,
+     -328143.0
+    ],
+    "current": -1061235.0,
+    "current_pct": null,
+    "key": null,
+    "label": "預期信用減損損失",
+    "line_idx": 16,
+    "note": "十二(二)",
+    "page": 9,
+    "prior": -328143.0,
+    "prior_pct": null,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6000",
+    "columns": [
+     -34737908.0,
+     -25380093.0,
+     -65281476.0,
+     -49132511.0
+    ],
+    "current": -65281476.0,
+    "current_pct": -19.0,
+    "key": "total_opex",
+    "label": "營業費用合計",
+    "line_idx": 17,
+    "note": null,
+    "page": 9,
+    "prior": -49132511.0,
+    "prior_pct": -20.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "6900",
+    "columns": [
+     30570042.0,
+     18668770.0,
+     58987345.0,
+     32704774.0
+    ],
+    "current": 58987345.0,
+    "current_pct": 17.0,
+    "key": "operating_income",
+    "label": "營業利益",
+    "line_idx": 18,
+    "note": null,
+    "page": 9,
+    "prior": 32704774.0,
+    "prior_pct": 14.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": "7100",
+    "columns": [
+     970261.0,
+     1038606.0,
+     1920977.0,
+     1862451.0
+    ],
+    "current": 1920977.0,
+    "current_pct": null,
+    "key": "interest_income",
+    "label": "利息收入",
+    "line_idx": 20,
+    "note": "六(二十一)",
+    "page": 9,
+    "prior": 1862451.0,
+    "prior_pct": null,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7010",
+    "columns": [
+     1317704.0,
+     1356749.0,
+     3063375.0,
+     2540869.0
+    ],
+    "current": 3063375.0,
+    "current_pct": 1.0,
+    "key": "other_income",
+    "label": "其他收入",
+    "line_idx": 21,
+    "note": "六(二十二)",
+    "page": 9,
+    "prior": 2540869.0,
+    "prior_pct": 1.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7020",
+    "columns": [
+     2719906.0,
+     -965500.0,
+     3225012.0,
+     -850207.0
+    ],
+    "current": 3225012.0,
+    "current_pct": 1.0,
+    "key": "other_gains_losses",
+    "label": "其他利益及損失",
+    "line_idx": 22,
+    "note": "六(二十三)",
+    "page": 9,
+    "prior": -850207.0,
+    "prior_pct": null,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7050",
+    "columns": [
+     -571884.0,
+     -526765.0,
+     -1094432.0,
+     -1037290.0
+    ],
+    "current": -1094432.0,
+    "current_pct": null,
+    "key": "finance_costs",
+    "label": "財務成本",
+    "line_idx": 23,
+    "note": "六(二十四)",
+    "page": 9,
+    "prior": -1037290.0,
+    "prior_pct": null,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7060",
+    "columns": [
+     -6415.0,
+     -671.0,
+     -9840.0,
+     13490.0
+    ],
+    "current": -9840.0,
+    "current_pct": null,
+    "key": "equity_method_share",
+    "label": "採用權益法認列之關聯企業及合資損益之份額",
+    "line_idx": 24,
+    "note": null,
+    "page": 9,
+    "prior": 13490.0,
+    "prior_pct": null,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7000",
+    "columns": [
+     4429572.0,
+     902419.0,
+     7105092.0,
+     2529313.0
+    ],
+    "current": 7105092.0,
+    "current_pct": 2.0,
+    "key": "nonoperating_total",
+    "label": "營業外收入及支出合計",
+    "line_idx": 25,
+    "note": null,
+    "page": 9,
+    "prior": 2529313.0,
+    "prior_pct": 1.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7900",
+    "columns": [
+     34999614.0,
+     19571189.0,
+     66092437.0,
+     35234087.0
+    ],
+    "current": 66092437.0,
+    "current_pct": 19.0,
+    "key": "pretax_income",
+    "label": "稅前淨利",
+    "line_idx": 26,
+    "note": null,
+    "page": 9,
+    "prior": 35234087.0,
+    "prior_pct": 15.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "7950",
+    "columns": [
+     -7830563.0,
+     -4237459.0,
+     -15088837.0,
+     -7857035.0
+    ],
+    "current": -15088837.0,
+    "current_pct": -4.0,
+    "key": "income_tax",
+    "label": "所得稅費用",
+    "line_idx": 27,
+    "note": "六(二十七)",
+    "page": 9,
+    "prior": -7857035.0,
+    "prior_pct": -4.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "8200",
+    "columns": [
+     27169051.0,
+     15333730.0,
+     51003600.0,
+     27377052.0
+    ],
+    "current": 51003600.0,
+    "current_pct": 15.0,
+    "key": "net_income",
+    "label": "本期淨利",
+    "line_idx": 28,
+    "note": null,
+    "page": 9,
+    "prior": 27377052.0,
+    "prior_pct": 11.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": "8311",
+    "columns": [
+     -1563.0,
+     5235.0,
+     -2023.0,
+     -13676.0
+    ],
+    "current": -2023.0,
+    "current_pct": null,
+    "key": "remeasurement_defined_benefit",
+    "label": "確定福利計畫之再衡量數",
+    "line_idx": 10,
+    "note": null,
+    "page": 10,
+    "prior": -13676.0,
+    "prior_pct": null,
+    "section": "不重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8316",
+    "columns": [
+     211090.0,
+     -216246.0,
+     1680013.0,
+     -242928.0
+    ],
+    "current": 1680013.0,
+    "current_pct": 1.0,
+    "key": "fvoci_equity_gain_loss",
+    "label": "透過其他綜合損益按公允價值衡量之權益工具投資未實現評價損益",
+    "line_idx": 11,
+    "note": "六(三)",
+    "page": 10,
+    "prior": -242928.0,
+    "prior_pct": null,
+    "section": "不重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8310",
+    "columns": [
+     209527.0,
+     -211011.0,
+     1677990.0,
+     -256604.0
+    ],
+    "current": 1677990.0,
+    "current_pct": 1.0,
+    "key": "oci_nonreclass_total",
+    "label": "不重分類至損益之項目總額",
+    "line_idx": 13,
+    "note": null,
+    "page": 10,
+    "prior": -256604.0,
+    "prior_pct": null,
+    "section": "不重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8361",
+    "columns": [
+     -1660309.0,
+     -34375236.0,
+     1731085.0,
+     -28336624.0
+    ],
+    "current": 1731085.0,
+    "current_pct": null,
+    "key": "fx_translation_difference",
+    "label": "國外營運機構財務報表換算之兌換差額",
+    "line_idx": 15,
+    "note": null,
+    "page": 10,
+    "prior": -28336624.0,
+    "prior_pct": -11.0,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8370",
+    "columns": [
+     -937.0,
+     -20396.0,
+     -3915.0,
+     -18570.0
+    ],
+    "current": -3915.0,
+    "current_pct": null,
+    "key": null,
+    "label": "採用權益法認列之關聯企業及合資之其他綜合損益之份額-可能重分類至損益之項目",
+    "line_idx": 16,
+    "note": null,
+    "page": 10,
+    "prior": -18570.0,
+    "prior_pct": null,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8399",
+    "columns": [
+     114091.0,
+     1258509.0,
+     -64748.0,
+     901732.0
+    ],
+    "current": -64748.0,
+    "current_pct": null,
+    "key": null,
+    "label": "與可能重分類之項目相關之所得稅",
+    "line_idx": 18,
+    "note": "六(二十七)",
+    "page": 10,
+    "prior": 901732.0,
+    "prior_pct": null,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8360",
+    "columns": [
+     -1547155.0,
+     -33137123.0,
+     1662422.0,
+     -27453462.0
+    ],
+    "current": 1662422.0,
+    "current_pct": null,
+    "key": "oci_reclass_total",
+    "label": "後續可能重分類至損益之項目總額",
+    "line_idx": 19,
+    "note": null,
+    "page": 10,
+    "prior": -27453462.0,
+    "prior_pct": -11.0,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8300",
+    "columns": [
+     -1337628.0,
+     -33348134.0,
+     3340412.0,
+     -27710066.0
+    ],
+    "current": 3340412.0,
+    "current_pct": 1.0,
+    "key": "oci",
+    "label": "其他綜合損益(淨額)",
+    "line_idx": 20,
+    "note": null,
+    "page": 10,
+    "prior": -27710066.0,
+    "prior_pct": -11.0,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8500",
+    "columns": [
+     25831423.0,
+     -18014404.0,
+     54344012.0,
+     -333014.0
+    ],
+    "current": 54344012.0,
+    "current_pct": 16.0,
+    "key": "total_comprehensive_income",
+    "label": "本期綜合損益總額",
+    "line_idx": 21,
+    "note": null,
+    "page": 10,
+    "prior": -333014.0,
+    "prior_pct": null,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": "8610",
+    "columns": [
+     25135640.0,
+     13948044.0,
+     45691231.0,
+     24178986.0
+    ],
+    "current": 45691231.0,
+    "current_pct": 13.0,
+    "key": "net_income_parent",
+    "label": "母公司業主",
+    "line_idx": 23,
+    "note": null,
+    "page": 10,
+    "prior": 24178986.0,
+    "prior_pct": 10.0,
+    "section": "淨利歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "8620",
+    "columns": [
+     2033411.0,
+     1385686.0,
+     5312369.0,
+     3198066.0
+    ],
+    "current": 5312369.0,
+    "current_pct": 2.0,
+    "key": "net_income_nci",
+    "label": "非控制權益",
+    "line_idx": 24,
+    "note": null,
+    "page": 10,
+    "prior": 3198066.0,
+    "prior_pct": 1.0,
+    "section": "淨利歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "8710",
+    "columns": [
+     24310488.0,
+     -14601747.0,
+     49830610.0,
+     286446.0
+    ],
+    "current": 49830610.0,
+    "current_pct": 15.0,
+    "key": "tci_parent",
+    "label": "母公司業主",
+    "line_idx": 26,
+    "note": null,
+    "page": 10,
+    "prior": 286446.0,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "8720",
+    "columns": [
+     1520935.0,
+     -3412657.0,
+     4513402.0,
+     -619460.0
+    ],
+    "current": 4513402.0,
+    "current_pct": 1.0,
+    "key": "tci_nci",
+    "label": "非控制權益",
+    "line_idx": 27,
+    "note": null,
+    "page": 10,
+    "prior": -619460.0,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "9750",
+    "columns": [
+     9.68,
+     5.37,
+     17.59,
+     9.31
+    ],
+    "current": 17.59,
+    "current_pct": null,
+    "key": "eps_basic",
+    "label": "基本每股盈餘",
+    "line_idx": 29,
+    "note": null,
+    "page": 10,
+    "prior": 9.31,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": "9850",
+    "columns": [
+     9.67,
+     5.36,
+     17.57,
+     9.28
+    ],
+    "current": 17.57,
+    "current_pct": null,
+    "key": "eps_diluted",
+    "label": "稀釋每股盈餘",
+    "line_idx": 31,
+    "note": null,
+    "page": 10,
+    "prior": 9.28,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     66092437.0,
+     35234087.0
+    ],
+    "current": 66092437.0,
+    "current_pct": null,
+    "key": "pretax_income_cf",
+    "label": "本期稅前淨利",
+    "line_idx": 7,
+    "note": null,
+    "page": 12,
+    "prior": 35234087.0,
+    "prior_pct": null,
+    "section": "營業活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     14278138.0,
+     11618541.0
+    ],
+    "current": 14278138.0,
+    "current_pct": null,
+    "key": "depreciation",
+    "label": "折舊費用",
+    "line_idx": 10,
+    "note": "六(七)(八)(九)(二十五)",
+    "page": 12,
+    "prior": 11618541.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     1943872.0,
+     1960472.0
+    ],
+    "current": 1943872.0,
+    "current_pct": null,
+    "key": "amortization",
+    "label": "攤銷費用",
+    "line_idx": 12,
+    "note": "六(十)(二十五)",
+    "page": 12,
+    "prior": 1960472.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     1061235.0,
+     328143.0
+    ],
+    "current": 1061235.0,
+    "current_pct": null,
+    "key": "impairment_loss_receivables",
+    "label": "預期信用減損損失",
+    "line_idx": 13,
+    "note": "十二(二)",
+    "page": 12,
+    "prior": 328143.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -732254.0,
+     556638.0
+    ],
+    "current": -732254.0,
+    "current_pct": null,
+    "key": null,
+    "label": "透過損益按公允價值衡量金融資產及負債之淨(利益)損失",
+    "line_idx": 14,
+    "note": "六(二十三)",
+    "page": 12,
+    "prior": 556638.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     1094432.0,
+     1037290.0
+    ],
+    "current": 1094432.0,
+    "current_pct": null,
+    "key": "finance_costs_adj",
+    "label": "利息費用",
+    "line_idx": 16,
+    "note": "六(二十四)",
+    "page": 12,
+    "prior": 1037290.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1920977.0,
+     -1862451.0
+    ],
+    "current": -1920977.0,
+    "current_pct": null,
+    "key": "interest_income_adj",
+    "label": "利息收入",
+    "line_idx": 17,
+    "note": "六(二十一)",
+    "page": 12,
+    "prior": -1862451.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -134553.0,
+     -185378.0
+    ],
+    "current": -134553.0,
+    "current_pct": null,
+    "key": "dividend_income_adj",
+    "label": "股利收入",
+    "line_idx": 18,
+    "note": "六(二十二)",
+    "page": 12,
+    "prior": -185378.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     5284.0,
+     8542.0
+    ],
+    "current": 5284.0,
+    "current_pct": null,
+    "key": "share_based_comp",
+    "label": "股份基礎給付酬勞成本",
+    "line_idx": 19,
+    "note": "六(二十九)",
+    "page": 12,
+    "prior": 8542.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     9840.0,
+     -13490.0
+    ],
+    "current": 9840.0,
+    "current_pct": null,
+    "key": null,
+    "label": "採用權益法認列之關聯企業損失(利益)之份額",
+    "line_idx": 20,
+    "note": null,
+    "page": 12,
+    "prior": -13490.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     418435.0,
+     12352.0
+    ],
+    "current": 418435.0,
+    "current_pct": null,
+    "key": null,
+    "label": "處分不動產、廠房及設備損失",
+    "line_idx": 22,
+    "note": "六(二十三)",
+    "page": 12,
+    "prior": 12352.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     10140.0,
+     38978.0
+    ],
+    "current": 10140.0,
+    "current_pct": null,
+    "key": null,
+    "label": "處分投資損失",
+    "line_idx": 23,
+    "note": "六(二十三)",
+    "page": 12,
+    "prior": 38978.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     204972.0,
+     null
+    ],
+    "current": 204972.0,
+    "current_pct": null,
+    "key": null,
+    "label": "非金融資產減損損失",
+    "line_idx": 24,
+    "note": "六(十)(二十三)",
+    "page": 12,
+    "prior": null,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -790354.0,
+     null
+    ],
+    "current": -790354.0,
+    "current_pct": null,
+    "key": null,
+    "label": "處分待出售非流動資產利益",
+    "line_idx": 25,
+    "note": "六(二十三)",
+    "page": 12,
+    "prior": null,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -135797.0,
+     null
+    ],
+    "current": -135797.0,
+    "current_pct": null,
+    "key": null,
+    "label": "廉價購買利益",
+    "line_idx": 26,
+    "note": "六(二十二)",
+    "page": 12,
+    "prior": null,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     201717.0,
+     -43332.0
+    ],
+    "current": 201717.0,
+    "current_pct": null,
+    "key": null,
+    "label": "強制透過損益按公允價值衡量之金融資產",
+    "line_idx": 29,
+    "note": null,
+    "page": 12,
+    "prior": -43332.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -879722.0,
+     -304273.0
+    ],
+    "current": -879722.0,
+    "current_pct": null,
+    "key": null,
+    "label": "合約資產",
+    "line_idx": 31,
+    "note": null,
+    "page": 12,
+    "prior": -304273.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -453036.0,
+     750903.0
+    ],
+    "current": -453036.0,
+    "current_pct": null,
+    "key": "change_notes_receivable",
+    "label": "應收票據",
+    "line_idx": 32,
+    "note": null,
+    "page": 12,
+    "prior": 750903.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -21685625.0,
+     -2524480.0
+    ],
+    "current": -21685625.0,
+    "current_pct": null,
+    "key": "change_receivables",
+    "label": "應收帳款",
+    "line_idx": 33,
+    "note": null,
+    "page": 12,
+    "prior": -2524480.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     5717.0,
+     4836.0
+    ],
+    "current": 5717.0,
+    "current_pct": null,
+    "key": "change_receivables_related",
+    "label": "應收帳款-關係人",
+    "line_idx": 34,
+    "note": null,
+    "page": 12,
+    "prior": 4836.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     161867.0,
+     603971.0
+    ],
+    "current": 161867.0,
+    "current_pct": null,
+    "key": "change_other_receivables",
+    "label": "其他應收款",
+    "line_idx": 35,
+    "note": null,
+    "page": 12,
+    "prior": 603971.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -225.0,
+     null
+    ],
+    "current": -225.0,
+    "current_pct": null,
+    "key": null,
+    "label": "其他應收款-關係人",
+    "line_idx": 36,
+    "note": null,
+    "page": 12,
+    "prior": null,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -37836259.0,
+     2390161.0
+    ],
+    "current": -37836259.0,
+    "current_pct": null,
+    "key": "change_inventories",
+    "label": "存貨",
+    "line_idx": 37,
+    "note": null,
+    "page": 12,
+    "prior": 2390161.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1174113.0,
+     -93928.0
+    ],
+    "current": -1174113.0,
+    "current_pct": null,
+    "key": null,
+    "label": "預付款項",
+    "line_idx": 38,
+    "note": null,
+    "page": 12,
+    "prior": -93928.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -132254.0,
+     1304.0
+    ],
+    "current": -132254.0,
+    "current_pct": null,
+    "key": "change_other_current_assets",
+    "label": "其他流動資產",
+    "line_idx": 39,
+    "note": null,
+    "page": 12,
+    "prior": 1304.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     98959.0,
+     -87677.0
+    ],
+    "current": 98959.0,
+    "current_pct": null,
+    "key": null,
+    "label": "其他非流動資產",
+    "line_idx": 40,
+    "note": null,
+    "page": 12,
+    "prior": -87677.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     2752407.0,
+     -1064115.0
+    ],
+    "current": 2752407.0,
+    "current_pct": null,
+    "key": "change_contract_liabilities",
+    "label": "合約負債",
+    "line_idx": 42,
+    "note": null,
+    "page": 12,
+    "prior": -1064115.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     2803.0,
+     486.0
+    ],
+    "current": 2803.0,
+    "current_pct": null,
+    "key": "change_notes_payable",
+    "label": "應付票據",
+    "line_idx": 43,
+    "note": null,
+    "page": 12,
+    "prior": 486.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     22151921.0,
+     230123.0
+    ],
+    "current": 22151921.0,
+    "current_pct": null,
+    "key": "change_payables",
+    "label": "應付帳款",
+    "line_idx": 44,
+    "note": null,
+    "page": 12,
+    "prior": 230123.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -15912.0,
+     -5735.0
+    ],
+    "current": -15912.0,
+    "current_pct": null,
+    "key": null,
+    "label": "應付帳款-關係人",
+    "line_idx": 45,
+    "note": null,
+    "page": 12,
+    "prior": -5735.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     7233352.0,
+     -327460.0
+    ],
+    "current": 7233352.0,
+    "current_pct": null,
+    "key": "change_other_payables",
+    "label": "其他應付款",
+    "line_idx": 46,
+    "note": null,
+    "page": 12,
+    "prior": -327460.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     17487979.0,
+     -497367.0
+    ],
+    "current": 17487979.0,
+    "current_pct": null,
+    "key": "change_other_current_liabilities",
+    "label": "其他流動負債",
+    "line_idx": 47,
+    "note": null,
+    "page": 12,
+    "prior": -497367.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     2172232.0,
+     -587280.0
+    ],
+    "current": 2172232.0,
+    "current_pct": null,
+    "key": null,
+    "label": "其他非流動負債",
+    "line_idx": 48,
+    "note": null,
+    "page": 12,
+    "prior": -587280.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     71496658.0,
+     47179861.0
+    ],
+    "current": 71496658.0,
+    "current_pct": null,
+    "key": "cash_from_operations_before_tax",
+    "label": "營運產生之現金流入",
+    "line_idx": 49,
+    "note": null,
+    "page": 12,
+    "prior": 47179861.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     1872384.0,
+     1771012.0
+    ],
+    "current": 1872384.0,
+    "current_pct": null,
+    "key": "interest_received",
+    "label": "收取之利息",
+    "line_idx": 50,
+    "note": null,
+    "page": 12,
+    "prior": 1771012.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     110565.0,
+     178475.0
+    ],
+    "current": 110565.0,
+    "current_pct": null,
+    "key": "dividends_received",
+    "label": "收取之股利",
+    "line_idx": 51,
+    "note": null,
+    "page": 12,
+    "prior": 178475.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -770244.0,
+     -817825.0
+    ],
+    "current": -770244.0,
+    "current_pct": null,
+    "key": "interest_paid",
+    "label": "支付之利息",
+    "line_idx": 52,
+    "note": null,
+    "page": 12,
+    "prior": -817825.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -9608760.0,
+     -4717949.0
+    ],
+    "current": -9608760.0,
+    "current_pct": null,
+    "key": "income_tax_paid",
+    "label": "支付之所得稅",
+    "line_idx": 53,
+    "note": null,
+    "page": 12,
+    "prior": -4717949.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     63100603.0,
+     43593574.0
+    ],
+    "current": 63100603.0,
+    "current_pct": null,
+    "key": "cfo",
+    "label": "營業活動之淨現金流入",
+    "line_idx": 54,
+    "note": null,
+    "page": 12,
+    "prior": 43593574.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1005443.0,
+     null
+    ],
+    "current": -1005443.0,
+    "current_pct": null,
+    "key": null,
+    "label": "取得透過其他綜合損益按公允價值衡量之金融資產",
+    "line_idx": 7,
+    "note": null,
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     2999.0,
+     null
+    ],
+    "current": 2999.0,
+    "current_pct": null,
+    "key": "fvoci_disposal_proceeds",
+    "label": "處分透過其他綜合損益按公允價值衡量之金融資產",
+    "line_idx": 9,
+    "note": null,
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     185580.0,
+     -74969.0
+    ],
+    "current": 185580.0,
+    "current_pct": null,
+    "key": null,
+    "label": "按攤銷後成本衡量之金融資產減少(增加)",
+    "line_idx": 11,
+    "note": null,
+    "page": 13,
+    "prior": -74969.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -868.0,
+     -492.0
+    ],
+    "current": -868.0,
+    "current_pct": null,
+    "key": null,
+    "label": "取得採用權益法之投資",
+    "line_idx": 12,
+    "note": null,
+    "page": 13,
+    "prior": -492.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     -60000.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": null,
+    "label": "預付長期投資款增加",
+    "line_idx": 13,
+    "note": "六(十一)",
+    "page": 13,
+    "prior": -60000.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     7883.0,
+     null
+    ],
+    "current": 7883.0,
+    "current_pct": null,
+    "key": null,
+    "label": "採用權益法之被投資公司清算退回股款",
+    "line_idx": 14,
+    "note": null,
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -762405.0,
+     null
+    ],
+    "current": -762405.0,
+    "current_pct": null,
+    "key": null,
+    "label": "對子公司之收購(扣除所取得之現金)",
+    "line_idx": 15,
+    "note": "六(三十)",
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     10546.0,
+     null
+    ],
+    "current": 10546.0,
+    "current_pct": null,
+    "key": null,
+    "label": "處分子公司價款",
+    "line_idx": 16,
+    "note": null,
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     -2169278.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": null,
+    "label": "取得營業資產",
+    "line_idx": 17,
+    "note": "六(三十)",
+    "page": 13,
+    "prior": -2169278.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -27252368.0,
+     -19041227.0
+    ],
+    "current": -27252368.0,
+    "current_pct": null,
+    "key": "capex",
+    "label": "取得不動產、廠房及設備",
+    "line_idx": 18,
+    "note": null,
+    "page": 13,
+    "prior": -19041227.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     20072.0,
+     19590.0
+    ],
+    "current": 20072.0,
+    "current_pct": null,
+    "key": null,
+    "label": "取得政府補助收入-不動產、廠房及設備",
+    "line_idx": 19,
+    "note": null,
+    "page": 13,
+    "prior": 19590.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     38154.0,
+     22601.0
+    ],
+    "current": 38154.0,
+    "current_pct": null,
+    "key": "ppe_disposal_proceeds",
+    "label": "處分不動產、廠房及設備價款",
+    "line_idx": 20,
+    "note": null,
+    "page": 13,
+    "prior": 22601.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -198249.0,
+     -330634.0
+    ],
+    "current": -198249.0,
+    "current_pct": null,
+    "key": null,
+    "label": "預付土地及房屋款",
+    "line_idx": 21,
+    "note": null,
+    "page": 13,
+    "prior": -330634.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -564395.0,
+     -1024771.0
+    ],
+    "current": -564395.0,
+    "current_pct": null,
+    "key": "intangible_purchase",
+    "label": "取得無形資產",
+    "line_idx": 22,
+    "note": null,
+    "page": 13,
+    "prior": -1024771.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     983231.0,
+     null
+    ],
+    "current": 983231.0,
+    "current_pct": null,
+    "key": null,
+    "label": "處分待出售非流動資產價款",
+    "line_idx": 23,
+    "note": null,
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1747192.0,
+     410230.0
+    ],
+    "current": -1747192.0,
+    "current_pct": null,
+    "key": null,
+    "label": "其他非流動資產(增加)減少",
+    "line_idx": 24,
+    "note": null,
+    "page": 13,
+    "prior": 410230.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -30282455.0,
+     -22248950.0
+    ],
+    "current": -30282455.0,
+    "current_pct": null,
+    "key": "cfi",
+    "label": "投資活動之淨現金流出",
+    "line_idx": 25,
+    "note": null,
+    "page": 13,
+    "prior": -22248950.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     13936983.0,
+     -308661.0
+    ],
+    "current": 13936983.0,
+    "current_pct": null,
+    "key": null,
+    "label": "短期借款增加(減少)",
+    "line_idx": 27,
+    "note": "六(三十三)",
+    "page": 13,
+    "prior": -308661.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     17090987.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": "bonds_issued",
+    "label": "發行應付公司債",
+    "line_idx": 28,
+    "note": "六(三十三)",
+    "page": 13,
+    "prior": 17090987.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -14000000.0,
+     null
+    ],
+    "current": -14000000.0,
+    "current_pct": null,
+    "key": null,
+    "label": "償還應付公司債",
+    "line_idx": 29,
+    "note": "六(三十三)",
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     12891087.0,
+     43691582.0
+    ],
+    "current": 12891087.0,
+    "current_pct": null,
+    "key": "long_term_borrowings_proceeds",
+    "label": "舉借長期借款",
+    "line_idx": 30,
+    "note": "六(三十三)",
+    "page": 13,
+    "prior": 43691582.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -16832243.0,
+     -40704315.0
+    ],
+    "current": -16832243.0,
+    "current_pct": null,
+    "key": "long_term_borrowings_repayment",
+    "label": "償還長期借款",
+    "line_idx": 31,
+    "note": "六(三十三)",
+    "page": 13,
+    "prior": -40704315.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -434197.0,
+     -575211.0
+    ],
+    "current": -434197.0,
+    "current_pct": null,
+    "key": "lease_principal_repayment",
+    "label": "租賃本金償還",
+    "line_idx": 32,
+    "note": null,
+    "page": 13,
+    "prior": -575211.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -417046.0,
+     43326.0
+    ],
+    "current": -417046.0,
+    "current_pct": null,
+    "key": null,
+    "label": "存入保證金(減少)增加",
+    "line_idx": 33,
+    "note": null,
+    "page": 13,
+    "prior": 43326.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -2725886.0,
+     -2043802.0
+    ],
+    "current": -2725886.0,
+    "current_pct": null,
+    "key": null,
+    "label": "發放現金股利予非控制權益",
+    "line_idx": 34,
+    "note": null,
+    "page": 13,
+    "prior": -2043802.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -3737801.0,
+     null
+    ],
+    "current": -3737801.0,
+    "current_pct": null,
+    "key": null,
+    "label": "取得子公司非控制權益之價款",
+    "line_idx": 35,
+    "note": "六(三十一)",
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     8699479.0,
+     null
+    ],
+    "current": 8699479.0,
+    "current_pct": null,
+    "key": null,
+    "label": "處分子公司(未喪失控制力)",
+    "line_idx": 36,
+    "note": "六(三十一)",
+    "page": 13,
+    "prior": null,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -2619624.0,
+     17193906.0
+    ],
+    "current": -2619624.0,
+    "current_pct": null,
+    "key": "cff",
+    "label": "籌資活動之淨現金(流出)流入",
+    "line_idx": 37,
+    "note": null,
+    "page": 13,
+    "prior": 17193906.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     979505.0,
+     -16469812.0
+    ],
+    "current": 979505.0,
+    "current_pct": null,
+    "key": "fx_effect",
+    "label": "匯率影響數",
+    "line_idx": 38,
+    "note": null,
+    "page": 13,
+    "prior": -16469812.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     31178029.0,
+     22068718.0
+    ],
+    "current": 31178029.0,
+    "current_pct": null,
+    "key": "net_change_in_cash",
+    "label": "本期現金及約當現金增加數",
+    "line_idx": 39,
+    "note": null,
+    "page": 13,
+    "prior": 22068718.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     151172175.0,
+     117459250.0
+    ],
+    "current": 151172175.0,
+    "current_pct": null,
+    "key": "cash_beginning",
+    "label": "期初現金及約當現金餘額",
+    "line_idx": 40,
+    "note": null,
+    "page": 13,
+    "prior": 117459250.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     182350204.0,
+     139527968.0
+    ],
+    "current": 182350204.0,
+    "current_pct": null,
+    "key": "cash_ending",
+    "label": "期末現金及約當現金餘額",
+    "line_idx": 41,
+    "note": null,
+    "page": 13,
+    "prior": 139527968.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   }
+  ],
+  "unmapped_labels": [
+   "按攤銷後成本衡量之金融資產-流動",
+   "合約資產-流動",
+   "本期所得稅資產",
+   "待出售非流動資產淨額",
+   "透過損益按公允價值衡量之金融資產-非流動",
+   "合約資產-非流動",
+   "投資性不動產淨額",
+   "透過損益按公允價值衡量之金融負債-流動",
+   "透過損益按公允價值衡量之金融負債-非流動",
+   "其他非流動負債",
+   "合計",
+   "預期信用減損損失",
+   "採用權益法認列之關聯企業及合資之其他綜合損益之份額-可能重分類至損益之項目",
+   "與可能重分類之項目相關之所得稅",
+   "透過損益按公允價值衡量金融資產及負債之淨(利益)損失",
+   "採用權益法認列之關聯企業損失(利益)之份額",
+   "處分不動產、廠房及設備損失",
+   "處分投資損失",
+   "非金融資產減損損失",
+   "處分待出售非流動資產利益",
+   "廉價購買利益",
+   "強制透過損益按公允價值衡量之金融資產",
+   "合約資產",
+   "其他應收款-關係人",
+   "預付款項",
+   "其他非流動資產",
+   "應付帳款-關係人",
+   "取得透過其他綜合損益按公允價值衡量之金融資產",
+   "按攤銷後成本衡量之金融資產減少(增加)",
+   "取得採用權益法之投資",
+   "預付長期投資款增加",
+   "採用權益法之被投資公司清算退回股款",
+   "對子公司之收購(扣除所取得之現金)",
+   "處分子公司價款",
+   "取得營業資產",
+   "取得政府補助收入-不動產、廠房及設備",
+   "預付土地及房屋款",
+   "處分待出售非流動資產價款",
+   "其他非流動資產(增加)減少",
+   "短期借款增加(減少)",
+   "償還應付公司債",
+   "存入保證金(減少)增加",
+   "發放現金股利予非控制權益",
+   "取得子公司非控制權益之價款",
+   "處分子公司(未喪失控制力)"
+  ]
+ },
+ "3653_FY": {
+  "_source": "tests/fixtures/tw_equity/fs_3653_pages.json（HEAD 12cadec 行為）",
+  "checks": [
+   {
+    "lhs": 27968731.0,
+    "name": "bs_assets_eq_liab_equity",
+    "passed": true,
+    "period": "current",
+    "rhs": 27968731.0
+   },
+   {
+    "lhs": 18461872.0,
+    "name": "bs_assets_eq_liab_equity",
+    "passed": true,
+    "period": "prior",
+    "rhs": 18461872.0
+   },
+   {
+    "lhs": 27968731.0,
+    "name": "bs_assets_sum",
+    "passed": true,
+    "period": "current",
+    "rhs": 27968731.0
+   },
+   {
+    "lhs": 18461872.0,
+    "name": "bs_assets_sum",
+    "passed": true,
+    "period": "prior",
+    "rhs": 18461872.0
+   },
+   {
+    "lhs": 27968731.0,
+    "name": "bs_liab_equity_sum",
+    "passed": true,
+    "period": "current",
+    "rhs": 27968731.0
+   },
+   {
+    "lhs": 18461872.0,
+    "name": "bs_liab_equity_sum",
+    "passed": true,
+    "period": "prior",
+    "rhs": 18461872.0
+   },
+   {
+    "lhs": 8433990.0,
+    "name": "is_gross_profit",
+    "passed": true,
+    "period": "current",
+    "rhs": 8433990.0
+   },
+   {
+    "lhs": 5365466.0,
+    "name": "is_gross_profit",
+    "passed": true,
+    "period": "prior",
+    "rhs": 5365466.0
+   },
+   {
+    "lhs": 6498133.0,
+    "name": "is_operating_income",
+    "passed": true,
+    "period": "current",
+    "rhs": 6498133.0
+   },
+   {
+    "lhs": 3798559.0,
+    "name": "is_operating_income",
+    "passed": true,
+    "period": "prior",
+    "rhs": 3798559.0
+   },
+   {
+    "lhs": 6606955.0,
+    "name": "is_pretax",
+    "passed": true,
+    "period": "current",
+    "rhs": 6606955.0
+   },
+   {
+    "lhs": 4245429.0,
+    "name": "is_pretax",
+    "passed": true,
+    "period": "prior",
+    "rhs": 4245429.0
+   },
+   {
+    "lhs": 5310342.0,
+    "name": "is_net_income",
+    "passed": true,
+    "period": "current",
+    "rhs": 5310342.0
+   },
+   {
+    "lhs": 3415162.0,
+    "name": "is_net_income",
+    "passed": true,
+    "period": "prior",
+    "rhs": 3415162.0
+   },
+   {
+    "lhs": 6866814.0,
+    "name": "cf_net_change",
+    "passed": true,
+    "period": "current",
+    "rhs": 6866814.0
+   },
+   {
+    "lhs": -1888370.0,
+    "name": "cf_net_change",
+    "passed": true,
+    "period": "prior",
+    "rhs": -1888370.0
+   },
+   {
+    "lhs": 9134067.0,
+    "name": "cf_ending",
+    "passed": true,
+    "period": "current",
+    "rhs": 9134067.0
+   },
+   {
+    "lhs": 2267253.0,
+    "name": "cf_ending",
+    "passed": true,
+    "period": "prior",
+    "rhs": 2267253.0
+   },
+   {
+    "lhs": 9134067.0,
+    "name": "cf_ending_eq_bs_cash",
+    "passed": true,
+    "period": "current",
+    "rhs": 9134067.0
+   },
+   {
+    "lhs": 2267253.0,
+    "name": "cf_ending_eq_bs_cash",
+    "passed": true,
+    "period": "prior",
+    "rhs": 2267253.0
+   },
+   {
+    "lhs": 6606955.0,
+    "name": "cf_pretax_eq_is",
+    "passed": true,
+    "period": "current",
+    "rhs": 6606955.0
+   },
+   {
+    "lhs": 4245429.0,
+    "name": "cf_pretax_eq_is",
+    "passed": true,
+    "period": "prior",
+    "rhs": 4245429.0
+   }
+  ],
+  "rows": [
+   {
+    "code": null,
+    "columns": [
+     9134067.0,
+     2267253.0
+    ],
+    "current": 9134067.0,
+    "current_pct": 33.0,
+    "key": "cash",
+    "label": "現金及約當現金",
+    "line_idx": 7,
+    "note": "六(一)",
+    "page": 10,
+    "prior": 2267253.0,
+    "prior_pct": 12.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     157576.0,
+     null
+    ],
+    "current": 157576.0,
+    "current_pct": 1.0,
+    "key": "fvtpl_current",
+    "label": "透過損益按公允價值衡量之金融資產-流動",
+    "line_idx": 8,
+    "note": "六(二)",
+    "page": 10,
+    "prior": null,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     414.0,
+     941.0
+    ],
+    "current": 414.0,
+    "current_pct": null,
+    "key": "notes_receivable",
+    "label": "應收票據淨額",
+    "line_idx": 10,
+    "note": "六(四)",
+    "page": 10,
+    "prior": 941.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     5290997.0,
+     3958244.0
+    ],
+    "current": 5290997.0,
+    "current_pct": 19.0,
+    "key": "accounts_receivable",
+    "label": "應收帳款淨額",
+    "line_idx": 11,
+    "note": "六(四)",
+    "page": 10,
+    "prior": 3958244.0,
+    "prior_pct": 21.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     122166.0,
+     101719.0
+    ],
+    "current": 122166.0,
+    "current_pct": null,
+    "key": "accounts_receivable_related",
+    "label": "應收帳款-關係人淨額",
+    "line_idx": 12,
+    "note": "六(四)及七",
+    "page": 10,
+    "prior": 101719.0,
+    "prior_pct": 1.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     124155.0,
+     54312.0
+    ],
+    "current": 124155.0,
+    "current_pct": null,
+    "key": "other_receivables",
+    "label": "其他應收款",
+    "line_idx": 13,
+    "note": null,
+    "page": 10,
+    "prior": 54312.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     3652341.0,
+     3061636.0
+    ],
+    "current": 3652341.0,
+    "current_pct": 13.0,
+    "key": "inventories",
+    "label": "存貨",
+    "line_idx": 14,
+    "note": "六(五)",
+    "page": 10,
+    "prior": 3061636.0,
+    "prior_pct": 17.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     84860.0,
+     50692.0
+    ],
+    "current": 84860.0,
+    "current_pct": null,
+    "key": "other_current_assets",
+    "label": "其他流動資產",
+    "line_idx": 15,
+    "note": null,
+    "page": 10,
+    "prior": 50692.0,
+    "prior_pct": null,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     18566576.0,
+     9494797.0
+    ],
+    "current": 18566576.0,
+    "current_pct": 66.0,
+    "key": "total_current_assets",
+    "label": "流動資產合計",
+    "line_idx": 16,
+    "note": null,
+    "page": 10,
+    "prior": 9494797.0,
+    "prior_pct": 51.0,
+    "section": "流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     207635.0,
+     510139.0
+    ],
+    "current": 207635.0,
+    "current_pct": 1.0,
+    "key": "fvoci_noncurrent",
+    "label": "透過其他綜合損益按公允價值衡量之金融資產-非流動",
+    "line_idx": 18,
+    "note": "六(三)",
+    "page": 10,
+    "prior": 510139.0,
+    "prior_pct": 3.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     18322.0,
+     16655.0
+    ],
+    "current": 18322.0,
+    "current_pct": null,
+    "key": "equity_method_investments",
+    "label": "採用權益法之投資",
+    "line_idx": 20,
+    "note": "六(六)",
+    "page": 10,
+    "prior": 16655.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     8073201.0,
+     4851594.0
+    ],
+    "current": 8073201.0,
+    "current_pct": 29.0,
+    "key": "ppe",
+    "label": "不動產、廠房及設備",
+    "line_idx": 21,
+    "note": "六(七)及八",
+    "page": 10,
+    "prior": 4851594.0,
+    "prior_pct": 26.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     202521.0,
+     200801.0
+    ],
+    "current": 202521.0,
+    "current_pct": 1.0,
+    "key": "right_of_use_assets",
+    "label": "使用權資產",
+    "line_idx": 22,
+    "note": "六(八)",
+    "page": 10,
+    "prior": 200801.0,
+    "prior_pct": 1.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     13925.0,
+     11801.0
+    ],
+    "current": 13925.0,
+    "current_pct": null,
+    "key": "intangible_assets",
+    "label": "無形資產",
+    "line_idx": 23,
+    "note": null,
+    "page": 10,
+    "prior": 11801.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     109115.0,
+     127814.0
+    ],
+    "current": 109115.0,
+    "current_pct": null,
+    "key": "deferred_tax_assets",
+    "label": "遞延所得稅資產",
+    "line_idx": 24,
+    "note": "六(二十二)",
+    "page": 10,
+    "prior": 127814.0,
+    "prior_pct": 1.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     538055.0,
+     501204.0
+    ],
+    "current": 538055.0,
+    "current_pct": 2.0,
+    "key": "prepaid_equipment",
+    "label": "預付設備款",
+    "line_idx": 25,
+    "note": "七",
+    "page": 10,
+    "prior": 501204.0,
+    "prior_pct": 3.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     33829.0,
+     50122.0
+    ],
+    "current": 33829.0,
+    "current_pct": null,
+    "key": "refundable_deposits",
+    "label": "存出保證金",
+    "line_idx": 26,
+    "note": null,
+    "page": 10,
+    "prior": 50122.0,
+    "prior_pct": null,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     205552.0,
+     2696945.0
+    ],
+    "current": 205552.0,
+    "current_pct": 1.0,
+    "key": "other_noncurrent_assets",
+    "label": "其他非流動資產-其他",
+    "line_idx": 27,
+    "note": null,
+    "page": 10,
+    "prior": 2696945.0,
+    "prior_pct": 15.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     9402155.0,
+     8967075.0
+    ],
+    "current": 9402155.0,
+    "current_pct": 34.0,
+    "key": "total_noncurrent_assets",
+    "label": "非流動資產合計",
+    "line_idx": 28,
+    "note": null,
+    "page": 10,
+    "prior": 8967075.0,
+    "prior_pct": 49.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     27968731.0,
+     18461872.0
+    ],
+    "current": 27968731.0,
+    "current_pct": 100.0,
+    "key": "total_assets",
+    "label": "資產總計",
+    "line_idx": 29,
+    "note": null,
+    "page": 10,
+    "prior": 18461872.0,
+    "prior_pct": 100.0,
+    "section": "非流動資產",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     24665.0,
+     80894.0
+    ],
+    "current": 24665.0,
+    "current_pct": null,
+    "key": "contract_liabilities_current",
+    "label": "合約負債-流動",
+    "line_idx": 7,
+    "note": "六(十八)",
+    "page": 11,
+    "prior": 80894.0,
+    "prior_pct": 1.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     13382.0,
+     10042.0
+    ],
+    "current": 13382.0,
+    "current_pct": null,
+    "key": "notes_payable",
+    "label": "應付票據",
+    "line_idx": 8,
+    "note": null,
+    "page": 11,
+    "prior": 10042.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     1827507.0,
+     1542294.0
+    ],
+    "current": 1827507.0,
+    "current_pct": 7.0,
+    "key": "accounts_payable",
+    "label": "應付帳款",
+    "line_idx": 9,
+    "note": "七",
+    "page": 11,
+    "prior": 1542294.0,
+    "prior_pct": 8.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     1680109.0,
+     1237994.0
+    ],
+    "current": 1680109.0,
+    "current_pct": 6.0,
+    "key": "other_payables",
+    "label": "其他應付款",
+    "line_idx": 10,
+    "note": "六(十)及七",
+    "page": 11,
+    "prior": 1237994.0,
+    "prior_pct": 7.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     833346.0,
+     488623.0
+    ],
+    "current": 833346.0,
+    "current_pct": 3.0,
+    "key": "current_tax_liabilities",
+    "label": "本期所得稅負債",
+    "line_idx": 11,
+    "note": null,
+    "page": 11,
+    "prior": 488623.0,
+    "prior_pct": 3.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     40274.0,
+     38059.0
+    ],
+    "current": 40274.0,
+    "current_pct": null,
+    "key": "lease_liabilities_current",
+    "label": "租賃負債-流動",
+    "line_idx": 12,
+    "note": null,
+    "page": 11,
+    "prior": 38059.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     34063.0,
+     22383.0
+    ],
+    "current": 34063.0,
+    "current_pct": null,
+    "key": "other_current_liabilities",
+    "label": "其他流動負債-其他",
+    "line_idx": 13,
+    "note": null,
+    "page": 11,
+    "prior": 22383.0,
+    "prior_pct": null,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     4453346.0,
+     3420289.0
+    ],
+    "current": 4453346.0,
+    "current_pct": 16.0,
+    "key": "total_current_liabilities",
+    "label": "流動負債合計",
+    "line_idx": 14,
+    "note": null,
+    "page": 11,
+    "prior": 3420289.0,
+    "prior_pct": 19.0,
+    "section": "流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     354764.0,
+     301104.0
+    ],
+    "current": 354764.0,
+    "current_pct": 2.0,
+    "key": "deferred_tax_liabilities",
+    "label": "遞延所得稅負債",
+    "line_idx": 16,
+    "note": "六(二十二)",
+    "page": 11,
+    "prior": 301104.0,
+    "prior_pct": 2.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     46693.0,
+     41229.0
+    ],
+    "current": 46693.0,
+    "current_pct": null,
+    "key": "lease_liabilities_noncurrent",
+    "label": "租賃負債-非流動",
+    "line_idx": 17,
+    "note": null,
+    "page": 11,
+    "prior": 41229.0,
+    "prior_pct": null,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     43787.0,
+     36460.0
+    ],
+    "current": 43787.0,
+    "current_pct": null,
+    "key": "net_defined_benefit_liabilities",
+    "label": "淨確定福利負債-非流動",
+    "line_idx": 18,
+    "note": "六(十二)",
+    "page": 11,
+    "prior": 36460.0,
+    "prior_pct": null,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     5428.0,
+     4822.0
+    ],
+    "current": 5428.0,
+    "current_pct": null,
+    "key": "guarantee_deposits_received",
+    "label": "存入保證金",
+    "line_idx": 19,
+    "note": null,
+    "page": 11,
+    "prior": 4822.0,
+    "prior_pct": null,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     450672.0,
+     383615.0
+    ],
+    "current": 450672.0,
+    "current_pct": 2.0,
+    "key": "total_noncurrent_liabilities",
+    "label": "非流動負債合計",
+    "line_idx": 20,
+    "note": null,
+    "page": 11,
+    "prior": 383615.0,
+    "prior_pct": 2.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     4904018.0,
+     3803904.0
+    ],
+    "current": 4904018.0,
+    "current_pct": 18.0,
+    "key": "total_liabilities",
+    "label": "負債總計",
+    "line_idx": 21,
+    "note": null,
+    "page": 11,
+    "prior": 3803904.0,
+    "prior_pct": 21.0,
+    "section": "非流動負債",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     1448700.0,
+     1429211.0
+    ],
+    "current": 1448700.0,
+    "current_pct": 5.0,
+    "key": "common_stock",
+    "label": "普通股股本",
+    "line_idx": 25,
+    "note": null,
+    "page": 11,
+    "prior": 1429211.0,
+    "prior_pct": 8.0,
+    "section": "股本",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     18628.0,
+     1.0
+    ],
+    "current": 18628.0,
+    "current_pct": null,
+    "key": "advance_receipts_for_stock",
+    "label": "預收股本",
+    "line_idx": 26,
+    "note": null,
+    "page": 11,
+    "prior": 1.0,
+    "prior_pct": null,
+    "section": "股本",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     12767546.0,
+     7636119.0
+    ],
+    "current": 12767546.0,
+    "current_pct": 45.0,
+    "key": "capital_surplus",
+    "label": "資本公積",
+    "line_idx": 28,
+    "note": null,
+    "page": 11,
+    "prior": 7636119.0,
+    "prior_pct": 41.0,
+    "section": "資本公積",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     1583158.0,
+     1239798.0
+    ],
+    "current": 1583158.0,
+    "current_pct": 6.0,
+    "key": "legal_reserve",
+    "label": "法定盈餘公積",
+    "line_idx": 30,
+    "note": null,
+    "page": 11,
+    "prior": 1239798.0,
+    "prior_pct": 7.0,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     9229.0,
+     197939.0
+    ],
+    "current": 9229.0,
+    "current_pct": null,
+    "key": "special_reserve",
+    "label": "特別盈餘公積",
+    "line_idx": 31,
+    "note": null,
+    "page": 11,
+    "prior": 197939.0,
+    "prior_pct": 1.0,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     6976263.0,
+     3893066.0
+    ],
+    "current": 6976263.0,
+    "current_pct": 25.0,
+    "key": "unappropriated_earnings",
+    "label": "未分配盈餘",
+    "line_idx": 32,
+    "note": null,
+    "page": 11,
+    "prior": 3893066.0,
+    "prior_pct": 21.0,
+    "section": "保留盈餘",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     33836.0,
+     70286.0
+    ],
+    "current": 33836.0,
+    "current_pct": null,
+    "key": "other_equity",
+    "label": "其他權益",
+    "line_idx": 34,
+    "note": null,
+    "page": 11,
+    "prior": 70286.0,
+    "prior_pct": null,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     22837360.0,
+     14466420.0
+    ],
+    "current": 22837360.0,
+    "current_pct": 81.0,
+    "key": "equity_parent",
+    "label": "歸屬於母公司業主之權益合計",
+    "line_idx": 35,
+    "note": null,
+    "page": 11,
+    "prior": 14466420.0,
+    "prior_pct": 78.0,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     227353.0,
+     191548.0
+    ],
+    "current": 227353.0,
+    "current_pct": 1.0,
+    "key": "noncontrolling_interests",
+    "label": "非控制權益",
+    "line_idx": 36,
+    "note": null,
+    "page": 11,
+    "prior": 191548.0,
+    "prior_pct": 1.0,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     23064713.0,
+     14657968.0
+    ],
+    "current": 23064713.0,
+    "current_pct": 82.0,
+    "key": "total_equity",
+    "label": "權益總計",
+    "line_idx": 37,
+    "note": null,
+    "page": 11,
+    "prior": 14657968.0,
+    "prior_pct": 79.0,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     27968731.0,
+     18461872.0
+    ],
+    "current": 27968731.0,
+    "current_pct": 100.0,
+    "key": "total_liabilities_and_equity",
+    "label": "負債及權益總計",
+    "line_idx": 40,
+    "note": null,
+    "page": 11,
+    "prior": 18461872.0,
+    "prior_pct": 100.0,
+    "section": "其他權益",
+    "statement": "bs"
+   },
+   {
+    "code": null,
+    "columns": [
+     20275577.0,
+     14278187.0
+    ],
+    "current": 20275577.0,
+    "current_pct": 100.0,
+    "key": "revenue",
+    "label": "營業收入",
+    "line_idx": 7,
+    "note": "六(十八)及七",
+    "page": 12,
+    "prior": 14278187.0,
+    "prior_pct": 100.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -11841587.0,
+     -8912721.0
+    ],
+    "current": -11841587.0,
+    "current_pct": -58.0,
+    "key": "cogs",
+    "label": "營業成本",
+    "line_idx": 8,
+    "note": "六(五)(二十一)及七",
+    "page": 12,
+    "prior": -8912721.0,
+    "prior_pct": -62.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     8433990.0,
+     5365466.0
+    ],
+    "current": 8433990.0,
+    "current_pct": 42.0,
+    "key": "gross_profit",
+    "label": "營業毛利",
+    "line_idx": 10,
+    "note": null,
+    "page": 12,
+    "prior": 5365466.0,
+    "prior_pct": 38.0,
+    "section": null,
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -241214.0,
+     -182238.0
+    ],
+    "current": -241214.0,
+    "current_pct": -1.0,
+    "key": "selling_expenses",
+    "label": "推銷費用",
+    "line_idx": 12,
+    "note": null,
+    "page": 12,
+    "prior": -182238.0,
+    "prior_pct": -1.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -954822.0,
+     -787150.0
+    ],
+    "current": -954822.0,
+    "current_pct": -5.0,
+    "key": "admin_expenses",
+    "label": "管理費用",
+    "line_idx": 13,
+    "note": null,
+    "page": 12,
+    "prior": -787150.0,
+    "prior_pct": -6.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -739821.0,
+     -597519.0
+    ],
+    "current": -739821.0,
+    "current_pct": -4.0,
+    "key": "rd_expenses",
+    "label": "研究發展費用",
+    "line_idx": 14,
+    "note": null,
+    "page": 12,
+    "prior": -597519.0,
+    "prior_pct": -4.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1935857.0,
+     -1566907.0
+    ],
+    "current": -1935857.0,
+    "current_pct": -10.0,
+    "key": "total_opex",
+    "label": "營業費用合計",
+    "line_idx": 15,
+    "note": null,
+    "page": 12,
+    "prior": -1566907.0,
+    "prior_pct": -11.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     6498133.0,
+     3798559.0
+    ],
+    "current": 6498133.0,
+    "current_pct": 32.0,
+    "key": "operating_income",
+    "label": "營業利益",
+    "line_idx": 16,
+    "note": null,
+    "page": 12,
+    "prior": 3798559.0,
+    "prior_pct": 27.0,
+    "section": "營業費用",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     93104.0,
+     96642.0
+    ],
+    "current": 93104.0,
+    "current_pct": 1.0,
+    "key": "interest_income",
+    "label": "利息收入",
+    "line_idx": 18,
+    "note": null,
+    "page": 12,
+    "prior": 96642.0,
+    "prior_pct": 1.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     31548.0,
+     38181.0
+    ],
+    "current": 31548.0,
+    "current_pct": null,
+    "key": "other_income",
+    "label": "其他收入",
+    "line_idx": 19,
+    "note": "六(十九)及七",
+    "page": 12,
+    "prior": 38181.0,
+    "prior_pct": null,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     21125.0,
+     324040.0
+    ],
+    "current": 21125.0,
+    "current_pct": null,
+    "key": "other_gains_losses",
+    "label": "其他利益及損失",
+    "line_idx": 20,
+    "note": "六(二十)",
+    "page": 12,
+    "prior": 324040.0,
+    "prior_pct": 2.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -38622.0,
+     -13607.0
+    ],
+    "current": -38622.0,
+    "current_pct": null,
+    "key": "finance_costs",
+    "label": "財務成本",
+    "line_idx": 21,
+    "note": null,
+    "page": 12,
+    "prior": -13607.0,
+    "prior_pct": null,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     1667.0,
+     1614.0
+    ],
+    "current": 1667.0,
+    "current_pct": null,
+    "key": "equity_method_share",
+    "label": "採用權益法認列之關聯企業及合資損益之份額",
+    "line_idx": 22,
+    "note": "六(六)",
+    "page": 12,
+    "prior": 1614.0,
+    "prior_pct": null,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     108822.0,
+     446870.0
+    ],
+    "current": 108822.0,
+    "current_pct": 1.0,
+    "key": "nonoperating_total",
+    "label": "營業外收入及支出合計",
+    "line_idx": 24,
+    "note": null,
+    "page": 12,
+    "prior": 446870.0,
+    "prior_pct": 3.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     6606955.0,
+     4245429.0
+    ],
+    "current": 6606955.0,
+    "current_pct": 33.0,
+    "key": "pretax_income",
+    "label": "稅前淨利",
+    "line_idx": 25,
+    "note": null,
+    "page": 12,
+    "prior": 4245429.0,
+    "prior_pct": 30.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1296613.0,
+     -830267.0
+    ],
+    "current": -1296613.0,
+    "current_pct": -6.0,
+    "key": "income_tax",
+    "label": "所得稅費用",
+    "line_idx": 26,
+    "note": "六(二十二)",
+    "page": 12,
+    "prior": -830267.0,
+    "prior_pct": -6.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     5310342.0,
+     3415162.0
+    ],
+    "current": 5310342.0,
+    "current_pct": 27.0,
+    "key": "net_income",
+    "label": "本期淨利",
+    "line_idx": 27,
+    "note": null,
+    "page": 12,
+    "prior": 3415162.0,
+    "prior_pct": 24.0,
+    "section": "營業外收入及支出",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -2049.0,
+     7286.0
+    ],
+    "current": -2049.0,
+    "current_pct": null,
+    "key": "remeasurement_defined_benefit",
+    "label": "確定福利計畫之再衡量數",
+    "line_idx": 30,
+    "note": "六(十二)",
+    "page": 12,
+    "prior": 7286.0,
+    "prior_pct": null,
+    "section": "不重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -17812.0,
+     252700.0
+    ],
+    "current": -17812.0,
+    "current_pct": null,
+    "key": "fvoci_equity_gain_loss",
+    "label": "透過其他綜合損益按公允價值衡量之權益工具投資未實現評價損益",
+    "line_idx": 31,
+    "note": "六(三)",
+    "page": 12,
+    "prior": 252700.0,
+    "prior_pct": 2.0,
+    "section": "不重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     409.0,
+     -1457.0
+    ],
+    "current": 409.0,
+    "current_pct": null,
+    "key": "oci_tax_nonreclass",
+    "label": "與不重分類之項目相關之所得稅",
+    "line_idx": 33,
+    "note": "六(二十二)",
+    "page": 12,
+    "prior": -1457.0,
+    "prior_pct": null,
+    "section": "不重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -19452.0,
+     258529.0
+    ],
+    "current": -19452.0,
+    "current_pct": null,
+    "key": "oci_nonreclass_total",
+    "label": "不重分類至損益之項目總額",
+    "line_idx": 34,
+    "note": null,
+    "page": 12,
+    "prior": 258529.0,
+    "prior_pct": 2.0,
+    "section": "不重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     18681.0,
+     72861.0
+    ],
+    "current": 18681.0,
+    "current_pct": null,
+    "key": "fx_translation_difference",
+    "label": "國外營運機構財務報表換算之兌換差額",
+    "line_idx": 36,
+    "note": null,
+    "page": 12,
+    "prior": 72861.0,
+    "prior_pct": null,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     18681.0,
+     72861.0
+    ],
+    "current": 18681.0,
+    "current_pct": null,
+    "key": "oci_reclass_total",
+    "label": "後續可能重分類至損益之項目總額",
+    "line_idx": 38,
+    "note": null,
+    "page": 12,
+    "prior": 72861.0,
+    "prior_pct": null,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     -771.0,
+     331390.0
+    ],
+    "current": -771.0,
+    "current_pct": null,
+    "key": "oci",
+    "label": "其他綜合損益(淨額)",
+    "line_idx": 39,
+    "note": null,
+    "page": 12,
+    "prior": 331390.0,
+    "prior_pct": 2.0,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     5309571.0,
+     3746552.0
+    ],
+    "current": 5309571.0,
+    "current_pct": 27.0,
+    "key": "total_comprehensive_income",
+    "label": "本期綜合損益總額",
+    "line_idx": 40,
+    "note": null,
+    "page": 12,
+    "prior": 3746552.0,
+    "prior_pct": 26.0,
+    "section": "後續可能重分類至損益之項目",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     5277165.0,
+     3427777.0
+    ],
+    "current": 5277165.0,
+    "current_pct": 27.0,
+    "key": "net_income_parent",
+    "label": "母公司業主",
+    "line_idx": 42,
+    "note": null,
+    "page": 12,
+    "prior": 3427777.0,
+    "prior_pct": 24.0,
+    "section": "淨利歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     33177.0,
+     -12615.0
+    ],
+    "current": 33177.0,
+    "current_pct": null,
+    "key": "net_income_nci",
+    "label": "非控制權益",
+    "line_idx": 43,
+    "note": null,
+    "page": 12,
+    "prior": -12615.0,
+    "prior_pct": null,
+    "section": "淨利歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     5310342.0,
+     3415162.0
+    ],
+    "current": 5310342.0,
+    "current_pct": 27.0,
+    "key": "net_income_attrib_total",
+    "label": "合計",
+    "line_idx": 44,
+    "note": null,
+    "page": 12,
+    "prior": 3415162.0,
+    "prior_pct": 24.0,
+    "section": "淨利歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     5273766.0,
+     3740971.0
+    ],
+    "current": 5273766.0,
+    "current_pct": 27.0,
+    "key": "tci_parent",
+    "label": "母公司業主",
+    "line_idx": 46,
+    "note": null,
+    "page": 12,
+    "prior": 3740971.0,
+    "prior_pct": 26.0,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     35805.0,
+     5581.0
+    ],
+    "current": 35805.0,
+    "current_pct": null,
+    "key": "tci_nci",
+    "label": "非控制權益",
+    "line_idx": 47,
+    "note": null,
+    "page": 12,
+    "prior": 5581.0,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     5309571.0,
+     3746552.0
+    ],
+    "current": 5309571.0,
+    "current_pct": 27.0,
+    "key": "tci_attrib_total",
+    "label": "合計",
+    "line_idx": 48,
+    "note": null,
+    "page": 12,
+    "prior": 3746552.0,
+    "prior_pct": 26.0,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     36.75,
+     24.15
+    ],
+    "current": 36.75,
+    "current_pct": null,
+    "key": "eps_basic",
+    "label": "基本每股盈餘",
+    "line_idx": 49,
+    "note": "六(二十三)",
+    "page": 12,
+    "prior": 24.15,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     36.14,
+     24.07
+    ],
+    "current": 36.14,
+    "current_pct": null,
+    "key": "eps_diluted",
+    "label": "稀釋每股盈餘",
+    "line_idx": 50,
+    "note": "六(二十三)",
+    "page": 12,
+    "prior": 24.07,
+    "prior_pct": null,
+    "section": "綜合損益總額歸屬於:",
+    "statement": "is"
+   },
+   {
+    "code": null,
+    "columns": [
+     6606955.0,
+     4245429.0
+    ],
+    "current": 6606955.0,
+    "current_pct": null,
+    "key": "pretax_income_cf",
+    "label": "本期稅前淨利",
+    "line_idx": 6,
+    "note": null,
+    "page": 14,
+    "prior": 4245429.0,
+    "prior_pct": null,
+    "section": "營業活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     629171.0,
+     576411.0
+    ],
+    "current": 629171.0,
+    "current_pct": null,
+    "key": "depreciation",
+    "label": "折舊費用",
+    "line_idx": 9,
+    "note": "六(七)(八)(二十一)",
+    "page": 14,
+    "prior": 576411.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     18877.0,
+     20513.0
+    ],
+    "current": 18877.0,
+    "current_pct": null,
+    "key": "amortization",
+    "label": "攤銷費用",
+    "line_idx": 11,
+    "note": "六(二十一)",
+    "page": 14,
+    "prior": 20513.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     3230.0,
+     -7459.0
+    ],
+    "current": 3230.0,
+    "current_pct": null,
+    "key": "impairment_loss_receivables",
+    "label": "預期信用減損損失(迴轉利益)",
+    "line_idx": 12,
+    "note": "十二(二)",
+    "page": 14,
+    "prior": -7459.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -59296.0,
+     -26103.0
+    ],
+    "current": -59296.0,
+    "current_pct": null,
+    "key": "fvtpl_gain_adj",
+    "label": "透過損益按公允價值衡量之金融資產利益",
+    "line_idx": 13,
+    "note": "六(二十)",
+    "page": 14,
+    "prior": -26103.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     38622.0,
+     13607.0
+    ],
+    "current": 38622.0,
+    "current_pct": null,
+    "key": "finance_costs_adj",
+    "label": "財務成本",
+    "line_idx": 14,
+    "note": null,
+    "page": 14,
+    "prior": 13607.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -93104.0,
+     -96642.0
+    ],
+    "current": -93104.0,
+    "current_pct": null,
+    "key": "interest_income_adj",
+    "label": "利息收入",
+    "line_idx": 15,
+    "note": null,
+    "page": 14,
+    "prior": -96642.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     2277.0,
+     -3406.0
+    ],
+    "current": 2277.0,
+    "current_pct": null,
+    "key": "ppe_disposal_loss_adj",
+    "label": "處分不動產、廠房及設備之損失(利益)",
+    "line_idx": 16,
+    "note": "六(二十)",
+    "page": 14,
+    "prior": -3406.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     145.0,
+     743.0
+    ],
+    "current": 145.0,
+    "current_pct": null,
+    "key": "lease_modification_loss",
+    "label": "租賃修改損失",
+    "line_idx": 17,
+    "note": "六(八)",
+    "page": 14,
+    "prior": 743.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1667.0,
+     -1614.0
+    ],
+    "current": -1667.0,
+    "current_pct": null,
+    "key": "equity_method_share_adj",
+    "label": "採用權益法認列之關聯企業及合資損益之份額",
+    "line_idx": 18,
+    "note": "六(六)",
+    "page": 14,
+    "prior": -1614.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -16616.0,
+     -11919.0
+    ],
+    "current": -16616.0,
+    "current_pct": null,
+    "key": "dividend_income_adj",
+    "label": "股利收入",
+    "line_idx": 20,
+    "note": "六(十九)",
+    "page": 14,
+    "prior": -11919.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -2790.0,
+     -3545.0
+    ],
+    "current": -2790.0,
+    "current_pct": null,
+    "key": "impairment_reversal_nonfinancial",
+    "label": "非金融資產減損迴轉利益",
+    "line_idx": 21,
+    "note": "六(七)",
+    "page": 14,
+    "prior": -3545.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -93872.0,
+     -56217.0
+    ],
+    "current": -93872.0,
+    "current_pct": null,
+    "key": "unrealized_fx_gain",
+    "label": "未實現外幣兌換淨利益",
+    "line_idx": 22,
+    "note": null,
+    "page": 14,
+    "prior": -56217.0,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -8.0,
+     null
+    ],
+    "current": -8.0,
+    "current_pct": null,
+    "key": "bond_buyback_gain",
+    "label": "買回公司債利益",
+    "line_idx": 23,
+    "note": null,
+    "page": 14,
+    "prior": null,
+    "prior_pct": null,
+    "section": "收益費損項目",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     685.0,
+     -622.0
+    ],
+    "current": 685.0,
+    "current_pct": null,
+    "key": "change_notes_receivable",
+    "label": "應收票據",
+    "line_idx": 26,
+    "note": null,
+    "page": 14,
+    "prior": -622.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1262904.0,
+     -1373182.0
+    ],
+    "current": -1262904.0,
+    "current_pct": null,
+    "key": "change_receivables",
+    "label": "應收帳款",
+    "line_idx": 27,
+    "note": null,
+    "page": 14,
+    "prior": -1373182.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -16260.0,
+     29814.0
+    ],
+    "current": -16260.0,
+    "current_pct": null,
+    "key": "change_receivables_related",
+    "label": "應收帳款-關係人",
+    "line_idx": 28,
+    "note": null,
+    "page": 14,
+    "prior": 29814.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -55226.0,
+     10314.0
+    ],
+    "current": -55226.0,
+    "current_pct": null,
+    "key": "change_other_receivables",
+    "label": "其他應收款",
+    "line_idx": 29,
+    "note": null,
+    "page": 14,
+    "prior": 10314.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -651230.0,
+     -635456.0
+    ],
+    "current": -651230.0,
+    "current_pct": null,
+    "key": "change_inventories",
+    "label": "存貨",
+    "line_idx": 30,
+    "note": null,
+    "page": 14,
+    "prior": -635456.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -34168.0,
+     9184.0
+    ],
+    "current": -34168.0,
+    "current_pct": null,
+    "key": "change_other_current_assets",
+    "label": "其他流動資產",
+    "line_idx": 31,
+    "note": null,
+    "page": 14,
+    "prior": 9184.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之資產之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -56229.0,
+     34803.0
+    ],
+    "current": -56229.0,
+    "current_pct": null,
+    "key": "change_contract_liabilities",
+    "label": "合約負債",
+    "line_idx": 33,
+    "note": null,
+    "page": 14,
+    "prior": 34803.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     3340.0,
+     6404.0
+    ],
+    "current": 3340.0,
+    "current_pct": null,
+    "key": "change_notes_payable",
+    "label": "應付票據",
+    "line_idx": 34,
+    "note": null,
+    "page": 14,
+    "prior": 6404.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     293762.0,
+     484430.0
+    ],
+    "current": 293762.0,
+    "current_pct": null,
+    "key": "change_payables",
+    "label": "應付帳款",
+    "line_idx": 35,
+    "note": null,
+    "page": 14,
+    "prior": 484430.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     388428.0,
+     225743.0
+    ],
+    "current": 388428.0,
+    "current_pct": null,
+    "key": "change_other_payables",
+    "label": "其他應付款",
+    "line_idx": 36,
+    "note": null,
+    "page": 14,
+    "prior": 225743.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     12395.0,
+     7453.0
+    ],
+    "current": 12395.0,
+    "current_pct": null,
+    "key": "change_other_current_liabilities",
+    "label": "其他流動負債",
+    "line_idx": 37,
+    "note": null,
+    "page": 14,
+    "prior": 7453.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     7327.0,
+     6523.0
+    ],
+    "current": 7327.0,
+    "current_pct": null,
+    "key": "change_net_defined_benefit",
+    "label": "淨確定福利負債-非流動",
+    "line_idx": 38,
+    "note": null,
+    "page": 14,
+    "prior": 6523.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     5661844.0,
+     3455206.0
+    ],
+    "current": 5661844.0,
+    "current_pct": null,
+    "key": "cash_from_operations_before_tax",
+    "label": "營運產生之現金流入",
+    "line_idx": 39,
+    "note": null,
+    "page": 14,
+    "prior": 3455206.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1553.0,
+     -1416.0
+    ],
+    "current": -1553.0,
+    "current_pct": null,
+    "key": "interest_paid",
+    "label": "支付之利息",
+    "line_idx": 40,
+    "note": null,
+    "page": 14,
+    "prior": -1416.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -886772.0,
+     -563114.0
+    ],
+    "current": -886772.0,
+    "current_pct": null,
+    "key": "income_tax_paid",
+    "label": "支付之所得稅",
+    "line_idx": 41,
+    "note": null,
+    "page": 14,
+    "prior": -563114.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     4773519.0,
+     2890676.0
+    ],
+    "current": 4773519.0,
+    "current_pct": null,
+    "key": "cfo",
+    "label": "營業活動之淨現金流入",
+    "line_idx": 42,
+    "note": null,
+    "page": 14,
+    "prior": 2890676.0,
+    "prior_pct": null,
+    "section": "與營業活動相關之負債之淨變動",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -154025.0,
+     -130080.0
+    ],
+    "current": -154025.0,
+    "current_pct": null,
+    "key": "fvtpl_purchase",
+    "label": "取得透過損益按公允價值衡量之金融資產",
+    "line_idx": 6,
+    "note": null,
+    "page": 15,
+    "prior": -130080.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     155591.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": "fvtpl_disposal_proceeds",
+    "label": "處分透過損益按公允價值衡量之金融資產",
+    "line_idx": 7,
+    "note": null,
+    "page": 15,
+    "prior": 155591.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     284691.0,
+     139140.0
+    ],
+    "current": 284691.0,
+    "current_pct": null,
+    "key": "fvoci_disposal_proceeds",
+    "label": "處分透過其他綜合損益按公允價值衡量之金融資產",
+    "line_idx": 8,
+    "note": null,
+    "page": 15,
+    "prior": 139140.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -829582.0,
+     -217200.0
+    ],
+    "current": -829582.0,
+    "current_pct": null,
+    "key": "capex",
+    "label": "取得不動產、廠房及設備",
+    "line_idx": 10,
+    "note": "六(二十五)",
+    "page": 15,
+    "prior": -217200.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     15059.0,
+     14237.0
+    ],
+    "current": 15059.0,
+    "current_pct": null,
+    "key": "ppe_disposal_proceeds",
+    "label": "處分不動產、廠房及設備價款",
+    "line_idx": 11,
+    "note": null,
+    "page": 15,
+    "prior": 14237.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -20957.0,
+     -19267.0
+    ],
+    "current": -20957.0,
+    "current_pct": null,
+    "key": "intangible_purchase",
+    "label": "購置無形資產",
+    "line_idx": 12,
+    "note": null,
+    "page": 15,
+    "prior": -19267.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -342995.0,
+     -395555.0
+    ],
+    "current": -342995.0,
+    "current_pct": null,
+    "key": "prepaid_equipment_increase",
+    "label": "預付設備款增加",
+    "line_idx": 13,
+    "note": null,
+    "page": 15,
+    "prior": -395555.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     16293.0,
+     -27467.0
+    ],
+    "current": 16293.0,
+    "current_pct": null,
+    "key": "change_refundable_deposits",
+    "label": "存出保證金減少(增加)",
+    "line_idx": 14,
+    "note": null,
+    "page": 15,
+    "prior": -27467.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -91784.0,
+     -2191041.0
+    ],
+    "current": -91784.0,
+    "current_pct": null,
+    "key": "other_noncurrent_assets_increase",
+    "label": "其他非流動資產增加",
+    "line_idx": 15,
+    "note": null,
+    "page": 15,
+    "prior": -2191041.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     16616.0,
+     11919.0
+    ],
+    "current": 16616.0,
+    "current_pct": null,
+    "key": "dividends_received",
+    "label": "收取之股利",
+    "line_idx": 16,
+    "note": null,
+    "page": 15,
+    "prior": 11919.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     93104.0,
+     96642.0
+    ],
+    "current": 93104.0,
+    "current_pct": null,
+    "key": "interest_received",
+    "label": "收取之利息",
+    "line_idx": 17,
+    "note": null,
+    "page": 15,
+    "prior": 96642.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -1013580.0,
+     -2563081.0
+    ],
+    "current": -1013580.0,
+    "current_pct": null,
+    "key": "cfi",
+    "label": "投資活動之淨現金流出",
+    "line_idx": 18,
+    "note": null,
+    "page": 15,
+    "prior": -2563081.0,
+    "prior_pct": null,
+    "section": "投資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     367845.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": "short_term_borrowings_increase",
+    "label": "短期借款增加",
+    "line_idx": 20,
+    "note": "六(二十六)",
+    "page": 15,
+    "prior": 367845.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     -711166.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": "short_term_borrowings_decrease",
+    "label": "短期借款減少",
+    "line_idx": 21,
+    "note": "六(二十六)",
+    "page": 15,
+    "prior": -711166.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     81750.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": "long_term_borrowings_proceeds",
+    "label": "舉借長期借款",
+    "line_idx": 22,
+    "note": "六(二十六)",
+    "page": 15,
+    "prior": 81750.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     -481952.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": "long_term_borrowings_repayment",
+    "label": "償還長期借款",
+    "line_idx": 23,
+    "note": "六(二十六)",
+    "page": 15,
+    "prior": -481952.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -49043.0,
+     -45145.0
+    ],
+    "current": -49043.0,
+    "current_pct": null,
+    "key": "lease_principal_repayment",
+    "label": "租賃負債本金償還",
+    "line_idx": 24,
+    "note": "六(二十六)",
+    "page": 15,
+    "prior": -45145.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     606.0,
+     528.0
+    ],
+    "current": 606.0,
+    "current_pct": null,
+    "key": "guarantee_deposits_received_increase",
+    "label": "存入保證金增加",
+    "line_idx": 25,
+    "note": "六(二十六)",
+    "page": 15,
+    "prior": 528.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     null,
+     -28210.0
+    ],
+    "current": null,
+    "current_pct": null,
+    "key": "dividends_paid_to_nci",
+    "label": "子公司發放予非控制權益之現金股利",
+    "line_idx": 26,
+    "note": null,
+    "page": 15,
+    "prior": -28210.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     5197445.0,
+     null
+    ],
+    "current": 5197445.0,
+    "current_pct": null,
+    "key": "bonds_issued",
+    "label": "發行應付公司債",
+    "line_idx": 27,
+    "note": "六(二十六)",
+    "page": 15,
+    "prior": null,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -200.0,
+     null
+    ],
+    "current": -200.0,
+    "current_pct": null,
+    "key": "bonds_repaid",
+    "label": "應付公司債償還",
+    "line_idx": 28,
+    "note": "六(二十六)",
+    "page": 15,
+    "prior": null,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     -2072369.0,
+     -1408168.0
+    ],
+    "current": -2072369.0,
+    "current_pct": null,
+    "key": "dividends_paid",
+    "label": "發放現金股利",
+    "line_idx": 29,
+    "note": "六(十六)",
+    "page": 15,
+    "prior": -1408168.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     280.0,
+     9513.0
+    ],
+    "current": 280.0,
+    "current_pct": null,
+    "key": "employee_stock_option_exercised",
+    "label": "員工執行認股權",
+    "line_idx": 30,
+    "note": null,
+    "page": 15,
+    "prior": 9513.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     3076719.0,
+     -2215005.0
+    ],
+    "current": 3076719.0,
+    "current_pct": null,
+    "key": "cff",
+    "label": "籌資活動之淨現金流入(流出)",
+    "line_idx": 31,
+    "note": null,
+    "page": 15,
+    "prior": -2215005.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     30156.0,
+     -960.0
+    ],
+    "current": 30156.0,
+    "current_pct": null,
+    "key": "fx_effect",
+    "label": "匯率變動對現金及約當現金影響數",
+    "line_idx": 32,
+    "note": null,
+    "page": 15,
+    "prior": -960.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     6866814.0,
+     -1888370.0
+    ],
+    "current": 6866814.0,
+    "current_pct": null,
+    "key": "net_change_in_cash",
+    "label": "本期現金及約當現金增加(減少)數",
+    "line_idx": 33,
+    "note": null,
+    "page": 15,
+    "prior": -1888370.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     2267253.0,
+     4155623.0
+    ],
+    "current": 2267253.0,
+    "current_pct": null,
+    "key": "cash_beginning",
+    "label": "期初現金及約當現金餘額",
+    "line_idx": 34,
+    "note": null,
+    "page": 15,
+    "prior": 4155623.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   },
+   {
+    "code": null,
+    "columns": [
+     9134067.0,
+     2267253.0
+    ],
+    "current": 9134067.0,
+    "current_pct": null,
+    "key": "cash_ending",
+    "label": "期末現金及約當現金餘額",
+    "line_idx": 35,
+    "note": null,
+    "page": 15,
+    "prior": 2267253.0,
+    "prior_pct": null,
+    "section": "籌資活動之現金流量",
+    "statement": "cf"
+   }
+  ],
+  "unmapped_labels": []
+ }
+}

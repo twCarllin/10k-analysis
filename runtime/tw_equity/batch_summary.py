@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
-UNSUPPORTED_GROUPS = {"fh": "金控（工作包 E 未支援）"}
+UNSUPPORTED_GROUPS: dict[str, str] = {}  # fh 已支援（fh-schema Spec §8.2）；保留表結構供日後新類別
 
 
 def _metric(rec: dict, key: str, period: str = "current") -> float | None:
@@ -47,6 +47,47 @@ RANK_COLUMNS: list[tuple[str, str, str, Callable[[dict], float | None]]] = [
     ("ttm_revenue", "TTM 營收", "百萬元", lambda r: _mn(_ttm(r, "revenue"))),
     ("ttm_net_income", "TTM 淨利", "百萬元", lambda r: _mn(_ttm(r, "net_income"))),
 ]
+
+
+# 金控排名欄（fh-schema Spec §8.2）：取值同工業欄的 (key, 標題, 單位, 取值函式) 形狀。
+# group_car 期間與 TTM scope 另存於列（group_car_period／ttm_scope），由 render 標註。
+def _fh_ttm(rec: dict) -> float | None:
+    t = rec.get("ttm") or {}
+    key = "net_income_parent" if t.get("scope") == "parent_only" else "net_income"
+    return _mn(_ttm(rec, key))
+
+
+FH_RANK_COLUMNS: list[tuple[str, str, str, Callable[[dict], float | None]]] = [
+    ("net_revenue", "淨收益", "百萬元", lambda r: _mn(_value(r, "net_revenue"))),
+    ("roe", "ROE", "%", lambda r: _metric(r, "roe")),
+    ("roa", "ROA", "%", lambda r: _metric(r, "roa")),
+    ("cost_income_ratio", "成本收入比", "%", lambda r: _metric(r, "cost_income_ratio")),
+    ("credit_cost", "信用成本", "%", lambda r: _metric(r, "credit_cost")),
+    ("npl_ratio", "逾放比", "%", lambda r: _metric(r, "npl_ratio")),
+    ("coverage_ratio", "覆蓋率", "%", lambda r: _metric(r, "coverage_ratio")),
+    ("equity_to_assets", "權益／資產", "%", lambda r: _metric(r, "equity_to_assets")),
+    ("loan_to_deposit", "放款／存款", "%", lambda r: _metric(r, "loan_to_deposit")),
+    ("group_car", "集團 CAR", "%", lambda r: _metric(r, "group_car")),
+    ("ttm_net_income", "TTM 淨利", "百萬元", _fh_ttm),
+]
+FH_NOTE = ("金控 H1 指標未年化；TTM 為 FY＋本期 H1－上年同期 H1，其中 FY 為 IFRS 4、H1 為 IFRS 17（混用），"
+           "數字不可直接與 FY 比較。集團 CAR 為最新可得期，期間見括號。")
+FH_IFRS17_NOTE = "FY 為 IFRS 4、H1 為 IFRS 17"
+
+
+def _is_fh(r: dict) -> bool:
+    return r.get("schema") == "fh" or r.get("group") == "fh"
+
+
+def _fh_row(r: dict, base: dict) -> dict:
+    src = (((r.get("metrics") or {}).get("group_car") or {}).get("source") or {}).get("current") or {}
+    t = r.get("ttm") or {}
+    return {**base, "fs_period": r.get("fs_period"), "basis": r.get("basis"),
+            "values": {k: f(r) for k, _, _, f in FH_RANK_COLUMNS},
+            "group_car_period": src.get("period"),
+            "ttm_scope": t.get("scope"),
+            "ttm_label": "歸母" if t.get("scope") == "parent_only" else None,
+            "ifrs17_break": bool(r.get("ifrs17_break"))}
 
 
 def _yoy(cur: float | None, prior: float | None) -> float | None:
@@ -127,11 +168,14 @@ FLAG_RULES: list[tuple[str, str, Callable[[dict], str | None]]] = [
 
 
 def build_summary(records: list[dict]) -> dict[str, Any]:
-    rows, flags, unsupported, failed = [], [], [], []
+    rows, flags, unsupported, failed, fh_rows = [], [], [], [], []
     for r in records:
         base = {"ticker": r["ticker"], "company_name": r.get("company_name"), "group": r.get("group")}
         if r.get("status") == "error":
             failed.append({**base, "error": r.get("error")})
+            continue
+        if _is_fh(r):
+            fh_rows.append(_fh_row(r, base))
             continue
         if r.get("group") in UNSUPPORTED_GROUPS:
             unsupported.append({**base, "reason": UNSUPPORTED_GROUPS[r["group"]]})
@@ -146,6 +190,8 @@ def build_summary(records: list[dict]) -> dict[str, Any]:
         "columns": [{"key": k, "title": t, "unit": u} for k, t, u, _ in RANK_COLUMNS],
         "rules": [{"id": i, "desc": d} for i, d, _ in FLAG_RULES],
         "rows": rows, "flags": flags, "unsupported": unsupported, "failed": failed,
+        "fh_ranking": fh_rows,
+        "fh_columns": [{"key": k, "title": t, "unit": u} for k, t, u, _ in FH_RANK_COLUMNS],
     }
 
 
@@ -153,6 +199,32 @@ def _fmt(v: float | None, unit: str) -> str:
     if v is None:
         return ""
     return f"{v:,.0f}" if unit in ("百萬元", "天") else f"{v:,.1f}"
+
+
+def _fh_cell(row: dict, c: dict) -> str:
+    v = row["values"][c["key"]]
+    if v is None:
+        txt = "不可得"
+    else:
+        txt = f"{v:,.0f}" if c["unit"] == "百萬元" else f"{v:,.2f}"  # 金控比率 2 位（逾放比等 0.1 級數）
+    if c["key"] == "group_car" and v is not None and row.get("group_car_period"):
+        txt += f"（{row['group_car_period']}）"
+    if c["key"] == "ttm_net_income" and v is not None and row.get("ttm_label"):
+        txt += f"（{row['ttm_label']}）"
+    return txt
+
+
+def _fh_md(s: dict) -> list[str]:
+    cols = s["fh_columns"]
+    L = ["", "## 金控", "", FH_NOTE, "",
+         "| 代號 | 公司 | 期間 | " + " | ".join(f"{c['title']}（{c['unit']}）" for c in cols) + " | IFRS 17 |",
+         "|---|---|---|" + "---:|" * len(cols) + "---|"]
+    for r in s["fh_ranking"]:
+        mark = "斷層" if r["ifrs17_break"] else "否"
+        L.append(f"| {r['ticker']} | {r['company_name'] or ''} | {r['fs_period'] or ''} | "
+                 + " | ".join(_fh_cell(r, c) for c in cols) + f" | {mark} |")
+    L += [f"- {r['ticker']} {r['company_name'] or ''}：{FH_IFRS17_NOTE}" for r in s["fh_ranking"] if r["ifrs17_break"]]
+    return L
 
 
 def render_md(s: dict) -> str:
@@ -169,6 +241,8 @@ def render_md(s: dict) -> str:
     L += ["", "## 紅旗清單", "", "| 代號 | 公司 | 規則 | 說明 | 數值 |", "|---|---|---|---|---|"]
     L += [f"| {f['ticker']} | {f['company_name'] or ''} | {f['rule']} | {f['rule_desc']} | {f['detail']} |"
           for f in s["flags"]]
+    if s.get("fh_ranking"):
+        L += _fh_md(s)
     L += ["", "## 未支援", ""] + [f"- {u['ticker']} {u['company_name'] or ''}：{u['reason']}" for u in s["unsupported"]]
     L += ["", "## 失敗", ""] + [f"- {x['ticker']} {x['company_name'] or ''}：{x['error']}" for x in s["failed"]]
     return "\n".join(L) + "\n"
@@ -283,9 +357,39 @@ renderFlags(); renderRank();
 """
 
 
+_FH_HTML_SECTION = """  <section id="fh-section">
+    <h2>金控</h2>
+    <p class="sub">__NOTE__</p>
+    <div class="scroll"><table><thead><tr id="fh-head"></tr></thead><tbody id="fh-body"></tbody></table></div>
+    <ul id="fh-notes"></ul>
+  </section>
+"""
+_FH_HTML_JS = """const FH_NOTE = __IFRS17__;
+document.getElementById("fh-head").innerHTML = `<th>代號</th><th>公司</th><th>期間</th>` + S.fh_columns.map(c =>
+  `<th>${esc(c.title)}<span class="u">${esc(c.unit)}</span></th>`).join("") + `<th>IFRS 17</th>`;
+document.getElementById("fh-body").innerHTML = S.fh_ranking.map(r => `<tr><td>${esc(r.ticker)}</td><td>${esc(r.company_name)}</td>
+  <td class="tag">${esc(r.fs_period)}</td>` + S.fh_columns.map(c => { const v = r.values[c.key];
+    if (v == null) return `<td class="num tag">不可得</td>`;
+    let t = c.unit === "百萬元" ? fmt(v, c.unit) : v.toLocaleString("zh-TW", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (c.key === "group_car" && r.group_car_period) t += `（${esc(r.group_car_period)}）`;
+    if (c.key === "ttm_net_income" && r.ttm_label) t += `（${esc(r.ttm_label)}）`;
+    return `<td class="num${v < 0 ? " neg" : ""}">${t}</td>`; }).join("") + `<td class="tag">${r.ifrs17_break ? "斷層" : "否"}</td></tr>`).join("");
+document.getElementById("fh-notes").innerHTML = S.fh_ranking.filter(r => r.ifrs17_break)
+  .map(r => `<li>${esc(r.ticker)} ${esc(r.company_name)}：${esc(FH_NOTE)}</li>`).join("");
+"""
+
+
 def render_html(s: dict) -> str:
+    if not s.get("fh_ranking"):  # 無金控 → 與本功能前逐字相同（資料也不帶 fh_* 鍵）
+        data = json.dumps({k: v for k, v in s.items() if not k.startswith("fh_")}, ensure_ascii=False).replace("</", "<\\/")
+        return _HTML.replace("__DATA__", data)
     data = json.dumps(s, ensure_ascii=False).replace("</", "<\\/")
-    return _HTML.replace("__DATA__", data)
+    html = _HTML.replace("__DATA__", data)
+    html = html.replace("  <section><h2>未支援</h2>",
+                        _FH_HTML_SECTION.replace("__NOTE__", FH_NOTE) + "  <section><h2>未支援</h2>", 1)
+    return html.replace("renderFlags(); renderRank();",
+                        _FH_HTML_JS.replace("__IFRS17__", json.dumps(FH_IFRS17_NOTE, ensure_ascii=False))
+                        + "renderFlags(); renderRank();", 1)
 
 
 def write_summary(summary: dict, out_dir: Path) -> None:

@@ -1,0 +1,246 @@
+{
+ "assurance": "audited",
+ "basis": "FY",
+ "bridges": [
+  {
+   "target": "fcf",
+   "target_delta": 1270461.0,
+   "top_drivers": [
+    "cfo",
+    "capex"
+   ]
+  },
+  {
+   "target": "cfo",
+   "target_delta": 1882843.0,
+   "top_drivers": [
+    "pretax_income_cf",
+    "income_tax_paid",
+    "change_payables"
+   ]
+  },
+  {
+   "target": "net_income",
+   "target_delta": 1895180.0,
+   "top_drivers": [
+    "revenue",
+    "cogs",
+    "income_tax"
+   ]
+  },
+  {
+   "target": "operating_income",
+   "target_delta": 2699574.0,
+   "top_drivers": [
+    "revenue",
+    "cogs",
+    "total_opex"
+   ]
+  },
+  {
+   "target": "net_change_in_cash",
+   "target_delta": 8755184.0,
+   "top_drivers": [
+    "cff",
+    "cfo",
+    "cfi"
+   ]
+  },
+  {
+   "target": "cfi",
+   "target_delta": 1549501.0,
+   "top_drivers": [
+    "other_noncurrent_assets_increase",
+    "capex",
+    "fvtpl_disposal_proceeds"
+   ]
+  },
+  {
+   "target": "cff",
+   "target_delta": 5291724.0,
+   "top_drivers": [
+    "bonds_issued",
+    "short_term_borrowings_decrease",
+    "dividends_paid"
+   ]
+  },
+  {
+   "target": "total_assets",
+   "target_delta": 9506859.0,
+   "top_drivers": [
+    "cash",
+    "ppe",
+    "other_noncurrent_assets"
+   ]
+  }
+ ],
+ "checks": {
+  "failed": 0,
+  "none": 0,
+  "not_passed": [],
+  "passed": 22
+ },
+ "company_name": null,
+ "elapsed_seconds": null,
+ "error": null,
+ "fs_period": null,
+ "fy_income_usable": null,
+ "group": null,
+ "inputs": null,
+ "metrics": {
+  "asset_turnover": {
+   "current": 0.7249373237563048,
+   "prior": 0.7733878232933258
+  },
+  "capex_to_depreciation": {
+   "current": 1.3185318458733795,
+   "prior": 0.37681446051515327
+  },
+  "capex_to_revenue": {
+   "current": 4.091533375351044,
+   "prior": 1.5212015363014926
+  },
+  "cash_to_assets": {
+   "current": 32.65813883368537,
+   "prior": 12.280731878110736
+  },
+  "ccc": {
+   "current": 153.69541084990564,
+   "prior": 166.46271603366554
+  },
+  "cfo_to_net_income": {
+   "current": 0.8989099007182588,
+   "prior": 0.8464242691854735
+  },
+  "current_ratio": {
+   "current": 416.91294590629155,
+   "prior": 277.6021850785124
+  },
+  "debt_to_equity": {
+   "current": 0.3770565018519849,
+   "prior": 0.5409208152180439
+  },
+  "dio": {
+   "current": 112.5781928554002,
+   "prior": 125.72577734678332
+  },
+  "dividend_payout": {
+   "current": 39.27049845892633,
+   "prior": 41.08108549651859
+  },
+  "dpo": {
+   "current": 56.330292130607155,
+   "prior": 63.33414947017864
+  },
+  "dso": {
+   "current": 97.44751012511259,
+   "prior": 104.07108815706084
+  },
+  "ebitda": {
+   "current": 7146181.0,
+   "prior": 4395483.0
+  },
+  "ebitda_margin": {
+   "current": 35.2452657697485,
+   "prior": 30.78460171448938
+  },
+  "effective_tax_rate": {
+   "current": 19.624970958633742,
+   "prior": 19.556727953759207
+  },
+  "fcf": {
+   "current": 3943937.0,
+   "prior": 2673476.0
+  },
+  "fcf_margin": {
+   "current": 19.451663447111763,
+   "prior": 18.72419796715087
+  },
+  "gross_margin": {
+   "current": 41.59679401478932,
+   "prior": 37.578062256783724
+  },
+  "interest_bearing_debt": {
+   "current": 86967.0,
+   "prior": 79288.0
+  },
+  "interest_coverage": {
+   "current": 168.2495209983947,
+   "prior": 279.16212243698095
+  },
+  "liabilities_to_assets": {
+   "current": 17.533931017463754,
+   "prior": 20.60410775245327
+  },
+  "net_debt": {
+   "current": -9047100.0,
+   "prior": -2187965.0
+  },
+  "net_margin": {
+   "current": 26.19083047550262,
+   "prior": 23.91873702172412
+  },
+  "operating_margin": {
+   "current": 32.049065730657134,
+   "prior": 26.603930877218517
+  },
+  "opex_ratio": {
+   "current": 9.547728284132186,
+   "prior": 10.974131379565206
+  },
+  "quick_ratio": {
+   "current": 334.89953396839144,
+   "prior": 188.08822880171823
+  },
+  "rd_intensity": {
+   "current": 3.6488283416052725,
+   "prior": 4.184838033007972
+  },
+  "roa": {
+   "current": 18.98671055186594,
+   "prior": 18.4984599611567
+  },
+  "roe": {
+   "current": 23.10759649977055,
+   "prior": 23.69471507117863
+  },
+  "working_capital": {
+   "current": 14113230.0,
+   "prior": 6074508.0
+  }
+ },
+ "n_unmapped": 0,
+ "periods": {
+  "bs_current": "114-12-31",
+  "bs_prior_fy_end": "113-12-31",
+  "bs_prior_same": "113-12-31",
+  "flow_current": "114-01-01~114-12-31",
+  "flow_prior": "113-01-01~113-12-31"
+ },
+ "schema_version": 1,
+ "status": "ok",
+ "ticker": "3653",
+ "ttm": null,
+ "values": {
+  "cfo": {
+   "current": 4773519.0,
+   "prior": 2890676.0
+  },
+  "gross_profit": {
+   "current": 8433990.0,
+   "prior": 5365466.0
+  },
+  "net_income": {
+   "current": 5310342.0,
+   "prior": 3415162.0
+  },
+  "operating_income": {
+   "current": 6498133.0,
+   "prior": 3798559.0
+  },
+  "revenue": {
+   "current": 20275577.0,
+   "prior": 14278187.0
+  }
+ }
+}

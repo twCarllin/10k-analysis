@@ -1,0 +1,5125 @@
+{
+ "2059_H1": {
+  "assurance": null,
+  "basis": "H1",
+  "bridges": [
+   {
+    "components": [
+     {
+      "current": 5773574.0,
+      "delta": 1447999.0,
+      "key": "cfo",
+      "name": "營業活動之淨現金流入",
+      "prior": 4325575.0,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "capex",
+      "name": "capex",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "自由現金流變動",
+    "residual": null,
+    "target": "fcf",
+    "target_current": null,
+    "target_delta": null,
+    "target_prior": null,
+    "top_drivers": [
+     "cfo"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 13470254.0,
+      "delta": 9437320.0,
+      "key": "pretax_income_cf",
+      "name": "稅前淨利",
+      "prior": 4032934.0,
+      "share": 6.517490688874785
+     },
+     {
+      "current": -5865062.0,
+      "delta": -5174951.0,
+      "key": "change_receivables",
+      "name": "應收帳款",
+      "prior": -690111.0,
+      "share": -3.573863655983188
+     },
+     {
+      "current": -2063715.0,
+      "delta": -984016.0,
+      "key": "income_tax_paid",
+      "name": "支付之所得稅",
+      "prior": -1079699.0,
+      "share": -0.6795695300894545
+     },
+     {
+      "current": 507547.0,
+      "delta": 625104.0,
+      "key": "change_other_payables",
+      "name": "其他應付款",
+      "prior": -117557.0,
+      "share": 0.4317019555952732
+     },
+     {
+      "current": -485576.0,
+      "delta": -621482.0,
+      "key": "change_inventories",
+      "name": "存貨",
+      "prior": 135906.0,
+      "share": -0.4292005726523292
+     },
+     {
+      "current": -439157.0,
+      "delta": -101703.0,
+      "key": "interest_income_adj",
+      "name": "利息收入",
+      "prior": -337454.0,
+      "share": -0.07023692695920371
+     },
+     {
+      "current": 108895.0,
+      "delta": 66812.0,
+      "key": "change_notes_payable",
+      "name": "應付票據",
+      "prior": 42083.0,
+      "share": 0.046140915843173924
+     },
+     {
+      "current": 11842.0,
+      "delta": -53445.0,
+      "key": "impairment_loss_receivables",
+      "name": "預期信用減損損失",
+      "prior": 65287.0,
+      "share": -0.03690955587676511
+     },
+     {
+      "current": 54466.0,
+      "delta": 17238.0,
+      "key": "change_payables",
+      "name": "應付帳款",
+      "prior": 37228.0,
+      "share": 0.011904704354077592
+     },
+     {
+      "current": -9290.0,
+      "delta": -12341.0,
+      "key": "change_other_receivables",
+      "name": "其他應收款",
+      "prior": 3051.0,
+      "share": -0.008522795941157417
+     },
+     {
+      "current": 9222.0,
+      "delta": -11682.0,
+      "key": "change_other_current_liabilities",
+      "name": "其他流動負債",
+      "prior": 20904.0,
+      "share": -0.008067685129616801
+     },
+     {
+      "current": 5215.0,
+      "delta": -6801.0,
+      "key": "change_notes_receivable",
+      "name": "應收票據",
+      "prior": 12016.0,
+      "share": -0.004696826448084564
+     },
+     {
+      "current": 14704.0,
+      "delta": -2194.0,
+      "key": "finance_costs_adj",
+      "name": "財務成本",
+      "prior": 16898.0,
+      "share": -0.0015151944165707296
+     },
+     {
+      "current": -13802.0,
+      "delta": 1351.0,
+      "key": "interest_paid",
+      "name": "支付之利息",
+      "prior": -15153.0,
+      "share": 0.0009330116940688495
+     },
+     {
+      "current": 5557.0,
+      "delta": 929.0,
+      "key": "change_other_current_assets",
+      "name": "其他流動資產",
+      "prior": 4628.0,
+      "share": 0.0006415750287120364
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "depreciation",
+      "name": "depreciation",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "amortization",
+      "name": "amortization",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "change_receivables_related",
+      "name": "change_receivables_related",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "change_contract_liabilities",
+      "name": "change_contract_liabilities",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "dividend_income_adj",
+      "name": "dividend_income_adj",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvtpl_gain_adj",
+      "name": "fvtpl_gain_adj",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "unrealized_fx_gain",
+      "name": "unrealized_fx_gain",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "ppe_disposal_loss_adj",
+      "name": "ppe_disposal_loss_adj",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "equity_method_share_adj",
+      "name": "equity_method_share_adj",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "impairment_reversal_nonfinancial",
+      "name": "impairment_reversal_nonfinancial",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "lease_modification_loss",
+      "name": "lease_modification_loss",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "bond_buyback_gain",
+      "name": "bond_buyback_gain",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "change_net_defined_benefit",
+      "name": "change_net_defined_benefit",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "營業現金流變動（間接法）",
+    "residual": -1732140.0,
+    "target": "cfo",
+    "target_current": 5773574.0,
+    "target_delta": 1447999.0,
+    "target_prior": 4325575.0,
+    "top_drivers": [
+     "pretax_income_cf",
+     "change_receivables",
+     "income_tax_paid"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 16279766.0,
+      "delta": 8096833.0,
+      "key": "revenue",
+      "name": "營業收入",
+      "prior": 8182933.0,
+      "share": 1.0870720077547948
+     },
+     {
+      "current": 501656.0,
+      "delta": 2478693.0,
+      "key": "other_gains_losses",
+      "name": "其他利益及損失",
+      "prior": -1977037.0,
+      "share": 0.3327866310343508
+     },
+     {
+      "current": 2896383.0,
+      "delta": 1989025.0,
+      "key": "income_tax",
+      "name": "所得稅費用",
+      "prior": 907358.0,
+      "share": 0.26704433699256
+     },
+     {
+      "current": 2575266.0,
+      "delta": 676772.0,
+      "key": "cogs",
+      "name": "營業成本",
+      "prior": 1898494.0,
+      "share": 0.09086267394081464
+     },
+     {
+      "current": 500643.0,
+      "delta": 355186.0,
+      "key": "selling_expenses",
+      "name": "推銷費用",
+      "prior": 145457.0,
+      "share": 0.04768688673045308
+     },
+     {
+      "current": 349238.0,
+      "delta": 142550.0,
+      "key": "rd_expenses",
+      "name": "研究發展費用",
+      "prior": 206688.0,
+      "share": 0.01913860823181681
+     },
+     {
+      "current": 298632.0,
+      "delta": 121040.0,
+      "key": "admin_expenses",
+      "name": "管理費用",
+      "prior": 177592.0,
+      "share": 0.016250698985472514
+     },
+     {
+      "current": 439157.0,
+      "delta": 101703.0,
+      "key": "interest_income",
+      "name": "利息收入",
+      "prior": 337454.0,
+      "share": 0.013654534359876992
+     },
+     {
+      "current": -14704.0,
+      "delta": 2194.0,
+      "key": "finance_costs",
+      "name": "財務成本",
+      "prior": -16898.0,
+      "share": 0.00029456405794883256
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "other_income",
+      "name": "other_income",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "equity_method_share",
+      "name": "equity_method_share",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "淨利變動",
+    "residual": -6515701.0,
+    "target": "net_income",
+    "target_current": 10573871.0,
+    "target_delta": 7448295.0,
+    "target_prior": 3125576.0,
+    "top_drivers": [
+     "revenue",
+     "other_gains_losses",
+     "income_tax"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 16279766.0,
+      "delta": 8096833.0,
+      "key": "revenue",
+      "name": "營業收入",
+      "prior": 8182933.0,
+      "share": 1.1812037819140944
+     },
+     {
+      "current": 2575266.0,
+      "delta": 676772.0,
+      "key": "cogs",
+      "name": "營業成本",
+      "prior": 1898494.0,
+      "share": 0.09873065751678038
+     },
+     {
+      "current": 1160355.0,
+      "delta": 565331.0,
+      "key": "total_opex",
+      "name": "營業費用合計",
+      "prior": 595024.0,
+      "share": 0.08247312439731397
+     }
+    ],
+    "name": "營業利益變動",
+    "residual": -2484206.0,
+    "target": "operating_income",
+    "target_current": 12544145.0,
+    "target_delta": 6854730.0,
+    "target_prior": 5689415.0,
+    "top_drivers": [
+     "revenue",
+     "cogs",
+     "total_opex"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 215630.0,
+      "delta": 1991498.0,
+      "key": "fx_effect",
+      "name": "匯率變動對現金及約當現金之影響",
+      "prior": -1775868.0,
+      "share": 0.644952540966591
+     },
+     {
+      "current": 5773574.0,
+      "delta": 1447999.0,
+      "key": "cfo",
+      "name": "營業活動之淨現金流入",
+      "prior": 4325575.0,
+      "share": 0.46893877591997724
+     },
+     {
+      "current": -504487.0,
+      "delta": -249538.0,
+      "key": "cfi",
+      "name": "投資活動之淨現金流出",
+      "prior": -254949.0,
+      "share": -0.08081362229222484
+     },
+     {
+      "current": -180158.0,
+      "delta": -102138.0,
+      "key": "cff",
+      "name": "籌資活動之淨現金流出",
+      "prior": -78020.0,
+      "share": -0.03307769459434339
+     }
+    ],
+    "name": "現金變動",
+    "residual": 0.0,
+    "target": "net_change_in_cash",
+    "target_current": 5304559.0,
+    "target_delta": 3087821.0,
+    "target_prior": 2216738.0,
+    "top_drivers": [
+     "fx_effect",
+     "cfo",
+     "cfi"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 434219.0,
+      "delta": 93618.0,
+      "key": "interest_received",
+      "name": "收取之利息",
+      "prior": 340601.0,
+      "share": -0.3751653054845354
+     },
+     {
+      "current": -2724.0,
+      "delta": 1752.0,
+      "key": "intangible_purchase",
+      "name": "購置無形資產",
+      "prior": -4476.0,
+      "share": -0.007020974761358992
+     },
+     {
+      "current": 1054.0,
+      "delta": 978.0,
+      "key": "ppe_disposal_proceeds",
+      "name": "處分不動產、廠房及設備價款",
+      "prior": 76.0,
+      "share": -0.003919242760621629
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "capex",
+      "name": "capex",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "prepaid_equipment_increase",
+      "name": "prepaid_equipment_increase",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvtpl_purchase",
+      "name": "fvtpl_purchase",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvtpl_disposal_proceeds",
+      "name": "fvtpl_disposal_proceeds",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvoci_disposal_proceeds",
+      "name": "fvoci_disposal_proceeds",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "other_noncurrent_assets_increase",
+      "name": "other_noncurrent_assets_increase",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "change_refundable_deposits",
+      "name": "change_refundable_deposits",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "dividends_received",
+      "name": "dividends_received",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "投資現金流變動",
+    "residual": -345886.0,
+    "target": "cfi",
+    "target_current": -504487.0,
+    "target_delta": -249538.0,
+    "target_prior": -254949.0,
+    "top_drivers": [
+     "interest_received",
+     "intangible_purchase",
+     "ppe_disposal_proceeds"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": -165953.0,
+      "delta": -101029.0,
+      "key": "long_term_borrowings_repayment",
+      "name": "償還長期借款",
+      "prior": -64924.0,
+      "share": 0.9891421410248878
+     },
+     {
+      "current": -14205.0,
+      "delta": -1109.0,
+      "key": "lease_principal_repayment",
+      "name": "租賃負債本金償還",
+      "prior": -13096.0,
+      "share": 0.010857858975112104
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "short_term_borrowings_increase",
+      "name": "short_term_borrowings_increase",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "short_term_borrowings_decrease",
+      "name": "short_term_borrowings_decrease",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "long_term_borrowings_proceeds",
+      "name": "long_term_borrowings_proceeds",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "bonds_issued",
+      "name": "bonds_issued",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "bonds_repaid",
+      "name": "bonds_repaid",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "dividends_paid",
+      "name": "dividends_paid",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "dividends_paid_to_nci",
+      "name": "dividends_paid_to_nci",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "employee_stock_option_exercised",
+      "name": "employee_stock_option_exercised",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "guarantee_deposits_received_increase",
+      "name": "guarantee_deposits_received_increase",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "籌資現金流變動",
+    "residual": 0.0,
+    "target": "cff",
+    "target_current": -180158.0,
+    "target_delta": -102138.0,
+    "target_prior": -78020.0,
+    "top_drivers": [
+     "long_term_borrowings_repayment",
+     "lease_principal_repayment"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 10443402.0,
+      "delta": 5853220.0,
+      "key": "accounts_receivable",
+      "name": "應收帳款淨額",
+      "prior": 4590182.0,
+      "share": 0.4866634450918265
+     },
+     {
+      "current": 29384179.0,
+      "delta": 5304559.0,
+      "key": "cash",
+      "name": "現金及約當現金",
+      "prior": 24079620.0,
+      "share": 0.4410452635699417
+     },
+     {
+      "current": 1653826.0,
+      "delta": 488574.0,
+      "key": "inventories",
+      "name": "存貨",
+      "prior": 1165252.0,
+      "share": 0.04062227389749472
+     },
+     {
+      "current": 4110261.0,
+      "delta": 228656.0,
+      "key": "ppe",
+      "name": "不動產、廠房及設備",
+      "prior": 3881605.0,
+      "share": 0.019011504214930704
+     },
+     {
+      "current": 93249.0,
+      "delta": 75088.0,
+      "key": "prepaid_equipment",
+      "name": "預付設備款",
+      "prior": 18161.0,
+      "share": 0.006243159280713021
+     },
+     {
+      "current": 1186747.0,
+      "delta": 57326.0,
+      "key": "right_of_use_assets",
+      "name": "使用權資產",
+      "prior": 1129421.0,
+      "share": 0.004766345473659635
+     },
+     {
+      "current": 71533.0,
+      "delta": 14228.0,
+      "key": "other_receivables",
+      "name": "其他應收款",
+      "prior": 57305.0,
+      "share": 0.001182980905683796
+     },
+     {
+      "current": 48073.0,
+      "delta": -5557.0,
+      "key": "other_current_assets",
+      "name": "其他流動資產",
+      "prior": 53630.0,
+      "share": -0.00046203436132167934
+     },
+     {
+      "current": 34274.0,
+      "delta": -5215.0,
+      "key": "notes_receivable",
+      "name": "應收票據",
+      "prior": 39489.0,
+      "share": -0.00043359891925365447
+     },
+     {
+      "current": 47065.0,
+      "delta": -4367.0,
+      "key": "deferred_tax_assets",
+      "name": "遞延所得稅資產",
+      "prior": 51432.0,
+      "share": -0.00036309232605574477
+     },
+     {
+      "current": 7643.0,
+      "delta": 832.0,
+      "key": "refundable_deposits",
+      "name": "存出保證金",
+      "prior": 6811.0,
+      "share": 6.917628011870383e-05
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "other_noncurrent_assets",
+      "name": "other_noncurrent_assets",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvtpl_current",
+      "name": "fvtpl_current",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvoci_noncurrent",
+      "name": "fvoci_noncurrent",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "accounts_receivable_related",
+      "name": "accounts_receivable_related",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "equity_method_investments",
+      "name": "equity_method_investments",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "intangible_assets",
+      "name": "intangible_assets",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "總資產變動",
+    "residual": 19900.0,
+    "target": "total_assets",
+    "target_current": 47110680.0,
+    "target_delta": 12027244.0,
+    "target_prior": 35083436.0,
+    "top_drivers": [
+     "accounts_receivable",
+     "cash",
+     "inventories"
+    ]
+   }
+  ],
+  "days": {
+   "current": 181,
+   "prior": 181
+  },
+  "index": {
+   "asset_turnover": {
+    "current": 0.34556423299345285,
+    "prior": 0.2781356215758329
+   },
+   "capex_to_depreciation": {
+    "current": null,
+    "prior": null
+   },
+   "capex_to_revenue": {
+    "current": null,
+    "prior": null
+   },
+   "cash_to_assets": {
+    "current": 62.3726488346167,
+    "prior": 66.9770608121681
+   },
+   "ccc": {
+    "current": null,
+    "prior": null
+   },
+   "cfo_to_net_income": {
+    "current": 0.5460227385032407,
+    "prior": 1.3839289142225304
+   },
+   "current_ratio": {
+    "current": 356.12188974705936,
+    "prior": 386.01427811477976
+   },
+   "debt_to_equity": {
+    "current": 4.581043494964928,
+    "prior": 8.771227645203417
+   },
+   "dio": {
+    "current": 116.2375094456262,
+    "prior": 104.12390399969661
+   },
+   "dividend_payout": {
+    "current": null,
+    "prior": null
+   },
+   "dpo": {
+    "current": 19.657170171935636,
+    "prior": 16.05885507144084
+   },
+   "dso": {
+    "current": null,
+    "prior": null
+   },
+   "ebitda": {
+    "current": null,
+    "prior": null
+   },
+   "ebitda_margin": {
+    "current": null,
+    "prior": null
+   },
+   "effective_tax_rate": {
+    "current": 21.5020667019345,
+    "prior": 22.49870689676548
+   },
+   "fcf": {
+    "current": null,
+    "prior": null
+   },
+   "fcf_margin": {
+    "current": null,
+    "prior": null
+   },
+   "gross_margin": {
+    "current": 84.18118540524476,
+    "prior": 76.79934566249045
+   },
+   "interest_bearing_debt": {
+    "current": 1546278.0,
+    "prior": 1864511.0
+   },
+   "interest_coverage": {
+    "current": 853.1110582154515,
+    "prior": 336.69162031009586
+   },
+   "liabilities_to_assets": {
+    "current": 28.352046712125574,
+    "prior": 27.747615298067092
+   },
+   "net_debt": {
+    "current": -27837901.0,
+    "prior": -17840581.0
+   },
+   "net_margin": {
+    "current": 64.95100113846846,
+    "prior": 38.19627998909437
+   },
+   "operating_margin": {
+    "current": 77.05359524209378,
+    "prior": 69.52782089258216
+   },
+   "opex_ratio": {
+    "current": 7.127590163150993,
+    "prior": 7.271524769908296
+   },
+   "quick_ratio": {
+    "current": 341.9840666896737,
+    "prior": 368.8962924486929
+   },
+   "rd_intensity": {
+    "current": 2.145227394546089,
+    "prior": 2.525842506592685
+   },
+   "roa": {
+    "current": 22.444742890571735,
+    "prior": 10.623746076651312
+   },
+   "roe": {
+    "current": null,
+    "prior": null
+   },
+   "working_capital": {
+    "current": 29960839.0,
+    "prior": 18248037.0
+   }
+  },
+  "metrics": [
+   {
+    "formula": "cfo + capex",
+    "inputs": {
+     "capex": null,
+     "cfo": 5773574.0
+    },
+    "key": "fcf",
+    "name": "自由現金流",
+    "period": "current",
+    "unit": "仟元",
+    "value": null
+   },
+   {
+    "formula": "cfo + capex",
+    "inputs": {
+     "capex": null,
+     "cfo": 4325575.0
+    },
+    "key": "fcf",
+    "name": "自由現金流",
+    "period": "prior",
+    "unit": "仟元",
+    "value": null
+   },
+   {
+    "formula": "fcf / revenue * 100",
+    "inputs": {
+     "fcf": null,
+     "revenue": 16279766.0
+    },
+    "key": "fcf_margin",
+    "name": "自由現金流率",
+    "period": "current",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "fcf / revenue * 100",
+    "inputs": {
+     "fcf": null,
+     "revenue": 8182933.0
+    },
+    "key": "fcf_margin",
+    "name": "自由現金流率",
+    "period": "prior",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "gross_profit / revenue * 100",
+    "inputs": {
+     "gross_profit": 13704500.0,
+     "revenue": 16279766.0
+    },
+    "key": "gross_margin",
+    "name": "毛利率",
+    "period": "current",
+    "unit": "%",
+    "value": 84.18118540524476
+   },
+   {
+    "formula": "gross_profit / revenue * 100",
+    "inputs": {
+     "gross_profit": 6284439.0,
+     "revenue": 8182933.0
+    },
+    "key": "gross_margin",
+    "name": "毛利率",
+    "period": "prior",
+    "unit": "%",
+    "value": 76.79934566249045
+   },
+   {
+    "formula": "operating_income / revenue * 100",
+    "inputs": {
+     "operating_income": 12544145.0,
+     "revenue": 16279766.0
+    },
+    "key": "operating_margin",
+    "name": "營業利益率",
+    "period": "current",
+    "unit": "%",
+    "value": 77.05359524209378
+   },
+   {
+    "formula": "operating_income / revenue * 100",
+    "inputs": {
+     "operating_income": 5689415.0,
+     "revenue": 8182933.0
+    },
+    "key": "operating_margin",
+    "name": "營業利益率",
+    "period": "prior",
+    "unit": "%",
+    "value": 69.52782089258216
+   },
+   {
+    "formula": "net_income / revenue * 100",
+    "inputs": {
+     "net_income": 10573871.0,
+     "revenue": 16279766.0
+    },
+    "key": "net_margin",
+    "name": "淨利率",
+    "period": "current",
+    "unit": "%",
+    "value": 64.95100113846846
+   },
+   {
+    "formula": "net_income / revenue * 100",
+    "inputs": {
+     "net_income": 3125576.0,
+     "revenue": 8182933.0
+    },
+    "key": "net_margin",
+    "name": "淨利率",
+    "period": "prior",
+    "unit": "%",
+    "value": 38.19627998909437
+   },
+   {
+    "formula": "operating_income + depreciation + amortization",
+    "inputs": {
+     "amortization": null,
+     "depreciation": null,
+     "operating_income": 12544145.0
+    },
+    "key": "ebitda",
+    "name": "EBITDA",
+    "period": "current",
+    "unit": "仟元",
+    "value": null
+   },
+   {
+    "formula": "operating_income + depreciation + amortization",
+    "inputs": {
+     "amortization": null,
+     "depreciation": null,
+     "operating_income": 5689415.0
+    },
+    "key": "ebitda",
+    "name": "EBITDA",
+    "period": "prior",
+    "unit": "仟元",
+    "value": null
+   },
+   {
+    "formula": "ebitda / revenue * 100",
+    "inputs": {
+     "ebitda": null,
+     "revenue": 16279766.0
+    },
+    "key": "ebitda_margin",
+    "name": "EBITDA 率",
+    "period": "current",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "ebitda / revenue * 100",
+    "inputs": {
+     "ebitda": null,
+     "revenue": 8182933.0
+    },
+    "key": "ebitda_margin",
+    "name": "EBITDA 率",
+    "period": "prior",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "cfo / net_income",
+    "inputs": {
+     "cfo": 5773574.0,
+     "net_income": 10573871.0
+    },
+    "key": "cfo_to_net_income",
+    "name": "營業現金流／淨利",
+    "period": "current",
+    "unit": "x",
+    "value": 0.5460227385032407
+   },
+   {
+    "formula": "cfo / net_income",
+    "inputs": {
+     "cfo": 4325575.0,
+     "net_income": 3125576.0
+    },
+    "key": "cfo_to_net_income",
+    "name": "營業現金流／淨利",
+    "period": "prior",
+    "unit": "x",
+    "value": 1.3839289142225304
+   },
+   {
+    "formula": "abs(capex) / depreciation",
+    "inputs": {
+     "capex": null,
+     "depreciation": null
+    },
+    "key": "capex_to_depreciation",
+    "name": "資本支出／折舊",
+    "period": "current",
+    "unit": "x",
+    "value": null
+   },
+   {
+    "formula": "abs(capex) / depreciation",
+    "inputs": {
+     "capex": null,
+     "depreciation": null
+    },
+    "key": "capex_to_depreciation",
+    "name": "資本支出／折舊",
+    "period": "prior",
+    "unit": "x",
+    "value": null
+   },
+   {
+    "formula": "abs(capex) / revenue * 100",
+    "inputs": {
+     "capex": null,
+     "revenue": 16279766.0
+    },
+    "key": "capex_to_revenue",
+    "name": "資本支出率",
+    "period": "current",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "abs(capex) / revenue * 100",
+    "inputs": {
+     "capex": null,
+     "revenue": 8182933.0
+    },
+    "key": "capex_to_revenue",
+    "name": "資本支出率",
+    "period": "prior",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "(accounts_receivable + accounts_receivable_related) / revenue * days",
+    "inputs": {
+     "accounts_receivable": 10443402.0,
+     "accounts_receivable_related": null,
+     "days": 181,
+     "revenue": 16279766.0
+    },
+    "key": "dso",
+    "name": "應收帳款天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": null
+   },
+   {
+    "formula": "(accounts_receivable + accounts_receivable_related) / revenue * days",
+    "inputs": {
+     "accounts_receivable": 3700026.0,
+     "accounts_receivable_related": null,
+     "days": 181,
+     "revenue": 8182933.0
+    },
+    "key": "dso",
+    "name": "應收帳款天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": null
+   },
+   {
+    "formula": "inventories / abs(cogs) * days",
+    "inputs": {
+     "cogs": 2575266.0,
+     "days": 181,
+     "inventories": 1653826.0
+    },
+    "key": "dio",
+    "name": "存貨天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": 116.2375094456262
+   },
+   {
+    "formula": "inventories / abs(cogs) * days",
+    "inputs": {
+     "cogs": 1898494.0,
+     "days": 181,
+     "inventories": 1092147.0
+    },
+    "key": "dio",
+    "name": "存貨天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": 104.12390399969661
+   },
+   {
+    "formula": "accounts_payable / abs(cogs) * days",
+    "inputs": {
+     "accounts_payable": 279682.0,
+     "cogs": 2575266.0,
+     "days": 181
+    },
+    "key": "dpo",
+    "name": "應付帳款天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": 19.657170171935636
+   },
+   {
+    "formula": "accounts_payable / abs(cogs) * days",
+    "inputs": {
+     "accounts_payable": 168440.0,
+     "cogs": 1898494.0,
+     "days": 181
+    },
+    "key": "dpo",
+    "name": "應付帳款天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": 16.05885507144084
+   },
+   {
+    "formula": "dso + dio - dpo",
+    "inputs": {
+     "dio": 116.2375094456262,
+     "dpo": 19.657170171935636,
+     "dso": null
+    },
+    "key": "ccc",
+    "name": "現金轉換循環",
+    "period": "current",
+    "unit": "天",
+    "value": null
+   },
+   {
+    "formula": "dso + dio - dpo",
+    "inputs": {
+     "dio": 104.12390399969661,
+     "dpo": 16.05885507144084,
+     "dso": null
+    },
+    "key": "ccc",
+    "name": "現金轉換循環",
+    "period": "prior",
+    "unit": "天",
+    "value": null
+   },
+   {
+    "formula": "total_current_assets / total_current_liabilities * 100",
+    "inputs": {
+     "total_current_assets": 41658722.0,
+     "total_current_liabilities": 11697883.0
+    },
+    "key": "current_ratio",
+    "name": "流動比率",
+    "period": "current",
+    "unit": "%",
+    "value": 356.12188974705936
+   },
+   {
+    "formula": "total_current_assets / total_current_liabilities * 100",
+    "inputs": {
+     "total_current_assets": 24628151.0,
+     "total_current_liabilities": 6380114.0
+    },
+    "key": "current_ratio",
+    "name": "流動比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 386.01427811477976
+   },
+   {
+    "formula": "(total_current_assets - inventories) / total_current_liabilities * 100",
+    "inputs": {
+     "inventories": 1653826.0,
+     "total_current_assets": 41658722.0,
+     "total_current_liabilities": 11697883.0
+    },
+    "key": "quick_ratio",
+    "name": "速動比率",
+    "period": "current",
+    "unit": "%",
+    "value": 341.9840666896737
+   },
+   {
+    "formula": "(total_current_assets - inventories) / total_current_liabilities * 100",
+    "inputs": {
+     "inventories": 1092147.0,
+     "total_current_assets": 24628151.0,
+     "total_current_liabilities": 6380114.0
+    },
+    "key": "quick_ratio",
+    "name": "速動比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 368.8962924486929
+   },
+   {
+    "formula": "short_term_borrowings + long_term_borrowings_current + long_term_borrowings + bonds_payable + lease_liabilities_current + lease_liabilities_noncurrent（缺 key 視為 0）",
+    "inputs": {
+     "bonds_payable": null,
+     "lease_liabilities_current": 28811.0,
+     "lease_liabilities_noncurrent": 1206207.0,
+     "long_term_borrowings": 238735.0,
+     "long_term_borrowings_current": 72525.0,
+     "short_term_borrowings": null
+    },
+    "key": "interest_bearing_debt",
+    "name": "有息負債",
+    "period": "current",
+    "unit": "仟元",
+    "value": 1546278.0
+   },
+   {
+    "formula": "short_term_borrowings + long_term_borrowings_current + long_term_borrowings + bonds_payable + lease_liabilities_current + lease_liabilities_noncurrent（缺 key 視為 0）",
+    "inputs": {
+     "bonds_payable": null,
+     "lease_liabilities_current": 26559.0,
+     "lease_liabilities_noncurrent": 1159867.0,
+     "long_term_borrowings": 550718.0,
+     "long_term_borrowings_current": 127367.0,
+     "short_term_borrowings": null
+    },
+    "key": "interest_bearing_debt",
+    "name": "有息負債",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 1864511.0
+   },
+   {
+    "formula": "interest_bearing_debt - cash",
+    "inputs": {
+     "cash": 29384179.0,
+     "interest_bearing_debt": 1546278.0
+    },
+    "key": "net_debt",
+    "name": "淨負債",
+    "period": "current",
+    "unit": "仟元",
+    "value": -27837901.0
+   },
+   {
+    "formula": "interest_bearing_debt - cash",
+    "inputs": {
+     "cash": 19705092.0,
+     "interest_bearing_debt": 1864511.0
+    },
+    "key": "net_debt",
+    "name": "淨負債",
+    "period": "prior",
+    "unit": "仟元",
+    "value": -17840581.0
+   },
+   {
+    "formula": "interest_bearing_debt / total_equity * 100",
+    "inputs": {
+     "interest_bearing_debt": 1546278.0,
+     "total_equity": 33753838.0
+    },
+    "key": "debt_to_equity",
+    "name": "有息負債／權益",
+    "period": "current",
+    "unit": "%",
+    "value": 4.581043494964928
+   },
+   {
+    "formula": "interest_bearing_debt / total_equity * 100",
+    "inputs": {
+     "interest_bearing_debt": 1864511.0,
+     "total_equity": 21257127.0
+    },
+    "key": "debt_to_equity",
+    "name": "有息負債／權益",
+    "period": "prior",
+    "unit": "%",
+    "value": 8.771227645203417
+   },
+   {
+    "formula": "total_liabilities / total_assets * 100",
+    "inputs": {
+     "total_assets": 47110680.0,
+     "total_liabilities": 13356842.0
+    },
+    "key": "liabilities_to_assets",
+    "name": "負債比率",
+    "period": "current",
+    "unit": "%",
+    "value": 28.352046712125574
+   },
+   {
+    "formula": "total_liabilities / total_assets * 100",
+    "inputs": {
+     "total_assets": 29420658.0,
+     "total_liabilities": 8163531.0
+    },
+    "key": "liabilities_to_assets",
+    "name": "負債比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 27.747615298067092
+   },
+   {
+    "formula": "operating_income / abs(finance_costs)",
+    "inputs": {
+     "finance_costs": -14704.0,
+     "operating_income": 12544145.0
+    },
+    "key": "interest_coverage",
+    "name": "利息保障倍數",
+    "period": "current",
+    "unit": "x",
+    "value": 853.1110582154515
+   },
+   {
+    "formula": "operating_income / abs(finance_costs)",
+    "inputs": {
+     "finance_costs": -16898.0,
+     "operating_income": 5689415.0
+    },
+    "key": "interest_coverage",
+    "name": "利息保障倍數",
+    "period": "prior",
+    "unit": "x",
+    "value": 336.69162031009586
+   },
+   {
+    "formula": "net_income_parent / equity_parent * 100",
+    "inputs": {
+     "equity_parent": null,
+     "net_income_parent": null
+    },
+    "key": "roe",
+    "name": "股東權益報酬率（期末）",
+    "period": "current",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "net_income_parent / equity_parent * 100",
+    "inputs": {
+     "equity_parent": null,
+     "net_income_parent": null
+    },
+    "key": "roe",
+    "name": "股東權益報酬率（期末）",
+    "period": "prior",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "net_income / total_assets * 100",
+    "inputs": {
+     "net_income": 10573871.0,
+     "total_assets": 47110680.0
+    },
+    "key": "roa",
+    "name": "資產報酬率（期末）",
+    "period": "current",
+    "unit": "%",
+    "value": 22.444742890571735
+   },
+   {
+    "formula": "net_income / total_assets * 100",
+    "inputs": {
+     "net_income": 3125576.0,
+     "total_assets": 29420658.0
+    },
+    "key": "roa",
+    "name": "資產報酬率（期末）",
+    "period": "prior",
+    "unit": "%",
+    "value": 10.623746076651312
+   },
+   {
+    "formula": "revenue / total_assets",
+    "inputs": {
+     "revenue": 16279766.0,
+     "total_assets": 47110680.0
+    },
+    "key": "asset_turnover",
+    "name": "總資產週轉率（期末）",
+    "period": "current",
+    "unit": "x",
+    "value": 0.34556423299345285
+   },
+   {
+    "formula": "revenue / total_assets",
+    "inputs": {
+     "revenue": 8182933.0,
+     "total_assets": 29420658.0
+    },
+    "key": "asset_turnover",
+    "name": "總資產週轉率（期末）",
+    "period": "prior",
+    "unit": "x",
+    "value": 0.2781356215758329
+   },
+   {
+    "formula": "abs(rd_expenses) / revenue * 100",
+    "inputs": {
+     "rd_expenses": 349238.0,
+     "revenue": 16279766.0
+    },
+    "key": "rd_intensity",
+    "name": "研發費用率",
+    "period": "current",
+    "unit": "%",
+    "value": 2.145227394546089
+   },
+   {
+    "formula": "abs(rd_expenses) / revenue * 100",
+    "inputs": {
+     "rd_expenses": 206688.0,
+     "revenue": 8182933.0
+    },
+    "key": "rd_intensity",
+    "name": "研發費用率",
+    "period": "prior",
+    "unit": "%",
+    "value": 2.525842506592685
+   },
+   {
+    "formula": "abs(total_opex) / revenue * 100",
+    "inputs": {
+     "revenue": 16279766.0,
+     "total_opex": 1160355.0
+    },
+    "key": "opex_ratio",
+    "name": "營業費用率",
+    "period": "current",
+    "unit": "%",
+    "value": 7.127590163150993
+   },
+   {
+    "formula": "abs(total_opex) / revenue * 100",
+    "inputs": {
+     "revenue": 8182933.0,
+     "total_opex": 595024.0
+    },
+    "key": "opex_ratio",
+    "name": "營業費用率",
+    "period": "prior",
+    "unit": "%",
+    "value": 7.271524769908296
+   },
+   {
+    "formula": "abs(income_tax) / pretax_income * 100",
+    "inputs": {
+     "income_tax": 2896383.0,
+     "pretax_income": 13470254.0
+    },
+    "key": "effective_tax_rate",
+    "name": "有效稅率",
+    "period": "current",
+    "unit": "%",
+    "value": 21.5020667019345
+   },
+   {
+    "formula": "abs(income_tax) / pretax_income * 100",
+    "inputs": {
+     "income_tax": 907358.0,
+     "pretax_income": 4032934.0
+    },
+    "key": "effective_tax_rate",
+    "name": "有效稅率",
+    "period": "prior",
+    "unit": "%",
+    "value": 22.49870689676548
+   },
+   {
+    "formula": "abs(dividends_paid) / net_income_parent * 100",
+    "inputs": {
+     "dividends_paid": null,
+     "net_income_parent": null
+    },
+    "key": "dividend_payout",
+    "name": "現金股利支付率",
+    "period": "current",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "abs(dividends_paid) / net_income_parent * 100",
+    "inputs": {
+     "dividends_paid": null,
+     "net_income_parent": null
+    },
+    "key": "dividend_payout",
+    "name": "現金股利支付率",
+    "period": "prior",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "cash / total_assets * 100",
+    "inputs": {
+     "cash": 29384179.0,
+     "total_assets": 47110680.0
+    },
+    "key": "cash_to_assets",
+    "name": "現金占總資產",
+    "period": "current",
+    "unit": "%",
+    "value": 62.3726488346167
+   },
+   {
+    "formula": "cash / total_assets * 100",
+    "inputs": {
+     "cash": 19705092.0,
+     "total_assets": 29420658.0
+    },
+    "key": "cash_to_assets",
+    "name": "現金占總資產",
+    "period": "prior",
+    "unit": "%",
+    "value": 66.9770608121681
+   },
+   {
+    "formula": "total_current_assets - total_current_liabilities",
+    "inputs": {
+     "total_current_assets": 41658722.0,
+     "total_current_liabilities": 11697883.0
+    },
+    "key": "working_capital",
+    "name": "營運資金",
+    "period": "current",
+    "unit": "仟元",
+    "value": 29960839.0
+   },
+   {
+    "formula": "total_current_assets - total_current_liabilities",
+    "inputs": {
+     "total_current_assets": 24628151.0,
+     "total_current_liabilities": 6380114.0
+    },
+    "key": "working_capital",
+    "name": "營運資金",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 18248037.0
+   }
+  ],
+  "period_current": "115",
+  "period_prior": "114",
+  "periods": {
+   "bs_current": "115-06-30",
+   "bs_prior_fy_end": "114-12-31",
+   "bs_prior_same": "114-06-30",
+   "flow_current": "115-01-01~115-06-30",
+   "flow_prior": "114-01-01~114-06-30"
+  },
+  "ttm_vs_fy": {
+   "assurance": "mixed",
+   "bridges": [],
+   "index": {},
+   "metrics": [],
+   "period_fy": null,
+   "period_ttm": null,
+   "reason": "fy_income_missing",
+   "source_page": null,
+   "status": "unavailable",
+   "values": {}
+  }
+ },
+ "2308_H1": {
+  "assurance": null,
+  "basis": "H1",
+  "bridges": [
+   {
+    "components": [
+     {
+      "current": 63100603.0,
+      "delta": 19507029.0,
+      "key": "cfo",
+      "name": "營業活動之淨現金流入",
+      "prior": 43593574.0,
+      "share": 1.7269141655795455
+     },
+     {
+      "current": -27252368.0,
+      "delta": -8211141.0,
+      "key": "capex",
+      "name": "取得不動產、廠房及設備",
+      "prior": -19041227.0,
+      "share": -0.7269141655795454
+     }
+    ],
+    "name": "自由現金流變動",
+    "residual": 0.0,
+    "target": "fcf",
+    "target_current": 35848235.0,
+    "target_delta": 11295888.0,
+    "target_prior": 24552347.0,
+    "top_drivers": [
+     "cfo",
+     "capex"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": -37836259.0,
+      "delta": -40226420.0,
+      "key": "change_inventories",
+      "name": "存貨",
+      "prior": 2390161.0,
+      "share": -2.0621500075690666
+     },
+     {
+      "current": 66092437.0,
+      "delta": 30858350.0,
+      "key": "pretax_income_cf",
+      "name": "本期稅前淨利",
+      "prior": 35234087.0,
+      "share": 1.5819092697304136
+     },
+     {
+      "current": 22151921.0,
+      "delta": 21921798.0,
+      "key": "change_payables",
+      "name": "應付帳款",
+      "prior": 230123.0,
+      "share": 1.1237896862715486
+     },
+     {
+      "current": -21685625.0,
+      "delta": -19161145.0,
+      "key": "change_receivables",
+      "name": "應收帳款",
+      "prior": -2524480.0,
+      "share": -0.9822687504078658
+     },
+     {
+      "current": 17487979.0,
+      "delta": 17985346.0,
+      "key": "change_other_current_liabilities",
+      "name": "其他流動負債",
+      "prior": -497367.0,
+      "share": 0.9219930928487368
+     },
+     {
+      "current": 7233352.0,
+      "delta": 7560812.0,
+      "key": "change_other_payables",
+      "name": "其他應付款",
+      "prior": -327460.0,
+      "share": 0.38759423590337616
+     },
+     {
+      "current": -9608760.0,
+      "delta": -4890811.0,
+      "key": "income_tax_paid",
+      "name": "支付之所得稅",
+      "prior": -4717949.0,
+      "share": -0.2507204454353351
+     },
+     {
+      "current": 2752407.0,
+      "delta": 3816522.0,
+      "key": "change_contract_liabilities",
+      "name": "合約負債",
+      "prior": -1064115.0,
+      "share": 0.19564855314461263
+     },
+     {
+      "current": 14278138.0,
+      "delta": 2659597.0,
+      "key": "depreciation",
+      "name": "折舊費用",
+      "prior": 11618541.0,
+      "share": 0.13634044425729822
+     },
+     {
+      "current": -453036.0,
+      "delta": -1203939.0,
+      "key": "change_notes_receivable",
+      "name": "應收票據",
+      "prior": 750903.0,
+      "share": -0.06171821449591324
+     },
+     {
+      "current": 1061235.0,
+      "delta": 733092.0,
+      "key": "impairment_loss_receivables",
+      "name": "預期信用減損損失",
+      "prior": 328143.0,
+      "share": 0.037580915064000776
+     },
+     {
+      "current": 161867.0,
+      "delta": -442104.0,
+      "key": "change_other_receivables",
+      "name": "其他應收款",
+      "prior": 603971.0,
+      "share": -0.022663830560768632
+     },
+     {
+      "current": -132254.0,
+      "delta": -133558.0,
+      "key": "change_other_current_assets",
+      "name": "其他流動資產",
+      "prior": 1304.0,
+      "share": -0.006846660247442089
+     },
+     {
+      "current": -1920977.0,
+      "delta": -58526.0,
+      "key": "interest_income_adj",
+      "name": "利息收入",
+      "prior": -1862451.0,
+      "share": -0.003000251857932851
+     },
+     {
+      "current": 1094432.0,
+      "delta": 57142.0,
+      "key": "finance_costs_adj",
+      "name": "利息費用",
+      "prior": 1037290.0,
+      "share": 0.0029293030732665645
+     },
+     {
+      "current": -134553.0,
+      "delta": 50825.0,
+      "key": "dividend_income_adj",
+      "name": "股利收入",
+      "prior": -185378.0,
+      "share": 0.0026054710842947945
+     },
+     {
+      "current": -770244.0,
+      "delta": 47581.0,
+      "key": "interest_paid",
+      "name": "支付之利息",
+      "prior": -817825.0,
+      "share": 0.0024391720543400024
+     },
+     {
+      "current": 1943872.0,
+      "delta": -16600.0,
+      "key": "amortization",
+      "name": "攤銷費用",
+      "prior": 1960472.0,
+      "share": -0.0008509753074135482
+     },
+     {
+      "current": 2803.0,
+      "delta": 2317.0,
+      "key": "change_notes_payable",
+      "name": "應付票據",
+      "prior": 486.0,
+      "share": 0.00011877769802874646
+     },
+     {
+      "current": 5717.0,
+      "delta": 881.0,
+      "key": "change_receivables_related",
+      "name": "應收帳款-關係人",
+      "prior": 4836.0,
+      "share": 4.516320758020096e-05
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvtpl_gain_adj",
+      "name": "fvtpl_gain_adj",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "unrealized_fx_gain",
+      "name": "unrealized_fx_gain",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "ppe_disposal_loss_adj",
+      "name": "ppe_disposal_loss_adj",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "equity_method_share_adj",
+      "name": "equity_method_share_adj",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "impairment_reversal_nonfinancial",
+      "name": "impairment_reversal_nonfinancial",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "lease_modification_loss",
+      "name": "lease_modification_loss",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "bond_buyback_gain",
+      "name": "bond_buyback_gain",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "change_net_defined_benefit",
+      "name": "change_net_defined_benefit",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "營業現金流變動（間接法）",
+    "residual": -54131.0,
+    "target": "cfo",
+    "target_current": 63100603.0,
+    "target_delta": 19507029.0,
+    "target_prior": 43593574.0,
+    "top_drivers": [
+     "change_inventories",
+     "pretax_income_cf",
+     "change_payables"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 342608732.0,
+      "delta": 99654240.0,
+      "key": "revenue",
+      "name": "營業收入",
+      "prior": 242954492.0,
+      "share": 4.217892516503046
+     },
+     {
+      "current": -218339911.0,
+      "delta": -57222704.0,
+      "key": "cogs",
+      "name": "營業成本",
+      "prior": -161117207.0,
+      "share": -2.4219663405758642
+     },
+     {
+      "current": -15088837.0,
+      "delta": -7231802.0,
+      "key": "income_tax",
+      "name": "所得稅費用",
+      "prior": -7857035.0,
+      "share": -0.3060879651144975
+     },
+     {
+      "current": -29438966.0,
+      "delta": -6530288.0,
+      "key": "rd_expenses",
+      "name": "研究發展費用",
+      "prior": -22908678.0,
+      "share": -0.27639619634658436
+     },
+     {
+      "current": -21390676.0,
+      "delta": -5842933.0,
+      "key": "selling_expenses",
+      "name": "推銷費用",
+      "prior": -15547743.0,
+      "share": -0.24730371106265714
+     },
+     {
+      "current": 3225012.0,
+      "delta": 4075219.0,
+      "key": "other_gains_losses",
+      "name": "其他利益及損失",
+      "prior": -850207.0,
+      "share": 0.17248474047076195
+     },
+     {
+      "current": -13390599.0,
+      "delta": -3042652.0,
+      "key": "admin_expenses",
+      "name": "管理費用",
+      "prior": -10347947.0,
+      "share": -0.12878106441956735
+     },
+     {
+      "current": 3063375.0,
+      "delta": 522506.0,
+      "key": "other_income",
+      "name": "其他收入",
+      "prior": 2540869.0,
+      "share": 0.02211520701204425
+     },
+     {
+      "current": 1920977.0,
+      "delta": 58526.0,
+      "key": "interest_income",
+      "name": "利息收入",
+      "prior": 1862451.0,
+      "share": 0.0024771286943822686
+     },
+     {
+      "current": -1094432.0,
+      "delta": -57142.0,
+      "key": "finance_costs",
+      "name": "財務成本",
+      "prior": -1037290.0,
+      "share": -0.002418550522065263
+     },
+     {
+      "current": -9840.0,
+      "delta": -23330.0,
+      "key": "equity_method_share",
+      "name": "採用權益法認列之關聯企業及合資損益之份額",
+      "prior": 13490.0,
+      "share": -0.0009874485261240872
+     }
+    ],
+    "name": "淨利變動",
+    "residual": -733092.0,
+    "target": "net_income",
+    "target_current": 51003600.0,
+    "target_delta": 23626548.0,
+    "target_prior": 27377052.0,
+    "top_drivers": [
+     "revenue",
+     "cogs",
+     "income_tax"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 342608732.0,
+      "delta": 99654240.0,
+      "key": "revenue",
+      "name": "營業收入",
+      "prior": 242954492.0,
+      "share": 3.7916473240003805
+     },
+     {
+      "current": -218339911.0,
+      "delta": -57222704.0,
+      "key": "cogs",
+      "name": "營業成本",
+      "prior": -161117207.0,
+      "share": -2.1772110498626636
+     },
+     {
+      "current": -65281476.0,
+      "delta": -16148965.0,
+      "key": "total_opex",
+      "name": "營業費用合計",
+      "prior": -49132511.0,
+      "share": -0.6144362741377166
+     }
+    ],
+    "name": "營業利益變動",
+    "residual": 0.0,
+    "target": "operating_income",
+    "target_current": 58987345.0,
+    "target_delta": 26282571.0,
+    "target_prior": 32704774.0,
+    "top_drivers": [
+     "revenue",
+     "cogs",
+     "total_opex"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": -2619624.0,
+      "delta": -19813530.0,
+      "key": "cff",
+      "name": "籌資活動之淨現金(流出)流入",
+      "prior": 17193906.0,
+      "share": -2.175085470240285
+     },
+     {
+      "current": 63100603.0,
+      "delta": 19507029.0,
+      "key": "cfo",
+      "name": "營業活動之淨現金流入",
+      "prior": 43593574.0,
+      "share": 2.1414384688369954
+     },
+     {
+      "current": 979505.0,
+      "delta": 17449317.0,
+      "key": "fx_effect",
+      "name": "匯率影響數",
+      "prior": -16469812.0,
+      "share": 1.9155473997978552
+     },
+     {
+      "current": -30282455.0,
+      "delta": -8033505.0,
+      "key": "cfi",
+      "name": "投資活動之淨現金流出",
+      "prior": -22248950.0,
+      "share": -0.8819003983945657
+     }
+    ],
+    "name": "現金變動",
+    "residual": 0.0,
+    "target": "net_change_in_cash",
+    "target_current": 31178029.0,
+    "target_delta": 9109311.0,
+    "target_prior": 22068718.0,
+    "top_drivers": [
+     "cff",
+     "cfo",
+     "fx_effect"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": -27252368.0,
+      "delta": -8211141.0,
+      "key": "capex",
+      "name": "取得不動產、廠房及設備",
+      "prior": -19041227.0,
+      "share": 1.0221118926296804
+     },
+     {
+      "current": -564395.0,
+      "delta": 460376.0,
+      "key": "intangible_purchase",
+      "name": "取得無形資產",
+      "prior": -1024771.0,
+      "share": -0.05730699115765783
+     },
+     {
+      "current": 1872384.0,
+      "delta": 101372.0,
+      "key": "interest_received",
+      "name": "收取之利息",
+      "prior": 1771012.0,
+      "share": -0.012618651510144078
+     },
+     {
+      "current": 110565.0,
+      "delta": -67910.0,
+      "key": "dividends_received",
+      "name": "收取之股利",
+      "prior": 178475.0,
+      "share": 0.00845334632890625
+     },
+     {
+      "current": 38154.0,
+      "delta": 15553.0,
+      "key": "ppe_disposal_proceeds",
+      "name": "處分不動產、廠房及設備價款",
+      "prior": 22601.0,
+      "share": -0.001936016719974656
+     },
+     {
+      "current": 2999.0,
+      "delta": 2999.0,
+      "key": "fvoci_disposal_proceeds",
+      "name": "處分透過其他綜合損益按公允價值衡量之金融資產",
+      "prior": 0.0,
+      "share": -0.00037331152467073836
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "prepaid_equipment_increase",
+      "name": "prepaid_equipment_increase",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvtpl_purchase",
+      "name": "fvtpl_purchase",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fvtpl_disposal_proceeds",
+      "name": "fvtpl_disposal_proceeds",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "other_noncurrent_assets_increase",
+      "name": "other_noncurrent_assets_increase",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "change_refundable_deposits",
+      "name": "change_refundable_deposits",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "投資現金流變動",
+    "residual": -334754.0,
+    "target": "cfi",
+    "target_current": -30282455.0,
+    "target_delta": -8033505.0,
+    "target_prior": -22248950.0,
+    "top_drivers": [
+     "capex",
+     "intangible_purchase",
+     "interest_received"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 12891087.0,
+      "delta": -30800495.0,
+      "key": "long_term_borrowings_proceeds",
+      "name": "舉借長期借款",
+      "prior": 43691582.0,
+      "share": 1.5545183013829438
+     },
+     {
+      "current": -16832243.0,
+      "delta": 23872072.0,
+      "key": "long_term_borrowings_repayment",
+      "name": "償還長期借款",
+      "prior": -40704315.0,
+      "share": -1.2048368968073837
+     },
+     {
+      "current": 0.0,
+      "delta": -17090987.0,
+      "key": "bonds_issued",
+      "name": "發行應付公司債",
+      "prior": 17090987.0,
+      "share": 0.8625917239381372
+     },
+     {
+      "current": -434197.0,
+      "delta": 141014.0,
+      "key": "lease_principal_repayment",
+      "name": "租賃本金償還",
+      "prior": -575211.0,
+      "share": -0.0071170558704077465
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "short_term_borrowings_increase",
+      "name": "short_term_borrowings_increase",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "short_term_borrowings_decrease",
+      "name": "short_term_borrowings_decrease",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "bonds_repaid",
+      "name": "bonds_repaid",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "dividends_paid",
+      "name": "dividends_paid",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "dividends_paid_to_nci",
+      "name": "dividends_paid_to_nci",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "employee_stock_option_exercised",
+      "name": "employee_stock_option_exercised",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "guarantee_deposits_received_increase",
+      "name": "guarantee_deposits_received_increase",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "籌資現金流變動",
+    "residual": 4064866.0,
+    "target": "cff",
+    "target_current": -2619624.0,
+    "target_delta": -19813530.0,
+    "target_prior": 17193906.0,
+    "top_drivers": [
+     "long_term_borrowings_proceeds",
+     "long_term_borrowings_repayment",
+     "bonds_issued"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 139394174.0,
+      "delta": 37915866.0,
+      "key": "inventories",
+      "name": "存貨",
+      "prior": 101478308.0,
+      "share": 0.3302352001309379
+     },
+     {
+      "current": 182350204.0,
+      "delta": 31178029.0,
+      "key": "cash",
+      "name": "現金及約當現金",
+      "prior": 151172175.0,
+      "share": 0.27155077102823355
+     },
+     {
+      "current": 140007907.0,
+      "delta": 20782891.0,
+      "key": "accounts_receivable",
+      "name": "應收帳款淨額",
+      "prior": 119225016.0,
+      "share": 0.18101240701411034
+     },
+     {
+      "current": 158397548.0,
+      "delta": 16357705.0,
+      "key": "ppe",
+      "name": "不動產、廠房及設備",
+      "prior": 142039843.0,
+      "share": 0.14247043663351494
+     },
+     {
+      "current": 4554830.0,
+      "delta": 2628929.0,
+      "key": "fvoci_noncurrent",
+      "name": "透過其他綜合損益按公允價值衡量之金融資產-非流動",
+      "prior": 1925901.0,
+      "share": 0.02289714006387264
+     },
+     {
+      "current": 7341965.0,
+      "delta": 1575643.0,
+      "key": "other_noncurrent_assets",
+      "name": "其他非流動資產",
+      "prior": 5766322.0,
+      "share": 0.01372335215658562
+     },
+     {
+      "current": 10853075.0,
+      "delta": 1129642.0,
+      "key": "deferred_tax_assets",
+      "name": "遞延所得稅資產",
+      "prior": 9723433.0,
+      "share": 0.009838824516003748
+     },
+     {
+      "current": 2935688.0,
+      "delta": 453036.0,
+      "key": "notes_receivable",
+      "name": "應收票據淨額",
+      "prior": 2482652.0,
+      "share": 0.003945800265422385
+     },
+     {
+      "current": 74962513.0,
+      "delta": -363760.0,
+      "key": "intangible_assets",
+      "name": "無形資產",
+      "prior": 75326273.0,
+      "share": -0.003168234543281432
+     },
+     {
+      "current": 4903607.0,
+      "delta": 344424.0,
+      "key": "right_of_use_assets",
+      "name": "使用權資產",
+      "prior": 4559183.0,
+      "share": 0.002999824099227963
+     },
+     {
+      "current": 3944461.0,
+      "delta": 220033.0,
+      "key": "fvtpl_current",
+      "name": "透過損益按公允價值衡量之金融資產-流動",
+      "prior": 3724428.0,
+      "share": 0.001916417833906541
+     },
+     {
+      "current": 287084.0,
+      "delta": 132254.0,
+      "key": "other_current_assets",
+      "name": "其他流動資產",
+      "prior": 154830.0,
+      "share": 0.0011518905082668312
+     },
+     {
+      "current": 3214554.0,
+      "delta": -89041.0,
+      "key": "other_receivables",
+      "name": "其他應收款",
+      "prior": 3303595.0,
+      "share": -0.0007755189464710853
+     },
+     {
+      "current": 357045.0,
+      "delta": -23224.0,
+      "key": "equity_method_investments",
+      "name": "採用權益法之投資",
+      "prior": 380269.0,
+      "share": -0.00020227369428515497
+     },
+     {
+      "current": 3179.0,
+      "delta": -5717.0,
+      "key": "accounts_receivable_related",
+      "name": "應收帳款-關係人淨額",
+      "prior": 8896.0,
+      "share": -4.979326172184942e-05
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "prepaid_equipment",
+      "name": "prepaid_equipment",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "refundable_deposits",
+      "name": "refundable_deposits",
+      "prior": null,
+      "share": null
+     }
+    ],
+    "name": "總資產變動",
+    "residual": 2578022.0,
+    "target": "total_assets",
+    "target_current": 754433332.0,
+    "target_delta": 114814732.0,
+    "target_prior": 639618600.0,
+    "top_drivers": [
+     "inventories",
+     "cash",
+     "accounts_receivable"
+    ]
+   }
+  ],
+  "days": {
+   "current": 181,
+   "prior": 181
+  },
+  "index": {
+   "asset_turnover": {
+    "current": 0.45412724685923606,
+    "prior": 0.44463045638778725
+   },
+   "capex_to_depreciation": {
+    "current": 1.908678008294919,
+    "prior": 1.6388655856187107
+   },
+   "capex_to_revenue": {
+    "current": 7.9543705266683045,
+    "prior": 7.837363632692167
+   },
+   "cash_to_assets": {
+    "current": 24.170486147078137,
+    "prior": 25.534981296291726
+   },
+   "ccc": {
+    "current": 92.84099887244115,
+    "prior": 80.48090534591147
+   },
+   "cfo_to_net_income": {
+    "current": 1.2371793951799481,
+    "prior": 1.5923399641422313
+   },
+   "current_ratio": {
+    "current": 159.94945612739627,
+    "prior": 180.26896882234533
+   },
+   "debt_to_equity": {
+    "current": 20.94424973082724,
+    "prior": 31.748675917671278
+   },
+   "dio": {
+    "current": 115.55535302018146,
+    "prior": 91.59090283261924
+   },
+   "dividend_payout": {
+    "current": null,
+    "prior": null
+   },
+   "dpo": {
+    "current": 96.68213196258013,
+    "prior": 77.98515580648068
+   },
+   "dso": {
+    "current": 73.96777781483982,
+    "prior": 66.87515831977291
+   },
+   "ebitda": {
+    "current": 75209355.0,
+    "prior": 46283787.0
+   },
+   "ebitda_margin": {
+    "current": 21.95196677007053,
+    "prior": 19.050393602107178
+   },
+   "effective_tax_rate": {
+    "current": 22.829899584425974,
+    "prior": 22.299527727226195
+   },
+   "fcf": {
+    "current": 35848235.0,
+    "prior": 24552347.0
+   },
+   "fcf_margin": {
+    "current": 10.463316212267468,
+    "prior": 10.105739061618173
+   },
+   "gross_margin": {
+    "current": null,
+    "prior": null
+   },
+   "interest_bearing_debt": {
+    "current": 73351976.0,
+    "prior": 82831617.0
+   },
+   "interest_coverage": {
+    "current": 53.89767934417122,
+    "prior": 31.529055519671452
+   },
+   "liabilities_to_assets": {
+    "current": 53.57775470079575,
+    "prior": 52.253142166110514
+   },
+   "net_debt": {
+    "current": -108998228.0,
+    "prior": -56696351.0
+   },
+   "net_margin": {
+    "current": 14.886835984086943,
+    "prior": 11.268386838470144
+   },
+   "operating_margin": {
+    "current": 17.217116637879503,
+    "prior": 13.46127570261183
+   },
+   "opex_ratio": {
+    "current": 19.054235897291726,
+    "prior": 20.22292759254684
+   },
+   "quick_ratio": {
+    "current": 114.17173180809155,
+    "prior": 135.9487231007354
+   },
+   "rd_intensity": {
+    "current": 8.592590687385048,
+    "prior": 9.4292053673986
+   },
+   "roa": {
+    "current": 6.76051783989841,
+    "prior": 5.010267982743115
+   },
+   "roe": {
+    "current": null,
+    "prior": null
+   },
+   "working_capital": {
+    "current": 182547408.0,
+    "prior": 147659439.0
+   }
+  },
+  "metrics": [
+   {
+    "formula": "cfo + capex",
+    "inputs": {
+     "capex": -27252368.0,
+     "cfo": 63100603.0
+    },
+    "key": "fcf",
+    "name": "自由現金流",
+    "period": "current",
+    "unit": "仟元",
+    "value": 35848235.0
+   },
+   {
+    "formula": "cfo + capex",
+    "inputs": {
+     "capex": -19041227.0,
+     "cfo": 43593574.0
+    },
+    "key": "fcf",
+    "name": "自由現金流",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 24552347.0
+   },
+   {
+    "formula": "fcf / revenue * 100",
+    "inputs": {
+     "fcf": 35848235.0,
+     "revenue": 342608732.0
+    },
+    "key": "fcf_margin",
+    "name": "自由現金流率",
+    "period": "current",
+    "unit": "%",
+    "value": 10.463316212267468
+   },
+   {
+    "formula": "fcf / revenue * 100",
+    "inputs": {
+     "fcf": 24552347.0,
+     "revenue": 242954492.0
+    },
+    "key": "fcf_margin",
+    "name": "自由現金流率",
+    "period": "prior",
+    "unit": "%",
+    "value": 10.105739061618173
+   },
+   {
+    "formula": "gross_profit / revenue * 100",
+    "inputs": {
+     "gross_profit": null,
+     "revenue": 342608732.0
+    },
+    "key": "gross_margin",
+    "name": "毛利率",
+    "period": "current",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "gross_profit / revenue * 100",
+    "inputs": {
+     "gross_profit": null,
+     "revenue": 242954492.0
+    },
+    "key": "gross_margin",
+    "name": "毛利率",
+    "period": "prior",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "operating_income / revenue * 100",
+    "inputs": {
+     "operating_income": 58987345.0,
+     "revenue": 342608732.0
+    },
+    "key": "operating_margin",
+    "name": "營業利益率",
+    "period": "current",
+    "unit": "%",
+    "value": 17.217116637879503
+   },
+   {
+    "formula": "operating_income / revenue * 100",
+    "inputs": {
+     "operating_income": 32704774.0,
+     "revenue": 242954492.0
+    },
+    "key": "operating_margin",
+    "name": "營業利益率",
+    "period": "prior",
+    "unit": "%",
+    "value": 13.46127570261183
+   },
+   {
+    "formula": "net_income / revenue * 100",
+    "inputs": {
+     "net_income": 51003600.0,
+     "revenue": 342608732.0
+    },
+    "key": "net_margin",
+    "name": "淨利率",
+    "period": "current",
+    "unit": "%",
+    "value": 14.886835984086943
+   },
+   {
+    "formula": "net_income / revenue * 100",
+    "inputs": {
+     "net_income": 27377052.0,
+     "revenue": 242954492.0
+    },
+    "key": "net_margin",
+    "name": "淨利率",
+    "period": "prior",
+    "unit": "%",
+    "value": 11.268386838470144
+   },
+   {
+    "formula": "operating_income + depreciation + amortization",
+    "inputs": {
+     "amortization": 1943872.0,
+     "depreciation": 14278138.0,
+     "operating_income": 58987345.0
+    },
+    "key": "ebitda",
+    "name": "EBITDA",
+    "period": "current",
+    "unit": "仟元",
+    "value": 75209355.0
+   },
+   {
+    "formula": "operating_income + depreciation + amortization",
+    "inputs": {
+     "amortization": 1960472.0,
+     "depreciation": 11618541.0,
+     "operating_income": 32704774.0
+    },
+    "key": "ebitda",
+    "name": "EBITDA",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 46283787.0
+   },
+   {
+    "formula": "ebitda / revenue * 100",
+    "inputs": {
+     "ebitda": 75209355.0,
+     "revenue": 342608732.0
+    },
+    "key": "ebitda_margin",
+    "name": "EBITDA 率",
+    "period": "current",
+    "unit": "%",
+    "value": 21.95196677007053
+   },
+   {
+    "formula": "ebitda / revenue * 100",
+    "inputs": {
+     "ebitda": 46283787.0,
+     "revenue": 242954492.0
+    },
+    "key": "ebitda_margin",
+    "name": "EBITDA 率",
+    "period": "prior",
+    "unit": "%",
+    "value": 19.050393602107178
+   },
+   {
+    "formula": "cfo / net_income",
+    "inputs": {
+     "cfo": 63100603.0,
+     "net_income": 51003600.0
+    },
+    "key": "cfo_to_net_income",
+    "name": "營業現金流／淨利",
+    "period": "current",
+    "unit": "x",
+    "value": 1.2371793951799481
+   },
+   {
+    "formula": "cfo / net_income",
+    "inputs": {
+     "cfo": 43593574.0,
+     "net_income": 27377052.0
+    },
+    "key": "cfo_to_net_income",
+    "name": "營業現金流／淨利",
+    "period": "prior",
+    "unit": "x",
+    "value": 1.5923399641422313
+   },
+   {
+    "formula": "abs(capex) / depreciation",
+    "inputs": {
+     "capex": -27252368.0,
+     "depreciation": 14278138.0
+    },
+    "key": "capex_to_depreciation",
+    "name": "資本支出／折舊",
+    "period": "current",
+    "unit": "x",
+    "value": 1.908678008294919
+   },
+   {
+    "formula": "abs(capex) / depreciation",
+    "inputs": {
+     "capex": -19041227.0,
+     "depreciation": 11618541.0
+    },
+    "key": "capex_to_depreciation",
+    "name": "資本支出／折舊",
+    "period": "prior",
+    "unit": "x",
+    "value": 1.6388655856187107
+   },
+   {
+    "formula": "abs(capex) / revenue * 100",
+    "inputs": {
+     "capex": -27252368.0,
+     "revenue": 342608732.0
+    },
+    "key": "capex_to_revenue",
+    "name": "資本支出率",
+    "period": "current",
+    "unit": "%",
+    "value": 7.9543705266683045
+   },
+   {
+    "formula": "abs(capex) / revenue * 100",
+    "inputs": {
+     "capex": -19041227.0,
+     "revenue": 242954492.0
+    },
+    "key": "capex_to_revenue",
+    "name": "資本支出率",
+    "period": "prior",
+    "unit": "%",
+    "value": 7.837363632692167
+   },
+   {
+    "formula": "(accounts_receivable + accounts_receivable_related) / revenue * days",
+    "inputs": {
+     "accounts_receivable": 140007907.0,
+     "accounts_receivable_related": 3179.0,
+     "days": 181,
+     "revenue": 342608732.0
+    },
+    "key": "dso",
+    "name": "應收帳款天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": 73.96777781483982
+   },
+   {
+    "formula": "(accounts_receivable + accounts_receivable_related) / revenue * days",
+    "inputs": {
+     "accounts_receivable": 89759182.0,
+     "accounts_receivable_related": 6675.0,
+     "days": 181,
+     "revenue": 242954492.0
+    },
+    "key": "dso",
+    "name": "應收帳款天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": 66.87515831977291
+   },
+   {
+    "formula": "inventories / abs(cogs) * days",
+    "inputs": {
+     "cogs": -218339911.0,
+     "days": 181,
+     "inventories": 139394174.0
+    },
+    "key": "dio",
+    "name": "存貨天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": 115.55535302018146
+   },
+   {
+    "formula": "inventories / abs(cogs) * days",
+    "inputs": {
+     "cogs": -161117207.0,
+     "days": 181,
+     "inventories": 81529671.0
+    },
+    "key": "dio",
+    "name": "存貨天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": 91.59090283261924
+   },
+   {
+    "formula": "accounts_payable / abs(cogs) * days",
+    "inputs": {
+     "accounts_payable": 116627448.0,
+     "cogs": -218339911.0,
+     "days": 181
+    },
+    "key": "dpo",
+    "name": "應付帳款天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": 96.68213196258013
+   },
+   {
+    "formula": "accounts_payable / abs(cogs) * days",
+    "inputs": {
+     "accounts_payable": 69418511.0,
+     "cogs": -161117207.0,
+     "days": 181
+    },
+    "key": "dpo",
+    "name": "應付帳款天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": 77.98515580648068
+   },
+   {
+    "formula": "dso + dio - dpo",
+    "inputs": {
+     "dio": 115.55535302018146,
+     "dpo": 96.68213196258013,
+     "dso": 73.96777781483982
+    },
+    "key": "ccc",
+    "name": "現金轉換循環",
+    "period": "current",
+    "unit": "天",
+    "value": 92.84099887244115
+   },
+   {
+    "formula": "dso + dio - dpo",
+    "inputs": {
+     "dio": 91.59090283261924,
+     "dpo": 77.98515580648068,
+     "dso": 66.87515831977291
+    },
+    "key": "ccc",
+    "name": "現金轉換循環",
+    "period": "prior",
+    "unit": "天",
+    "value": 80.48090534591147
+   },
+   {
+    "formula": "total_current_assets / total_current_liabilities * 100",
+    "inputs": {
+     "total_current_assets": 487049600.0,
+     "total_current_liabilities": 304502192.0
+    },
+    "key": "current_ratio",
+    "name": "流動比率",
+    "period": "current",
+    "unit": "%",
+    "value": 159.94945612739627
+   },
+   {
+    "formula": "total_current_assets / total_current_liabilities * 100",
+    "inputs": {
+     "total_current_assets": 331615258.0,
+     "total_current_liabilities": 183955819.0
+    },
+    "key": "current_ratio",
+    "name": "流動比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 180.26896882234533
+   },
+   {
+    "formula": "(total_current_assets - inventories) / total_current_liabilities * 100",
+    "inputs": {
+     "inventories": 139394174.0,
+     "total_current_assets": 487049600.0,
+     "total_current_liabilities": 304502192.0
+    },
+    "key": "quick_ratio",
+    "name": "速動比率",
+    "period": "current",
+    "unit": "%",
+    "value": 114.17173180809155
+   },
+   {
+    "formula": "(total_current_assets - inventories) / total_current_liabilities * 100",
+    "inputs": {
+     "inventories": 81529671.0,
+     "total_current_assets": 331615258.0,
+     "total_current_liabilities": 183955819.0
+    },
+    "key": "quick_ratio",
+    "name": "速動比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 135.9487231007354
+   },
+   {
+    "formula": "short_term_borrowings + long_term_borrowings_current + long_term_borrowings + bonds_payable + lease_liabilities_current + lease_liabilities_noncurrent（缺 key 視為 0）",
+    "inputs": {
+     "bonds_payable": 30243710.0,
+     "lease_liabilities_current": null,
+     "lease_liabilities_noncurrent": 2713736.0,
+     "long_term_borrowings": 17787634.0,
+     "long_term_borrowings_current": 6305263.0,
+     "short_term_borrowings": 16301633.0
+    },
+    "key": "interest_bearing_debt",
+    "name": "有息負債",
+    "period": "current",
+    "unit": "仟元",
+    "value": 73351976.0
+   },
+   {
+    "formula": "short_term_borrowings + long_term_borrowings_current + long_term_borrowings + bonds_payable + lease_liabilities_current + lease_liabilities_noncurrent（缺 key 視為 0）",
+    "inputs": {
+     "bonds_payable": 23445265.0,
+     "lease_liabilities_current": null,
+     "lease_liabilities_noncurrent": 2377877.0,
+     "long_term_borrowings": 35203095.0,
+     "long_term_borrowings_current": 20196167.0,
+     "short_term_borrowings": 1609213.0
+    },
+    "key": "interest_bearing_debt",
+    "name": "有息負債",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 82831617.0
+   },
+   {
+    "formula": "interest_bearing_debt - cash",
+    "inputs": {
+     "cash": 182350204.0,
+     "interest_bearing_debt": 73351976.0
+    },
+    "key": "net_debt",
+    "name": "淨負債",
+    "period": "current",
+    "unit": "仟元",
+    "value": -108998228.0
+   },
+   {
+    "formula": "interest_bearing_debt - cash",
+    "inputs": {
+     "cash": 139527968.0,
+     "interest_bearing_debt": 82831617.0
+    },
+    "key": "net_debt",
+    "name": "淨負債",
+    "period": "prior",
+    "unit": "仟元",
+    "value": -56696351.0
+   },
+   {
+    "formula": "interest_bearing_debt / total_equity * 100",
+    "inputs": {
+     "interest_bearing_debt": 73351976.0,
+     "total_equity": 350224892.0
+    },
+    "key": "debt_to_equity",
+    "name": "有息負債／權益",
+    "period": "current",
+    "unit": "%",
+    "value": 20.94424973082724
+   },
+   {
+    "formula": "interest_bearing_debt / total_equity * 100",
+    "inputs": {
+     "interest_bearing_debt": 82831617.0,
+     "total_equity": 260897863.0
+    },
+    "key": "debt_to_equity",
+    "name": "有息負債／權益",
+    "period": "prior",
+    "unit": "%",
+    "value": 31.748675917671278
+   },
+   {
+    "formula": "total_liabilities / total_assets * 100",
+    "inputs": {
+     "total_assets": 754433332.0,
+     "total_liabilities": 404208440.0
+    },
+    "key": "liabilities_to_assets",
+    "name": "負債比率",
+    "period": "current",
+    "unit": "%",
+    "value": 53.57775470079575
+   },
+   {
+    "formula": "total_liabilities / total_assets * 100",
+    "inputs": {
+     "total_assets": 546418916.0,
+     "total_liabilities": 285521053.0
+    },
+    "key": "liabilities_to_assets",
+    "name": "負債比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 52.253142166110514
+   },
+   {
+    "formula": "operating_income / abs(finance_costs)",
+    "inputs": {
+     "finance_costs": -1094432.0,
+     "operating_income": 58987345.0
+    },
+    "key": "interest_coverage",
+    "name": "利息保障倍數",
+    "period": "current",
+    "unit": "x",
+    "value": 53.89767934417122
+   },
+   {
+    "formula": "operating_income / abs(finance_costs)",
+    "inputs": {
+     "finance_costs": -1037290.0,
+     "operating_income": 32704774.0
+    },
+    "key": "interest_coverage",
+    "name": "利息保障倍數",
+    "period": "prior",
+    "unit": "x",
+    "value": 31.529055519671452
+   },
+   {
+    "formula": "net_income_parent / equity_parent * 100",
+    "inputs": {
+     "equity_parent": null,
+     "net_income_parent": 45691231.0
+    },
+    "key": "roe",
+    "name": "股東權益報酬率（期末）",
+    "period": "current",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "net_income_parent / equity_parent * 100",
+    "inputs": {
+     "equity_parent": null,
+     "net_income_parent": 24178986.0
+    },
+    "key": "roe",
+    "name": "股東權益報酬率（期末）",
+    "period": "prior",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "net_income / total_assets * 100",
+    "inputs": {
+     "net_income": 51003600.0,
+     "total_assets": 754433332.0
+    },
+    "key": "roa",
+    "name": "資產報酬率（期末）",
+    "period": "current",
+    "unit": "%",
+    "value": 6.76051783989841
+   },
+   {
+    "formula": "net_income / total_assets * 100",
+    "inputs": {
+     "net_income": 27377052.0,
+     "total_assets": 546418916.0
+    },
+    "key": "roa",
+    "name": "資產報酬率（期末）",
+    "period": "prior",
+    "unit": "%",
+    "value": 5.010267982743115
+   },
+   {
+    "formula": "revenue / total_assets",
+    "inputs": {
+     "revenue": 342608732.0,
+     "total_assets": 754433332.0
+    },
+    "key": "asset_turnover",
+    "name": "總資產週轉率（期末）",
+    "period": "current",
+    "unit": "x",
+    "value": 0.45412724685923606
+   },
+   {
+    "formula": "revenue / total_assets",
+    "inputs": {
+     "revenue": 242954492.0,
+     "total_assets": 546418916.0
+    },
+    "key": "asset_turnover",
+    "name": "總資產週轉率（期末）",
+    "period": "prior",
+    "unit": "x",
+    "value": 0.44463045638778725
+   },
+   {
+    "formula": "abs(rd_expenses) / revenue * 100",
+    "inputs": {
+     "rd_expenses": -29438966.0,
+     "revenue": 342608732.0
+    },
+    "key": "rd_intensity",
+    "name": "研發費用率",
+    "period": "current",
+    "unit": "%",
+    "value": 8.592590687385048
+   },
+   {
+    "formula": "abs(rd_expenses) / revenue * 100",
+    "inputs": {
+     "rd_expenses": -22908678.0,
+     "revenue": 242954492.0
+    },
+    "key": "rd_intensity",
+    "name": "研發費用率",
+    "period": "prior",
+    "unit": "%",
+    "value": 9.4292053673986
+   },
+   {
+    "formula": "abs(total_opex) / revenue * 100",
+    "inputs": {
+     "revenue": 342608732.0,
+     "total_opex": -65281476.0
+    },
+    "key": "opex_ratio",
+    "name": "營業費用率",
+    "period": "current",
+    "unit": "%",
+    "value": 19.054235897291726
+   },
+   {
+    "formula": "abs(total_opex) / revenue * 100",
+    "inputs": {
+     "revenue": 242954492.0,
+     "total_opex": -49132511.0
+    },
+    "key": "opex_ratio",
+    "name": "營業費用率",
+    "period": "prior",
+    "unit": "%",
+    "value": 20.22292759254684
+   },
+   {
+    "formula": "abs(income_tax) / pretax_income * 100",
+    "inputs": {
+     "income_tax": -15088837.0,
+     "pretax_income": 66092437.0
+    },
+    "key": "effective_tax_rate",
+    "name": "有效稅率",
+    "period": "current",
+    "unit": "%",
+    "value": 22.829899584425974
+   },
+   {
+    "formula": "abs(income_tax) / pretax_income * 100",
+    "inputs": {
+     "income_tax": -7857035.0,
+     "pretax_income": 35234087.0
+    },
+    "key": "effective_tax_rate",
+    "name": "有效稅率",
+    "period": "prior",
+    "unit": "%",
+    "value": 22.299527727226195
+   },
+   {
+    "formula": "abs(dividends_paid) / net_income_parent * 100",
+    "inputs": {
+     "dividends_paid": null,
+     "net_income_parent": 45691231.0
+    },
+    "key": "dividend_payout",
+    "name": "現金股利支付率",
+    "period": "current",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "abs(dividends_paid) / net_income_parent * 100",
+    "inputs": {
+     "dividends_paid": null,
+     "net_income_parent": 24178986.0
+    },
+    "key": "dividend_payout",
+    "name": "現金股利支付率",
+    "period": "prior",
+    "unit": "%",
+    "value": null
+   },
+   {
+    "formula": "cash / total_assets * 100",
+    "inputs": {
+     "cash": 182350204.0,
+     "total_assets": 754433332.0
+    },
+    "key": "cash_to_assets",
+    "name": "現金占總資產",
+    "period": "current",
+    "unit": "%",
+    "value": 24.170486147078137
+   },
+   {
+    "formula": "cash / total_assets * 100",
+    "inputs": {
+     "cash": 139527968.0,
+     "total_assets": 546418916.0
+    },
+    "key": "cash_to_assets",
+    "name": "現金占總資產",
+    "period": "prior",
+    "unit": "%",
+    "value": 25.534981296291726
+   },
+   {
+    "formula": "total_current_assets - total_current_liabilities",
+    "inputs": {
+     "total_current_assets": 487049600.0,
+     "total_current_liabilities": 304502192.0
+    },
+    "key": "working_capital",
+    "name": "營運資金",
+    "period": "current",
+    "unit": "仟元",
+    "value": 182547408.0
+   },
+   {
+    "formula": "total_current_assets - total_current_liabilities",
+    "inputs": {
+     "total_current_assets": 331615258.0,
+     "total_current_liabilities": 183955819.0
+    },
+    "key": "working_capital",
+    "name": "營運資金",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 147659439.0
+   }
+  ],
+  "period_current": "115",
+  "period_prior": "114",
+  "periods": {
+   "bs_current": "115-06-30",
+   "bs_prior_fy_end": "114-12-31",
+   "bs_prior_same": "114-06-30",
+   "flow_current": "115-01-01~115-06-30",
+   "flow_prior": "114-01-01~114-06-30"
+  },
+  "ttm_vs_fy": {
+   "assurance": "mixed",
+   "bridges": [],
+   "index": {},
+   "metrics": [],
+   "period_fy": null,
+   "period_ttm": null,
+   "reason": "fy_income_missing",
+   "source_page": null,
+   "status": "unavailable",
+   "values": {}
+  }
+ },
+ "3653_FY": {
+  "assurance": "audited",
+  "basis": "FY",
+  "bridges": [
+   {
+    "components": [
+     {
+      "current": 4773519.0,
+      "delta": 1882843.0,
+      "key": "cfo",
+      "name": "營業活動之淨現金流入",
+      "prior": 2890676.0,
+      "share": 1.4820155833197557
+     },
+     {
+      "current": -829582.0,
+      "delta": -612382.0,
+      "key": "capex",
+      "name": "取得不動產、廠房及設備",
+      "prior": -217200.0,
+      "share": -0.4820155833197556
+     }
+    ],
+    "name": "自由現金流變動",
+    "residual": 0.0,
+    "target": "fcf",
+    "target_current": 3943937.0,
+    "target_delta": 1270461.0,
+    "target_prior": 2673476.0,
+    "top_drivers": [
+     "cfo",
+     "capex"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 6606955.0,
+      "delta": 2361526.0,
+      "key": "pretax_income_cf",
+      "name": "本期稅前淨利",
+      "prior": 4245429.0,
+      "share": 1.2542341554765852
+     },
+     {
+      "current": -886772.0,
+      "delta": -323658.0,
+      "key": "income_tax_paid",
+      "name": "支付之所得稅",
+      "prior": -563114.0,
+      "share": -0.17189855978432614
+     },
+     {
+      "current": 293762.0,
+      "delta": -190668.0,
+      "key": "change_payables",
+      "name": "應付帳款",
+      "prior": 484430.0,
+      "share": -0.1012660110269417
+     },
+     {
+      "current": 388428.0,
+      "delta": 162685.0,
+      "key": "change_other_payables",
+      "name": "其他應付款",
+      "prior": 225743.0,
+      "share": 0.08640391153165718
+     },
+     {
+      "current": -1262904.0,
+      "delta": 110278.0,
+      "key": "change_receivables",
+      "name": "應收帳款",
+      "prior": -1373182.0,
+      "share": 0.05856993918239598
+     },
+     {
+      "current": -56229.0,
+      "delta": -91032.0,
+      "key": "change_contract_liabilities",
+      "name": "合約負債",
+      "prior": 34803.0,
+      "share": -0.04834816285797594
+     },
+     {
+      "current": -55226.0,
+      "delta": -65540.0,
+      "key": "change_other_receivables",
+      "name": "其他應收款",
+      "prior": 10314.0,
+      "share": -0.0348090626780884
+     },
+     {
+      "current": 629171.0,
+      "delta": 52760.0,
+      "key": "depreciation",
+      "name": "折舊費用",
+      "prior": 576411.0,
+      "share": 0.028021454789379677
+     },
+     {
+      "current": -16260.0,
+      "delta": -46074.0,
+      "key": "change_receivables_related",
+      "name": "應收帳款-關係人",
+      "prior": 29814.0,
+      "share": -0.02447044177342455
+     },
+     {
+      "current": -34168.0,
+      "delta": -43352.0,
+      "key": "change_other_current_assets",
+      "name": "其他流動資產",
+      "prior": 9184.0,
+      "share": -0.023024755648771565
+     },
+     {
+      "current": -93872.0,
+      "delta": -37655.0,
+      "key": "unrealized_fx_gain",
+      "name": "未實現外幣兌換淨利益",
+      "prior": -56217.0,
+      "share": -0.01999901213218521
+     },
+     {
+      "current": -59296.0,
+      "delta": -33193.0,
+      "key": "fvtpl_gain_adj",
+      "name": "透過損益按公允價值衡量之金融資產利益",
+      "prior": -26103.0,
+      "share": -0.01762919160014935
+     },
+     {
+      "current": 38622.0,
+      "delta": 25015.0,
+      "key": "finance_costs_adj",
+      "name": "財務成本",
+      "prior": 13607.0,
+      "share": 0.013285759885449822
+     },
+     {
+      "current": -651230.0,
+      "delta": -15774.0,
+      "key": "change_inventories",
+      "name": "存貨",
+      "prior": -635456.0,
+      "share": -0.008377756403481332
+     },
+     {
+      "current": 3230.0,
+      "delta": 10689.0,
+      "key": "impairment_loss_receivables",
+      "name": "預期信用減損損失(迴轉利益)",
+      "prior": -7459.0,
+      "share": 0.005677053264664128
+     },
+     {
+      "current": 2277.0,
+      "delta": 5683.0,
+      "key": "ppe_disposal_loss_adj",
+      "name": "處分不動產、廠房及設備之損失(利益)",
+      "prior": -3406.0,
+      "share": 0.00301830795238902
+     },
+     {
+      "current": 12395.0,
+      "delta": 4942.0,
+      "key": "change_other_current_liabilities",
+      "name": "其他流動負債",
+      "prior": 7453.0,
+      "share": 0.0026247541616587254
+     },
+     {
+      "current": -16616.0,
+      "delta": -4697.0,
+      "key": "dividend_income_adj",
+      "name": "股利收入",
+      "prior": -11919.0,
+      "share": -0.0024946317882053896
+     },
+     {
+      "current": -93104.0,
+      "delta": 3538.0,
+      "key": "interest_income_adj",
+      "name": "利息收入",
+      "prior": -96642.0,
+      "share": 0.0018790732950118517
+     },
+     {
+      "current": 3340.0,
+      "delta": -3064.0,
+      "key": "change_notes_payable",
+      "name": "應付票據",
+      "prior": 6404.0,
+      "share": -0.0016273263357592747
+     },
+     {
+      "current": 18877.0,
+      "delta": -1636.0,
+      "key": "amortization",
+      "name": "攤銷費用",
+      "prior": 20513.0,
+      "share": -0.0008688987876312576
+     },
+     {
+      "current": 685.0,
+      "delta": 1307.0,
+      "key": "change_notes_receivable",
+      "name": "應收票據",
+      "prior": -622.0,
+      "share": 0.0006941630289939204
+     },
+     {
+      "current": 7327.0,
+      "delta": 804.0,
+      "key": "change_net_defined_benefit",
+      "name": "淨確定福利負債-非流動",
+      "prior": 6523.0,
+      "share": 0.0004270138296182953
+     },
+     {
+      "current": -2790.0,
+      "delta": 755.0,
+      "key": "impairment_reversal_nonfinancial",
+      "name": "非金融資產減損迴轉利益",
+      "prior": -3545.0,
+      "share": 0.00040098935492762807
+     },
+     {
+      "current": 145.0,
+      "delta": -598.0,
+      "key": "lease_modification_loss",
+      "name": "租賃修改損失",
+      "prior": 743.0,
+      "share": -0.00031760481357181666
+     },
+     {
+      "current": -1553.0,
+      "delta": -137.0,
+      "key": "interest_paid",
+      "name": "支付之利息",
+      "prior": -1416.0,
+      "share": -7.27623067881921e-05
+     },
+     {
+      "current": -1667.0,
+      "delta": -53.0,
+      "key": "equity_method_share_adj",
+      "name": "採用權益法認列之關聯企業及合資損益之份額",
+      "prior": -1614.0,
+      "share": -2.814892160419111e-05
+     },
+     {
+      "current": -8.0,
+      "delta": -8.0,
+      "key": "bond_buyback_gain",
+      "name": "買回公司債利益",
+      "prior": 0.0,
+      "share": -4.248893827047715e-06
+     }
+    ],
+    "name": "營業現金流變動（間接法）",
+    "residual": 0.0,
+    "target": "cfo",
+    "target_current": 4773519.0,
+    "target_delta": 1882843.0,
+    "target_prior": 2890676.0,
+    "top_drivers": [
+     "pretax_income_cf",
+     "income_tax_paid",
+     "change_payables"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 20275577.0,
+      "delta": 5997390.0,
+      "key": "revenue",
+      "name": "營業收入",
+      "prior": 14278187.0,
+      "share": 3.1645490138139913
+     },
+     {
+      "current": -11841587.0,
+      "delta": -2928866.0,
+      "key": "cogs",
+      "name": "營業成本",
+      "prior": -8912721.0,
+      "share": -1.5454289302335398
+     },
+     {
+      "current": -1296613.0,
+      "delta": -466346.0,
+      "key": "income_tax",
+      "name": "所得稅費用",
+      "prior": -830267.0,
+      "share": -0.2460695026329953
+     },
+     {
+      "current": 21125.0,
+      "delta": -302915.0,
+      "key": "other_gains_losses",
+      "name": "其他利益及損失",
+      "prior": 324040.0,
+      "share": -0.1598344220601737
+     },
+     {
+      "current": -954822.0,
+      "delta": -167672.0,
+      "key": "admin_expenses",
+      "name": "管理費用",
+      "prior": -787150.0,
+      "share": -0.08847286273599342
+     },
+     {
+      "current": -739821.0,
+      "delta": -142302.0,
+      "key": "rd_expenses",
+      "name": "研究發展費用",
+      "prior": -597519.0,
+      "share": -0.07508627148872403
+     },
+     {
+      "current": -241214.0,
+      "delta": -58976.0,
+      "key": "selling_expenses",
+      "name": "推銷費用",
+      "prior": -182238.0,
+      "share": -0.031118943847022445
+     },
+     {
+      "current": -38622.0,
+      "delta": -25015.0,
+      "key": "finance_costs",
+      "name": "財務成本",
+      "prior": -13607.0,
+      "share": -0.01319927394759337
+     },
+     {
+      "current": 31548.0,
+      "delta": -6633.0,
+      "key": "other_income",
+      "name": "其他收入",
+      "prior": 38181.0,
+      "share": -0.003499931404932513
+     },
+     {
+      "current": 93104.0,
+      "delta": -3538.0,
+      "key": "interest_income",
+      "name": "利息收入",
+      "prior": 96642.0,
+      "share": -0.0018668411443767874
+     },
+     {
+      "current": 1667.0,
+      "delta": 53.0,
+      "key": "equity_method_share",
+      "name": "採用權益法認列之關聯企業及合資損益之份額",
+      "prior": 1614.0,
+      "share": 2.7965681360081892e-05
+     }
+    ],
+    "name": "淨利變動",
+    "residual": 0.0,
+    "target": "net_income",
+    "target_current": 5310342.0,
+    "target_delta": 1895180.0,
+    "target_prior": 3415162.0,
+    "top_drivers": [
+     "revenue",
+     "cogs",
+     "income_tax"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 20275577.0,
+      "delta": 5997390.0,
+      "key": "revenue",
+      "name": "營業收入",
+      "prior": 14278187.0,
+      "share": 2.221606075625265
+     },
+     {
+      "current": -11841587.0,
+      "delta": -2928866.0,
+      "key": "cogs",
+      "name": "營業成本",
+      "prior": -8912721.0,
+      "share": -1.0849363640337328
+     },
+     {
+      "current": -1935857.0,
+      "delta": -368950.0,
+      "key": "total_opex",
+      "name": "營業費用合計",
+      "prior": -1566907.0,
+      "share": -0.1366697115915326
+     }
+    ],
+    "name": "營業利益變動",
+    "residual": 0.0,
+    "target": "operating_income",
+    "target_current": 6498133.0,
+    "target_delta": 2699574.0,
+    "target_prior": 3798559.0,
+    "top_drivers": [
+     "revenue",
+     "cogs",
+     "total_opex"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 3076719.0,
+      "delta": 5291724.0,
+      "key": "cff",
+      "name": "籌資活動之淨現金流入(流出)",
+      "prior": -2215005.0,
+      "share": 0.6044103699019918
+     },
+     {
+      "current": 4773519.0,
+      "delta": 1882843.0,
+      "key": "cfo",
+      "name": "營業活動之淨現金流入",
+      "prior": 2890676.0,
+      "share": 0.2150546464814446
+     },
+     {
+      "current": -1013580.0,
+      "delta": 1549501.0,
+      "key": "cfi",
+      "name": "投資活動之淨現金流出",
+      "prior": -2563081.0,
+      "share": 0.17698097492868226
+     },
+     {
+      "current": 30156.0,
+      "delta": 31116.0,
+      "key": "fx_effect",
+      "name": "匯率變動對現金及約當現金影響數",
+      "prior": -960.0,
+      "share": 0.0035540086878813743
+     }
+    ],
+    "name": "現金變動",
+    "residual": 0.0,
+    "target": "net_change_in_cash",
+    "target_current": 6866814.0,
+    "target_delta": 8755184.0,
+    "target_prior": -1888370.0,
+    "top_drivers": [
+     "cff",
+     "cfo",
+     "cfi"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": -91784.0,
+      "delta": 2099257.0,
+      "key": "other_noncurrent_assets_increase",
+      "name": "其他非流動資產增加",
+      "prior": -2191041.0,
+      "share": 1.3547955115872787
+     },
+     {
+      "current": -829582.0,
+      "delta": -612382.0,
+      "key": "capex",
+      "name": "取得不動產、廠房及設備",
+      "prior": -217200.0,
+      "share": -0.39521239418367593
+     },
+     {
+      "current": 0.0,
+      "delta": -155591.0,
+      "key": "fvtpl_disposal_proceeds",
+      "name": "處分透過損益按公允價值衡量之金融資產",
+      "prior": 155591.0,
+      "share": -0.1004136170289661
+     },
+     {
+      "current": 284691.0,
+      "delta": 145551.0,
+      "key": "fvoci_disposal_proceeds",
+      "name": "處分透過其他綜合損益按公允價值衡量之金融資產",
+      "prior": 139140.0,
+      "share": 0.09393411169144131
+     },
+     {
+      "current": -342995.0,
+      "delta": 52560.0,
+      "key": "prepaid_equipment_increase",
+      "name": "預付設備款增加",
+      "prior": -395555.0,
+      "share": 0.03392059766337679
+     },
+     {
+      "current": 16293.0,
+      "delta": 43760.0,
+      "key": "change_refundable_deposits",
+      "name": "存出保證金減少(增加)",
+      "prior": -27467.0,
+      "share": 0.02824134995717976
+     },
+     {
+      "current": -154025.0,
+      "delta": -23945.0,
+      "key": "fvtpl_purchase",
+      "name": "取得透過損益按公允價值衡量之金融資產",
+      "prior": -130080.0,
+      "share": -0.015453362082373617
+     },
+     {
+      "current": 16616.0,
+      "delta": 4697.0,
+      "key": "dividends_received",
+      "name": "收取之股利",
+      "prior": 11919.0,
+      "share": 0.003031298463182663
+     },
+     {
+      "current": 93104.0,
+      "delta": -3538.0,
+      "key": "interest_received",
+      "name": "收取之利息",
+      "prior": 96642.0,
+      "share": -0.002283315725514214
+     },
+     {
+      "current": -20957.0,
+      "delta": -1690.0,
+      "key": "intangible_purchase",
+      "name": "購置無形資產",
+      "prior": -19267.0,
+      "share": -0.001090673707212838
+     },
+     {
+      "current": 15059.0,
+      "delta": 822.0,
+      "key": "ppe_disposal_proceeds",
+      "name": "處分不動產、廠房及設備價款",
+      "prior": 14237.0,
+      "share": 0.0005304933652834042
+     }
+    ],
+    "name": "投資現金流變動",
+    "residual": 0.0,
+    "target": "cfi",
+    "target_current": -1013580.0,
+    "target_delta": 1549501.0,
+    "target_prior": -2563081.0,
+    "top_drivers": [
+     "other_noncurrent_assets_increase",
+     "capex",
+     "fvtpl_disposal_proceeds"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 5197445.0,
+      "delta": 5197445.0,
+      "key": "bonds_issued",
+      "name": "發行應付公司債",
+      "prior": 0.0,
+      "share": 0.9821836890964079
+     },
+     {
+      "current": 0.0,
+      "delta": 711166.0,
+      "key": "short_term_borrowings_decrease",
+      "name": "短期借款減少",
+      "prior": -711166.0,
+      "share": 0.1343921187121626
+     },
+     {
+      "current": -2072369.0,
+      "delta": -664201.0,
+      "key": "dividends_paid",
+      "name": "發放現金股利",
+      "prior": -1408168.0,
+      "share": -0.12551693928103583
+     },
+     {
+      "current": 0.0,
+      "delta": 481952.0,
+      "key": "long_term_borrowings_repayment",
+      "name": "償還長期借款",
+      "prior": -481952.0,
+      "share": 0.09107655652486789
+     },
+     {
+      "current": 0.0,
+      "delta": -367845.0,
+      "key": "short_term_borrowings_increase",
+      "name": "短期借款增加",
+      "prior": 367845.0,
+      "share": -0.06951326259646194
+     },
+     {
+      "current": 0.0,
+      "delta": -81750.0,
+      "key": "long_term_borrowings_proceeds",
+      "name": "舉借長期借款",
+      "prior": 81750.0,
+      "share": -0.01544865151697254
+     },
+     {
+      "current": 0.0,
+      "delta": 28210.0,
+      "key": "dividends_paid_to_nci",
+      "name": "子公司發放予非控制權益之現金股利",
+      "prior": -28210.0,
+      "share": 0.0053309658629210445
+     },
+     {
+      "current": 280.0,
+      "delta": -9233.0,
+      "key": "employee_stock_option_exercised",
+      "name": "員工執行認股權",
+      "prior": 9513.0,
+      "share": -0.0017447999933481036
+     },
+     {
+      "current": -49043.0,
+      "delta": -3898.0,
+      "key": "lease_principal_repayment",
+      "name": "租賃負債本金償還",
+      "prior": -45145.0,
+      "share": -0.000736621940222128
+     },
+     {
+      "current": -200.0,
+      "delta": -200.0,
+      "key": "bonds_repaid",
+      "name": "應付公司債償還",
+      "prior": 0.0,
+      "share": -3.7794866096568905e-05
+     },
+     {
+      "current": 606.0,
+      "delta": 78.0,
+      "key": "guarantee_deposits_received_increase",
+      "name": "存入保證金增加",
+      "prior": 528.0,
+      "share": 1.4739997777661873e-05
+     }
+    ],
+    "name": "籌資現金流變動",
+    "residual": 0.0,
+    "target": "cff",
+    "target_current": 3076719.0,
+    "target_delta": 5291724.0,
+    "target_prior": -2215005.0,
+    "top_drivers": [
+     "bonds_issued",
+     "short_term_borrowings_decrease",
+     "dividends_paid"
+    ]
+   },
+   {
+    "components": [
+     {
+      "current": 9134067.0,
+      "delta": 6866814.0,
+      "key": "cash",
+      "name": "現金及約當現金",
+      "prior": 2267253.0,
+      "share": 0.722301024975757
+     },
+     {
+      "current": 8073201.0,
+      "delta": 3221607.0,
+      "key": "ppe",
+      "name": "不動產、廠房及設備",
+      "prior": 4851594.0,
+      "share": 0.33887186083226856
+     },
+     {
+      "current": 205552.0,
+      "delta": -2491393.0,
+      "key": "other_noncurrent_assets",
+      "name": "其他非流動資產-其他",
+      "prior": 2696945.0,
+      "share": -0.26206268547792705
+     },
+     {
+      "current": 5290997.0,
+      "delta": 1332753.0,
+      "key": "accounts_receivable",
+      "name": "應收帳款淨額",
+      "prior": 3958244.0,
+      "share": 0.14018857332374446
+     },
+     {
+      "current": 3652341.0,
+      "delta": 590705.0,
+      "key": "inventories",
+      "name": "存貨",
+      "prior": 3061636.0,
+      "share": 0.06213461249398987
+     },
+     {
+      "current": 207635.0,
+      "delta": -302504.0,
+      "key": "fvoci_noncurrent",
+      "name": "透過其他綜合損益按公允價值衡量之金融資產-非流動",
+      "prior": 510139.0,
+      "share": -0.03181955259881313
+     },
+     {
+      "current": 157576.0,
+      "delta": 157576.0,
+      "key": "fvtpl_current",
+      "name": "透過損益按公允價值衡量之金融資產-流動",
+      "prior": 0.0,
+      "share": 0.01657498023269305
+     },
+     {
+      "current": 124155.0,
+      "delta": 69843.0,
+      "key": "other_receivables",
+      "name": "其他應收款",
+      "prior": 54312.0,
+      "share": 0.007346590498502187
+     },
+     {
+      "current": 538055.0,
+      "delta": 36851.0,
+      "key": "prepaid_equipment",
+      "name": "預付設備款",
+      "prior": 501204.0,
+      "share": 0.0038762539762081253
+     },
+     {
+      "current": 84860.0,
+      "delta": 34168.0,
+      "key": "other_current_assets",
+      "name": "其他流動資產",
+      "prior": 50692.0,
+      "share": 0.0035940366844611875
+     },
+     {
+      "current": 122166.0,
+      "delta": 20447.0,
+      "key": "accounts_receivable_related",
+      "name": "應收帳款-關係人淨額",
+      "prior": 101719.0,
+      "share": 0.002150762938631992
+     },
+     {
+      "current": 109115.0,
+      "delta": -18699.0,
+      "key": "deferred_tax_assets",
+      "name": "遞延所得稅資產",
+      "prior": 127814.0,
+      "share": -0.0019668956907849377
+     },
+     {
+      "current": 33829.0,
+      "delta": -16293.0,
+      "key": "refundable_deposits",
+      "name": "存出保證金",
+      "prior": 50122.0,
+      "share": -0.0017138152569634198
+     },
+     {
+      "current": 13925.0,
+      "delta": 2124.0,
+      "key": "intangible_assets",
+      "name": "無形資產",
+      "prior": 11801.0,
+      "share": 0.000223417639832462
+     },
+     {
+      "current": 202521.0,
+      "delta": 1720.0,
+      "key": "right_of_use_assets",
+      "name": "使用權資產",
+      "prior": 200801.0,
+      "share": 0.0001809220058906943
+     },
+     {
+      "current": 18322.0,
+      "delta": 1667.0,
+      "key": "equity_method_investments",
+      "name": "採用權益法之投資",
+      "prior": 16655.0,
+      "share": 0.00017534708361615546
+     },
+     {
+      "current": 414.0,
+      "delta": -527.0,
+      "key": "notes_receivable",
+      "name": "應收票據淨額",
+      "prior": 941.0,
+      "share": -5.543366110720691e-05
+     }
+    ],
+    "name": "總資產變動",
+    "residual": 0.0,
+    "target": "total_assets",
+    "target_current": 27968731.0,
+    "target_delta": 9506859.0,
+    "target_prior": 18461872.0,
+    "top_drivers": [
+     "cash",
+     "ppe",
+     "other_noncurrent_assets"
+    ]
+   }
+  ],
+  "days": {
+   "current": 365,
+   "prior": 366
+  },
+  "index": {
+   "asset_turnover": {
+    "current": 0.7249373237563048,
+    "prior": 0.7733878232933258
+   },
+   "capex_to_depreciation": {
+    "current": 1.3185318458733795,
+    "prior": 0.37681446051515327
+   },
+   "capex_to_revenue": {
+    "current": 4.091533375351044,
+    "prior": 1.5212015363014926
+   },
+   "cash_to_assets": {
+    "current": 32.65813883368537,
+    "prior": 12.280731878110736
+   },
+   "ccc": {
+    "current": 153.69541084990564,
+    "prior": 166.46271603366554
+   },
+   "cfo_to_net_income": {
+    "current": 0.8989099007182588,
+    "prior": 0.8464242691854735
+   },
+   "current_ratio": {
+    "current": 416.91294590629155,
+    "prior": 277.6021850785124
+   },
+   "debt_to_equity": {
+    "current": 0.3770565018519849,
+    "prior": 0.5409208152180439
+   },
+   "dio": {
+    "current": 112.5781928554002,
+    "prior": 125.72577734678332
+   },
+   "dividend_payout": {
+    "current": 39.27049845892633,
+    "prior": 41.08108549651859
+   },
+   "dpo": {
+    "current": 56.330292130607155,
+    "prior": 63.33414947017864
+   },
+   "dso": {
+    "current": 97.44751012511259,
+    "prior": 104.07108815706084
+   },
+   "ebitda": {
+    "current": 7146181.0,
+    "prior": 4395483.0
+   },
+   "ebitda_margin": {
+    "current": 35.2452657697485,
+    "prior": 30.78460171448938
+   },
+   "effective_tax_rate": {
+    "current": 19.624970958633742,
+    "prior": 19.556727953759207
+   },
+   "fcf": {
+    "current": 3943937.0,
+    "prior": 2673476.0
+   },
+   "fcf_margin": {
+    "current": 19.451663447111763,
+    "prior": 18.72419796715087
+   },
+   "gross_margin": {
+    "current": 41.59679401478932,
+    "prior": 37.578062256783724
+   },
+   "interest_bearing_debt": {
+    "current": 86967.0,
+    "prior": 79288.0
+   },
+   "interest_coverage": {
+    "current": 168.2495209983947,
+    "prior": 279.16212243698095
+   },
+   "liabilities_to_assets": {
+    "current": 17.533931017463754,
+    "prior": 20.60410775245327
+   },
+   "net_debt": {
+    "current": -9047100.0,
+    "prior": -2187965.0
+   },
+   "net_margin": {
+    "current": 26.19083047550262,
+    "prior": 23.91873702172412
+   },
+   "operating_margin": {
+    "current": 32.049065730657134,
+    "prior": 26.603930877218517
+   },
+   "opex_ratio": {
+    "current": 9.547728284132186,
+    "prior": 10.974131379565206
+   },
+   "quick_ratio": {
+    "current": 334.89953396839144,
+    "prior": 188.08822880171823
+   },
+   "rd_intensity": {
+    "current": 3.6488283416052725,
+    "prior": 4.184838033007972
+   },
+   "roa": {
+    "current": 18.98671055186594,
+    "prior": 18.4984599611567
+   },
+   "roe": {
+    "current": 23.10759649977055,
+    "prior": 23.69471507117863
+   },
+   "working_capital": {
+    "current": 14113230.0,
+    "prior": 6074508.0
+   }
+  },
+  "metrics": [
+   {
+    "formula": "cfo + capex",
+    "inputs": {
+     "capex": -829582.0,
+     "cfo": 4773519.0
+    },
+    "key": "fcf",
+    "name": "自由現金流",
+    "period": "current",
+    "unit": "仟元",
+    "value": 3943937.0
+   },
+   {
+    "formula": "cfo + capex",
+    "inputs": {
+     "capex": -217200.0,
+     "cfo": 2890676.0
+    },
+    "key": "fcf",
+    "name": "自由現金流",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 2673476.0
+   },
+   {
+    "formula": "fcf / revenue * 100",
+    "inputs": {
+     "fcf": 3943937.0,
+     "revenue": 20275577.0
+    },
+    "key": "fcf_margin",
+    "name": "自由現金流率",
+    "period": "current",
+    "unit": "%",
+    "value": 19.451663447111763
+   },
+   {
+    "formula": "fcf / revenue * 100",
+    "inputs": {
+     "fcf": 2673476.0,
+     "revenue": 14278187.0
+    },
+    "key": "fcf_margin",
+    "name": "自由現金流率",
+    "period": "prior",
+    "unit": "%",
+    "value": 18.72419796715087
+   },
+   {
+    "formula": "gross_profit / revenue * 100",
+    "inputs": {
+     "gross_profit": 8433990.0,
+     "revenue": 20275577.0
+    },
+    "key": "gross_margin",
+    "name": "毛利率",
+    "period": "current",
+    "unit": "%",
+    "value": 41.59679401478932
+   },
+   {
+    "formula": "gross_profit / revenue * 100",
+    "inputs": {
+     "gross_profit": 5365466.0,
+     "revenue": 14278187.0
+    },
+    "key": "gross_margin",
+    "name": "毛利率",
+    "period": "prior",
+    "unit": "%",
+    "value": 37.578062256783724
+   },
+   {
+    "formula": "operating_income / revenue * 100",
+    "inputs": {
+     "operating_income": 6498133.0,
+     "revenue": 20275577.0
+    },
+    "key": "operating_margin",
+    "name": "營業利益率",
+    "period": "current",
+    "unit": "%",
+    "value": 32.049065730657134
+   },
+   {
+    "formula": "operating_income / revenue * 100",
+    "inputs": {
+     "operating_income": 3798559.0,
+     "revenue": 14278187.0
+    },
+    "key": "operating_margin",
+    "name": "營業利益率",
+    "period": "prior",
+    "unit": "%",
+    "value": 26.603930877218517
+   },
+   {
+    "formula": "net_income / revenue * 100",
+    "inputs": {
+     "net_income": 5310342.0,
+     "revenue": 20275577.0
+    },
+    "key": "net_margin",
+    "name": "淨利率",
+    "period": "current",
+    "unit": "%",
+    "value": 26.19083047550262
+   },
+   {
+    "formula": "net_income / revenue * 100",
+    "inputs": {
+     "net_income": 3415162.0,
+     "revenue": 14278187.0
+    },
+    "key": "net_margin",
+    "name": "淨利率",
+    "period": "prior",
+    "unit": "%",
+    "value": 23.91873702172412
+   },
+   {
+    "formula": "operating_income + depreciation + amortization",
+    "inputs": {
+     "amortization": 18877.0,
+     "depreciation": 629171.0,
+     "operating_income": 6498133.0
+    },
+    "key": "ebitda",
+    "name": "EBITDA",
+    "period": "current",
+    "unit": "仟元",
+    "value": 7146181.0
+   },
+   {
+    "formula": "operating_income + depreciation + amortization",
+    "inputs": {
+     "amortization": 20513.0,
+     "depreciation": 576411.0,
+     "operating_income": 3798559.0
+    },
+    "key": "ebitda",
+    "name": "EBITDA",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 4395483.0
+   },
+   {
+    "formula": "ebitda / revenue * 100",
+    "inputs": {
+     "ebitda": 7146181.0,
+     "revenue": 20275577.0
+    },
+    "key": "ebitda_margin",
+    "name": "EBITDA 率",
+    "period": "current",
+    "unit": "%",
+    "value": 35.2452657697485
+   },
+   {
+    "formula": "ebitda / revenue * 100",
+    "inputs": {
+     "ebitda": 4395483.0,
+     "revenue": 14278187.0
+    },
+    "key": "ebitda_margin",
+    "name": "EBITDA 率",
+    "period": "prior",
+    "unit": "%",
+    "value": 30.78460171448938
+   },
+   {
+    "formula": "cfo / net_income",
+    "inputs": {
+     "cfo": 4773519.0,
+     "net_income": 5310342.0
+    },
+    "key": "cfo_to_net_income",
+    "name": "營業現金流／淨利",
+    "period": "current",
+    "unit": "x",
+    "value": 0.8989099007182588
+   },
+   {
+    "formula": "cfo / net_income",
+    "inputs": {
+     "cfo": 2890676.0,
+     "net_income": 3415162.0
+    },
+    "key": "cfo_to_net_income",
+    "name": "營業現金流／淨利",
+    "period": "prior",
+    "unit": "x",
+    "value": 0.8464242691854735
+   },
+   {
+    "formula": "abs(capex) / depreciation",
+    "inputs": {
+     "capex": -829582.0,
+     "depreciation": 629171.0
+    },
+    "key": "capex_to_depreciation",
+    "name": "資本支出／折舊",
+    "period": "current",
+    "unit": "x",
+    "value": 1.3185318458733795
+   },
+   {
+    "formula": "abs(capex) / depreciation",
+    "inputs": {
+     "capex": -217200.0,
+     "depreciation": 576411.0
+    },
+    "key": "capex_to_depreciation",
+    "name": "資本支出／折舊",
+    "period": "prior",
+    "unit": "x",
+    "value": 0.37681446051515327
+   },
+   {
+    "formula": "abs(capex) / revenue * 100",
+    "inputs": {
+     "capex": -829582.0,
+     "revenue": 20275577.0
+    },
+    "key": "capex_to_revenue",
+    "name": "資本支出率",
+    "period": "current",
+    "unit": "%",
+    "value": 4.091533375351044
+   },
+   {
+    "formula": "abs(capex) / revenue * 100",
+    "inputs": {
+     "capex": -217200.0,
+     "revenue": 14278187.0
+    },
+    "key": "capex_to_revenue",
+    "name": "資本支出率",
+    "period": "prior",
+    "unit": "%",
+    "value": 1.5212015363014926
+   },
+   {
+    "formula": "(accounts_receivable + accounts_receivable_related) / revenue * days",
+    "inputs": {
+     "accounts_receivable": 5290997.0,
+     "accounts_receivable_related": 122166.0,
+     "days": 365,
+     "revenue": 20275577.0
+    },
+    "key": "dso",
+    "name": "應收帳款天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": 97.44751012511259
+   },
+   {
+    "formula": "(accounts_receivable + accounts_receivable_related) / revenue * days",
+    "inputs": {
+     "accounts_receivable": 3958244.0,
+     "accounts_receivable_related": 101719.0,
+     "days": 366,
+     "revenue": 14278187.0
+    },
+    "key": "dso",
+    "name": "應收帳款天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": 104.07108815706084
+   },
+   {
+    "formula": "inventories / abs(cogs) * days",
+    "inputs": {
+     "cogs": -11841587.0,
+     "days": 365,
+     "inventories": 3652341.0
+    },
+    "key": "dio",
+    "name": "存貨天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": 112.5781928554002
+   },
+   {
+    "formula": "inventories / abs(cogs) * days",
+    "inputs": {
+     "cogs": -8912721.0,
+     "days": 366,
+     "inventories": 3061636.0
+    },
+    "key": "dio",
+    "name": "存貨天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": 125.72577734678332
+   },
+   {
+    "formula": "accounts_payable / abs(cogs) * days",
+    "inputs": {
+     "accounts_payable": 1827507.0,
+     "cogs": -11841587.0,
+     "days": 365
+    },
+    "key": "dpo",
+    "name": "應付帳款天數（期末）",
+    "period": "current",
+    "unit": "天",
+    "value": 56.330292130607155
+   },
+   {
+    "formula": "accounts_payable / abs(cogs) * days",
+    "inputs": {
+     "accounts_payable": 1542294.0,
+     "cogs": -8912721.0,
+     "days": 366
+    },
+    "key": "dpo",
+    "name": "應付帳款天數（期末）",
+    "period": "prior",
+    "unit": "天",
+    "value": 63.33414947017864
+   },
+   {
+    "formula": "dso + dio - dpo",
+    "inputs": {
+     "dio": 112.5781928554002,
+     "dpo": 56.330292130607155,
+     "dso": 97.44751012511259
+    },
+    "key": "ccc",
+    "name": "現金轉換循環",
+    "period": "current",
+    "unit": "天",
+    "value": 153.69541084990564
+   },
+   {
+    "formula": "dso + dio - dpo",
+    "inputs": {
+     "dio": 125.72577734678332,
+     "dpo": 63.33414947017864,
+     "dso": 104.07108815706084
+    },
+    "key": "ccc",
+    "name": "現金轉換循環",
+    "period": "prior",
+    "unit": "天",
+    "value": 166.46271603366554
+   },
+   {
+    "formula": "total_current_assets / total_current_liabilities * 100",
+    "inputs": {
+     "total_current_assets": 18566576.0,
+     "total_current_liabilities": 4453346.0
+    },
+    "key": "current_ratio",
+    "name": "流動比率",
+    "period": "current",
+    "unit": "%",
+    "value": 416.91294590629155
+   },
+   {
+    "formula": "total_current_assets / total_current_liabilities * 100",
+    "inputs": {
+     "total_current_assets": 9494797.0,
+     "total_current_liabilities": 3420289.0
+    },
+    "key": "current_ratio",
+    "name": "流動比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 277.6021850785124
+   },
+   {
+    "formula": "(total_current_assets - inventories) / total_current_liabilities * 100",
+    "inputs": {
+     "inventories": 3652341.0,
+     "total_current_assets": 18566576.0,
+     "total_current_liabilities": 4453346.0
+    },
+    "key": "quick_ratio",
+    "name": "速動比率",
+    "period": "current",
+    "unit": "%",
+    "value": 334.89953396839144
+   },
+   {
+    "formula": "(total_current_assets - inventories) / total_current_liabilities * 100",
+    "inputs": {
+     "inventories": 3061636.0,
+     "total_current_assets": 9494797.0,
+     "total_current_liabilities": 3420289.0
+    },
+    "key": "quick_ratio",
+    "name": "速動比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 188.08822880171823
+   },
+   {
+    "formula": "short_term_borrowings + long_term_borrowings_current + long_term_borrowings + bonds_payable + lease_liabilities_current + lease_liabilities_noncurrent（缺 key 視為 0）",
+    "inputs": {
+     "bonds_payable": null,
+     "lease_liabilities_current": 40274.0,
+     "lease_liabilities_noncurrent": 46693.0,
+     "long_term_borrowings": null,
+     "long_term_borrowings_current": null,
+     "short_term_borrowings": null
+    },
+    "key": "interest_bearing_debt",
+    "name": "有息負債",
+    "period": "current",
+    "unit": "仟元",
+    "value": 86967.0
+   },
+   {
+    "formula": "short_term_borrowings + long_term_borrowings_current + long_term_borrowings + bonds_payable + lease_liabilities_current + lease_liabilities_noncurrent（缺 key 視為 0）",
+    "inputs": {
+     "bonds_payable": null,
+     "lease_liabilities_current": 38059.0,
+     "lease_liabilities_noncurrent": 41229.0,
+     "long_term_borrowings": null,
+     "long_term_borrowings_current": null,
+     "short_term_borrowings": null
+    },
+    "key": "interest_bearing_debt",
+    "name": "有息負債",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 79288.0
+   },
+   {
+    "formula": "interest_bearing_debt - cash",
+    "inputs": {
+     "cash": 9134067.0,
+     "interest_bearing_debt": 86967.0
+    },
+    "key": "net_debt",
+    "name": "淨負債",
+    "period": "current",
+    "unit": "仟元",
+    "value": -9047100.0
+   },
+   {
+    "formula": "interest_bearing_debt - cash",
+    "inputs": {
+     "cash": 2267253.0,
+     "interest_bearing_debt": 79288.0
+    },
+    "key": "net_debt",
+    "name": "淨負債",
+    "period": "prior",
+    "unit": "仟元",
+    "value": -2187965.0
+   },
+   {
+    "formula": "interest_bearing_debt / total_equity * 100",
+    "inputs": {
+     "interest_bearing_debt": 86967.0,
+     "total_equity": 23064713.0
+    },
+    "key": "debt_to_equity",
+    "name": "有息負債／權益",
+    "period": "current",
+    "unit": "%",
+    "value": 0.3770565018519849
+   },
+   {
+    "formula": "interest_bearing_debt / total_equity * 100",
+    "inputs": {
+     "interest_bearing_debt": 79288.0,
+     "total_equity": 14657968.0
+    },
+    "key": "debt_to_equity",
+    "name": "有息負債／權益",
+    "period": "prior",
+    "unit": "%",
+    "value": 0.5409208152180439
+   },
+   {
+    "formula": "total_liabilities / total_assets * 100",
+    "inputs": {
+     "total_assets": 27968731.0,
+     "total_liabilities": 4904018.0
+    },
+    "key": "liabilities_to_assets",
+    "name": "負債比率",
+    "period": "current",
+    "unit": "%",
+    "value": 17.533931017463754
+   },
+   {
+    "formula": "total_liabilities / total_assets * 100",
+    "inputs": {
+     "total_assets": 18461872.0,
+     "total_liabilities": 3803904.0
+    },
+    "key": "liabilities_to_assets",
+    "name": "負債比率",
+    "period": "prior",
+    "unit": "%",
+    "value": 20.60410775245327
+   },
+   {
+    "formula": "operating_income / abs(finance_costs)",
+    "inputs": {
+     "finance_costs": -38622.0,
+     "operating_income": 6498133.0
+    },
+    "key": "interest_coverage",
+    "name": "利息保障倍數",
+    "period": "current",
+    "unit": "x",
+    "value": 168.2495209983947
+   },
+   {
+    "formula": "operating_income / abs(finance_costs)",
+    "inputs": {
+     "finance_costs": -13607.0,
+     "operating_income": 3798559.0
+    },
+    "key": "interest_coverage",
+    "name": "利息保障倍數",
+    "period": "prior",
+    "unit": "x",
+    "value": 279.16212243698095
+   },
+   {
+    "formula": "net_income_parent / equity_parent * 100",
+    "inputs": {
+     "equity_parent": 22837360.0,
+     "net_income_parent": 5277165.0
+    },
+    "key": "roe",
+    "name": "股東權益報酬率（期末）",
+    "period": "current",
+    "unit": "%",
+    "value": 23.10759649977055
+   },
+   {
+    "formula": "net_income_parent / equity_parent * 100",
+    "inputs": {
+     "equity_parent": 14466420.0,
+     "net_income_parent": 3427777.0
+    },
+    "key": "roe",
+    "name": "股東權益報酬率（期末）",
+    "period": "prior",
+    "unit": "%",
+    "value": 23.69471507117863
+   },
+   {
+    "formula": "net_income / total_assets * 100",
+    "inputs": {
+     "net_income": 5310342.0,
+     "total_assets": 27968731.0
+    },
+    "key": "roa",
+    "name": "資產報酬率（期末）",
+    "period": "current",
+    "unit": "%",
+    "value": 18.98671055186594
+   },
+   {
+    "formula": "net_income / total_assets * 100",
+    "inputs": {
+     "net_income": 3415162.0,
+     "total_assets": 18461872.0
+    },
+    "key": "roa",
+    "name": "資產報酬率（期末）",
+    "period": "prior",
+    "unit": "%",
+    "value": 18.4984599611567
+   },
+   {
+    "formula": "revenue / total_assets",
+    "inputs": {
+     "revenue": 20275577.0,
+     "total_assets": 27968731.0
+    },
+    "key": "asset_turnover",
+    "name": "總資產週轉率（期末）",
+    "period": "current",
+    "unit": "x",
+    "value": 0.7249373237563048
+   },
+   {
+    "formula": "revenue / total_assets",
+    "inputs": {
+     "revenue": 14278187.0,
+     "total_assets": 18461872.0
+    },
+    "key": "asset_turnover",
+    "name": "總資產週轉率（期末）",
+    "period": "prior",
+    "unit": "x",
+    "value": 0.7733878232933258
+   },
+   {
+    "formula": "abs(rd_expenses) / revenue * 100",
+    "inputs": {
+     "rd_expenses": -739821.0,
+     "revenue": 20275577.0
+    },
+    "key": "rd_intensity",
+    "name": "研發費用率",
+    "period": "current",
+    "unit": "%",
+    "value": 3.6488283416052725
+   },
+   {
+    "formula": "abs(rd_expenses) / revenue * 100",
+    "inputs": {
+     "rd_expenses": -597519.0,
+     "revenue": 14278187.0
+    },
+    "key": "rd_intensity",
+    "name": "研發費用率",
+    "period": "prior",
+    "unit": "%",
+    "value": 4.184838033007972
+   },
+   {
+    "formula": "abs(total_opex) / revenue * 100",
+    "inputs": {
+     "revenue": 20275577.0,
+     "total_opex": -1935857.0
+    },
+    "key": "opex_ratio",
+    "name": "營業費用率",
+    "period": "current",
+    "unit": "%",
+    "value": 9.547728284132186
+   },
+   {
+    "formula": "abs(total_opex) / revenue * 100",
+    "inputs": {
+     "revenue": 14278187.0,
+     "total_opex": -1566907.0
+    },
+    "key": "opex_ratio",
+    "name": "營業費用率",
+    "period": "prior",
+    "unit": "%",
+    "value": 10.974131379565206
+   },
+   {
+    "formula": "abs(income_tax) / pretax_income * 100",
+    "inputs": {
+     "income_tax": -1296613.0,
+     "pretax_income": 6606955.0
+    },
+    "key": "effective_tax_rate",
+    "name": "有效稅率",
+    "period": "current",
+    "unit": "%",
+    "value": 19.624970958633742
+   },
+   {
+    "formula": "abs(income_tax) / pretax_income * 100",
+    "inputs": {
+     "income_tax": -830267.0,
+     "pretax_income": 4245429.0
+    },
+    "key": "effective_tax_rate",
+    "name": "有效稅率",
+    "period": "prior",
+    "unit": "%",
+    "value": 19.556727953759207
+   },
+   {
+    "formula": "abs(dividends_paid) / net_income_parent * 100",
+    "inputs": {
+     "dividends_paid": -2072369.0,
+     "net_income_parent": 5277165.0
+    },
+    "key": "dividend_payout",
+    "name": "現金股利支付率",
+    "period": "current",
+    "unit": "%",
+    "value": 39.27049845892633
+   },
+   {
+    "formula": "abs(dividends_paid) / net_income_parent * 100",
+    "inputs": {
+     "dividends_paid": -1408168.0,
+     "net_income_parent": 3427777.0
+    },
+    "key": "dividend_payout",
+    "name": "現金股利支付率",
+    "period": "prior",
+    "unit": "%",
+    "value": 41.08108549651859
+   },
+   {
+    "formula": "cash / total_assets * 100",
+    "inputs": {
+     "cash": 9134067.0,
+     "total_assets": 27968731.0
+    },
+    "key": "cash_to_assets",
+    "name": "現金占總資產",
+    "period": "current",
+    "unit": "%",
+    "value": 32.65813883368537
+   },
+   {
+    "formula": "cash / total_assets * 100",
+    "inputs": {
+     "cash": 2267253.0,
+     "total_assets": 18461872.0
+    },
+    "key": "cash_to_assets",
+    "name": "現金占總資產",
+    "period": "prior",
+    "unit": "%",
+    "value": 12.280731878110736
+   },
+   {
+    "formula": "total_current_assets - total_current_liabilities",
+    "inputs": {
+     "total_current_assets": 18566576.0,
+     "total_current_liabilities": 4453346.0
+    },
+    "key": "working_capital",
+    "name": "營運資金",
+    "period": "current",
+    "unit": "仟元",
+    "value": 14113230.0
+   },
+   {
+    "formula": "total_current_assets - total_current_liabilities",
+    "inputs": {
+     "total_current_assets": 9494797.0,
+     "total_current_liabilities": 3420289.0
+    },
+    "key": "working_capital",
+    "name": "營運資金",
+    "period": "prior",
+    "unit": "仟元",
+    "value": 6074508.0
+   }
+  ],
+  "period_current": "114",
+  "period_prior": "113",
+  "periods": {
+   "bs_current": "114-12-31",
+   "bs_prior_fy_end": "113-12-31",
+   "bs_prior_same": "113-12-31",
+   "flow_current": "114-01-01~114-12-31",
+   "flow_prior": "113-01-01~113-12-31"
+  },
+  "ttm_vs_fy": null
+ }
+}

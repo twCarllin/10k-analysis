@@ -32,6 +32,7 @@ class TwEquityInputs:
     consolidated_fs_path: Path | None
     parent_fs_path: Path | None
     prior: PriorYearInputs | None = None
+    group: str | None = None  # 公司類別（"fh" 金控）；缺 → None（工業流程）
 
     @property
     def roc_year(self) -> int:
@@ -129,6 +130,7 @@ def load_inputs(ticker: str, *, base_dir: Path | None = None) -> TwEquityInputs:
         consolidated_fs_path=consolidated_fs_path,
         parent_fs_path=parent_fs_path,
         prior=prior,
+        group=data.get("group"),
     )
 
 
