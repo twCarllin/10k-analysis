@@ -178,6 +178,7 @@ _CODE_STD_RE = re.compile(r"^[0-9][0-9Xx]{3}$")  # 含 `11xx`／`1xxx` 小寫 x 
 _CODE_ALPHA_RE = re.compile(r"^(?:[A-Z]\d{4,5}|[A-Z]{4})$")
 _CODE_GLUE_RE = re.compile(r"^([A-Z]{1,4}\d{0,6}|\d{4})(?=[\u4e00-\u9fff])")
 _RIGHT_CODE_RE = re.compile(r"^[23][0-9Xx]{3}$")  # 並排頁右半（負債／權益）的代碼
+_CF_RIGHT_CODE_RE = re.compile(r"^[B-E](?:\d{5}|[B-E]{3})$")  # 並排 CF 右半（投資／籌資／匯率／期末）的代碼（3017）
 # 金控（group == "fh"）專用（fh-schema Spec §2.1）：5 位數代碼；右半 `2xxxx`／`3xxxx`；`減：` 前綴
 _FH_CODE_RE = re.compile(r"^(?:\d{5}|\d[Xx]{4})$")  # `4xxxx`＝無實碼的合計列（如 `4xxxx 淨收益`）
 _FH_CODE_GLUE_RE = re.compile(r"^(\d{5}|\d[Xx]{4})(?=[\u4e00-\u9fff])")
@@ -403,7 +404,8 @@ _CF_KEYS = _build({
     "interest_received": ("收取之利息",),
     "cfi": (
         "投資活動之淨現金流出", "投資活動之淨現金流入", "投資活動之淨現金流入(流出)",
-        "投資活動之淨現金流入(出)", "投資活動之淨現金流(出)入",
+        "投資活動之淨現金流入(出)", "投資活動之淨現金流(出)入", "投資活動之淨現金(流出)流入",
+        "投資活動之淨現金流(出)",
     ),
     "short_term_borrowings_increase": ("短期借款增加",),
     "short_term_borrowings_decrease": ("短期借款減少",),
@@ -518,6 +520,7 @@ _CN_DIGIT_RUN_RE = re.compile(rf"[{_CN_DIGITS}]+(?=[年月日季])")
 _PERIOD_TOKEN_RE = re.compile(
     r"(?P<mrange>(?P<my>\d{2,3})年(?P<m1>\d{1,2})月至(?P<m2>\d{1,2})月(?!\d{1,2}日))"  # 115年4月至6月
     r"|(?P<date>(?P<y>\d{2,3})年(?P<m>\d{1,2})月(?P<d>\d{1,2})日)"               # 115年6月30日
+    r"|(?P<drange>(?P<ry>\d{2,3})\.(?P<rm1>\d{1,2})\.(?P<rd1>\d{1,2})[〜~]\d{2,3}\.(?P<rm2>\d{1,2})\.(?P<rd2>\d{1,2}))"  # 115.4.1〜115.6.30
     r"|(?P<dot>(?P<dy>\d{2,3})\.(?P<dm>\d{1,2})\.(?P<dd>\d{1,2}))"              # 115.6.30
     r"|(?P<end>至(?P<em>\d{1,2})月(?P<ed>\d{1,2})日)"                              # 至6月30日
     r"|(?P<qtr>(?P<qy>\d{2,3})年第(?P<qn>[1-4])季)"                               # 115年第2季
@@ -574,6 +577,9 @@ def _periods_from_text(text: str) -> list[str]:
         if m.group("mrange"):
             y, m1, m2 = int(m.group("my")), int(m.group("m1")), int(m.group("m2"))
             seq.append(("full", _period(y, m1, 1, m2, _month_end(y, m2))))
+        elif m.group("drange"):
+            seq.append(("full", _period(int(m.group("ry")), int(m.group("rm1")), int(m.group("rd1")),
+                                        int(m.group("rm2")), int(m.group("rd2")))))
         elif m.group("date"):
             seq.append(("date", (int(m.group("y")), int(m.group("m")), int(m.group("d")))))
         elif m.group("dot"):
@@ -663,7 +669,7 @@ def detect_header(lines: list[str], fh: bool = False) -> StatementHeader:
     side = False
     n = len(periods)
     if n >= 2 and n % 2 == 0 and periods[: n // 2] == periods[n // 2:] \
-            and "資產" in joined and "負債" in joined:
+            and (("資產" in joined and "負債" in joined) or joined.count("代碼") >= 2):
         side = True
         periods = periods[: n // 2]
     return StatementHeader(
@@ -877,17 +883,19 @@ def _is_right_label(toks: list[str], fh: bool = False) -> bool:
     return "負債" in label or "權益" in label
 
 
-def _split_sides(text: str, h: int, fh: bool = False) -> tuple[str, str]:
+def _split_sides(text: str, h: int, fh: bool = False, cf: bool = False) -> tuple[str, str]:
     """並排頁一列 → (左半文字, 右半文字)（§2.2）；h＝單邊金額 token 數。
 
-    切點：右半代碼 token（`^[23]\\d{3}$`）為主；無代碼 → 左半金額 token 達 h 為界；
+    切點：右半代碼 token（`^[23]\\d{3}$`；cf＝True 為 `B／C／D／E` 開頭代碼）為主；無代碼 → 左半金額 token 達 h 為界；
     單邊列（總計列、標題）依科目名判左右。
     """
     toks = _norm_line(text).split()
-    right_code_re = _FH_RIGHT_CODE_RE if fh else _RIGHT_CODE_RE
+    right_code_re = _CF_RIGHT_CODE_RE if cf else _FH_RIGHT_CODE_RE if fh else _RIGHT_CODE_RE
     for j, t in enumerate(toks):
         if right_code_re.match(t):
             return " ".join(toks[:j]), " ".join(toks[j:])
+    if cf and toks and _CODE_ALPHA_RE.match(toks[0]):
+        return " ".join(toks), ""  # 並排 CF 左半 A 碼列、同列右半空白（`A32125 合約負債(減少) …`）
     counts = [_tok_amount_count(t, fh) for t in toks]
     total = sum(counts)
     if total >= h > 0:
@@ -905,6 +913,12 @@ def _split_sides(text: str, h: int, fh: bool = False) -> tuple[str, str]:
         colon = [i for i, t in enumerate(toks) if t.endswith(":") or t.endswith("：")]
         if len(colon) >= 2:
             return " ".join(toks[: colon[0] + 1]), " ".join(toks[colon[0] + 1:])
+        if (
+            not fh and len(toks) >= 3 and colon == [len(toks) - 1] and _CODE_STD_RE.match(toks[0])
+            and not right_code_re.match(toks[0])
+        ):
+            # 左半帶代碼科目（金額在下一列）＋右半區段標題：`1536 按攤銷後…-非流動 歸屬母公司業主之權益：`（3008）
+            return " ".join(toks[:-1]), toks[-1]
     if _is_right_label(toks, fh):
         return "", " ".join(toks)
     return " ".join(toks), ""
@@ -935,6 +949,99 @@ def _make_entry(
     return (page, idx, label, note, code, cols)
 
 
+def _row_of(
+    statement: str, section: str | None, label: str, note: str | None, page: int, idx: int,
+    code: str | None, columns: list[float | None], pcts: list[float | None] | None,
+    ci: int | None, pi: int | None, schema: str,
+) -> StatementRow:
+    return StatementRow(
+        statement=statement,
+        section=section,
+        label=label,
+        key=map_key(statement, label, section, schema) if label else None,
+        note=note,
+        current=columns[ci] if ci is not None and ci < len(columns) else None,
+        prior=columns[pi] if pi is not None and pi < len(columns) else None,
+        current_pct=pcts[ci] if pcts and ci is not None and ci < len(pcts) else None,
+        prior_pct=pcts[pi] if pcts and pi is not None and pi < len(pcts) else None,
+        page=page,
+        line_idx=idx,
+        code=code,
+        columns=list(columns),
+    )
+
+
+def _pos(r: StatementRow) -> tuple[int, int]:
+    return (r.page, r.line_idx)
+
+
+def _subtotal_label(
+    rows: list[StatementRow], heads: list[tuple[tuple[int, int], str]], pos: tuple[int, int],
+    value: float | None, statement: str, schema: str,
+) -> tuple[str, str] | None:
+    """pos 所在區段的 `區段合計` → (label, section)：須有 canonical key，且 value＝區段內已解析列本期加總。"""
+    before = [h for h in heads if h[0] < pos]
+    if value is None or not before:
+        return None
+    head_pos, section = before[-1]
+    label = f"{section}合計"
+    if map_key(statement, label, section, schema) is None:
+        return None
+    vals = [r.current for r in rows if r.label and head_pos < _pos(r) < pos and r.current is not None]
+    if not vals:
+        return None
+    total, tol = sum(vals), len(vals)  # 容差：每列 1 單位四捨五入
+    if abs(total - value) <= tol or abs(abs(total) - abs(value)) <= tol:
+        return label, section
+    return None
+
+
+def _resolve_unlabeled(
+    pending: list[tuple[int, StatementRow]],
+    stream_rows: list[list[StatementRow]],
+    stream_heads: list[list[tuple[tuple[int, int], str]]],
+    statement: str,
+    schema: str,
+) -> None:
+    """PDF 未印科目名的小計列（2382、3008）：金額＝所在區段加總 → 補 `區段合計` 科目名；不符者丟棄。
+
+    並排頁（兩條 stream）另處理右半無名小計被切到左半的兩型：
+    ①本側不符、另一側相符 → 歸另一側；②前一列帶代碼、其金額＝另一側區段加總（3008 p5 1517）
+    → 前一列改取本列金額，原金額成為另一側的區段合計。
+    """
+    def place(s: int, row: StatementRow, label: str, section: str) -> None:
+        row.label, row.section = label, section
+        row.key = map_key(statement, label, section, schema)
+        target = stream_rows[s]
+        k = sum(1 for r in target if _pos(r) < _pos(row))
+        target.insert(k, row)
+
+    for s, row in sorted(pending, key=lambda t: _pos(t[1])):
+        pos = _pos(row)
+        hit = _subtotal_label(stream_rows[s], stream_heads[s], pos, row.current, statement, schema)
+        if hit:
+            place(s, row, *hit)
+            continue
+        if len(stream_rows) < 2:
+            continue
+        o = 1 - s
+        hit = _subtotal_label(stream_rows[o], stream_heads[o], pos, row.current, statement, schema)
+        if hit:
+            place(o, row, *hit)
+            continue
+        prev = [r for r in stream_rows[s] if r.label and _pos(r) < pos]
+        if not prev or prev[-1].code is None:
+            continue
+        p = prev[-1]
+        hit = _subtotal_label(stream_rows[o], stream_heads[o], _pos(p), p.current, statement, schema)
+        if not hit:
+            continue
+        moved = StatementRow(**{**asdict(p), "label": "", "key": None, "note": None, "code": None})
+        for f in ("current", "prior", "current_pct", "prior_pct", "columns"):
+            setattr(p, f, getattr(row, f))
+        place(o, moved, *hit)
+
+
 def parse_statement_lines(
     lines: list[tuple[int, int, str]],
     statement: str,
@@ -962,7 +1069,7 @@ def parse_statement_lines(
     ci, pi = select_cols(statement, stmt_hdr.periods) if stmt_hdr else (None, None)
     if not stmt_hdr:
         ci, pi = 0, 1
-    side = statement == "bs" and stmt_hdr is not None and stmt_hdr.side_by_side
+    side = statement in ("bs", "cf") and stmt_hdr is not None and stmt_hdr.side_by_side
     half = (2 * n if stmt_hdr.has_pct else n) if side else 0
 
     # 預處理：每列 → 各 stream 的 entry；跳過列與期間列為 None（並排頁分左右兩條 stream）
@@ -984,12 +1091,19 @@ def parse_statement_lines(
             continue
         segs = [text]
         if side:
-            segs = list(_split_sides(text, half, fh))
+            segs = list(_split_sides(text, half, fh, cf=statement == "cf"))
         for st, seg in zip(streams, segs):
             if seg.strip():
                 st.append(_make_entry(statement, section_headers, n, page, idx, seg, fh))
 
-    for parsed in streams:
+    stream_rows: list[list[StatementRow]] = []
+    stream_heads: list[list[tuple[tuple[int, int], str]]] = []  # 各 stream 的區段標題 (位置, section)
+    pending: list[tuple[int, StatementRow]] = []  # 無科目名、無代碼的金額列 (stream, row)，待加總驗證
+    for s_i, parsed in enumerate(streams):
+        s_rows: list[StatementRow] = []
+        heads: list[tuple[tuple[int, int], str]] = []
+        stream_rows.append(s_rows)
+        stream_heads.append(heads)
         section: str | None = None
         i = 0
         while i < len(parsed):
@@ -1001,6 +1115,7 @@ def parse_statement_lines(
             if cols is None:
                 if _is_header(label, section_headers):
                     section = label if label in section_headers else label.rstrip(":")
+                    heads.append(((page, idx), section))
                     continue
                 nxt = parsed[i] if i < len(parsed) else None
                 if nxt is None or nxt[5] is None or nxt[4] is not None:
@@ -1028,30 +1143,20 @@ def parse_statement_lines(
                 label = _FH_LEAD_NOTE_FRAG_RE.sub("", label)
             label, glued = _strip_glued_note(label)  # 跨列合併後才完整的黏著附註
             note = glued + note
-            if not label and code is None:
-                continue  # 無科目名、無代碼的殘列（頁碼等）
             columns, pcts, warn_k = cols
+            if not label and code is None:
+                # 無科目名、無代碼：頁碼等殘列丟棄；非金控的金額列可能是 PDF 未印科目名的小計列，待加總驗證
+                if not fh and not warn_k:
+                    pending.append((s_i, _row_of(statement, section, "", None, page, idx, None,
+                                                 columns, pcts, ci, pi, schema)))
+                continue
             if warn_k and warnings is not None:
                 warnings.append(f"{statement} p{page} {label}: {warn_k} tokens")
-            cur = columns[ci] if ci is not None and ci < len(columns) else None
-            pri = columns[pi] if pi is not None and pi < len(columns) else None
-            cur_pct = pcts[ci] if pcts and ci is not None and ci < len(pcts) else None
-            pri_pct = pcts[pi] if pcts and pi is not None and pi < len(pcts) else None
-            rows.append(StatementRow(
-                statement=statement,
-                section=section,
-                label=label,
-                key=map_key(statement, label, section, schema),
-                note=note or None,
-                current=cur,
-                prior=pri,
-                current_pct=cur_pct,
-                prior_pct=pri_pct,
-                page=page,
-                line_idx=idx,
-                code=code,
-                columns=list(columns),
-            ))
+            s_rows.append(_row_of(statement, section, label, note or None, page, idx, code,
+                                  columns, pcts, ci, pi, schema))
+    _resolve_unlabeled(pending, stream_rows, stream_heads, statement, schema)
+    for s_rows in stream_rows:
+        rows.extend(s_rows)
     if statement == "is" and not fh:
         _apply_conditional_aliases(rows)
     return rows, period[0], period[1]
