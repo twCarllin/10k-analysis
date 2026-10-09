@@ -19,7 +19,13 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO_ROOT))
 
 from runtime.tw_equity import pdf_doc as _pdf_doc  # noqa: E402
-from tests.fixtures.tw_equity import make_ar2024_fixture, make_fs_fixture  # noqa: E402
+from runtime.tw_equity.doc_anchor import PageRange  # noqa: E402
+from runtime.tw_equity.statements import _FS_ANCHOR_KEY, _TITLE_KW, statement_pages  # noqa: E402
+from tests.fixtures.tw_equity import (  # noqa: E402
+    make_ar2024_fixture,
+    make_fs_fixture,
+    make_fs_h1_fixture,
+)
 
 _FIX = _REPO_ROOT / "tests" / "fixtures" / "tw_equity"
 _FS_PAGES = {2, 3, 5, 6, 10, 11, 12, 14, 22, 29, 31, 46, 47, 51, 55, 64, 67, 13, 15}
@@ -87,3 +93,45 @@ def test_ar2024_producer_missing_pdf_raises(tmp_path: Path) -> None:
             pdf_path=tmp_path / "nope.pdf", out_path=tmp_path / "out.json"
         )
     assert not (tmp_path / "out.json").exists()
+
+
+# ── 半年報 fixture（fs-generalize item 1.1）────────────────────────────────
+# 契約 row：
+#   H1: json 含 4 個 ticker；每個 ticker 至少 1 頁 BS、1 頁 IS、1 頁 CF
+#   H2: 1303 BS 頁含 `2100` 開頭的右半科目文字
+#   H3: [邊界] PDF 不存在 → producer 印錯誤並以非 0 結束，不寫半份 json
+
+_H1_TICKERS = {"2059", "2308", "2303", "1303"}
+
+
+def _h1() -> dict:
+    return json.loads((_FIX / "fs_h1_pages.json").read_text(encoding="utf-8"))
+
+
+def test_h1_fixture_has_four_tickers_each_with_three_statements() -> None:
+    data = _h1()
+    assert set(data) == _H1_TICKERS
+    for ticker, entry in data.items():
+        doc = _pdf_doc.from_json(entry["doc"])
+        assert isinstance(doc, _pdf_doc.PdfDoc)
+        anchors = {k: (PageRange(*r) if r else None) for k, r in entry["fs_anchors"].items()}
+        for st in ("bs", "is", "cf"):
+            pages = statement_pages(doc, anchors[_FS_ANCHOR_KEY[st]], _TITLE_KW[st])
+            assert len(pages) >= 1, f"{ticker} {st}"
+
+
+def test_h1_fixture_1303_bs_has_right_half_code_2100() -> None:
+    entry = _h1()["1303"]
+    doc = _pdf_doc.from_json(entry["doc"])
+    anchors = {k: (PageRange(*r) if r else None) for k, r in entry["fs_anchors"].items()}
+    bs_pages = set(statement_pages(doc, anchors["fs_bs"], _TITLE_KW["bs"]))
+    lines = [ln for p in doc.pages if p.number in bs_pages for ln in p.lines]
+    assert any(tok.startswith("2100") for ln in lines for tok in ln.split())
+
+
+def test_h1_producer_missing_pdf_exits_nonzero_and_writes_nothing(tmp_path: Path, capsys) -> None:
+    out = tmp_path / "out.json"
+    rc = make_fs_h1_fixture.main(pdf_dir=tmp_path, out_path=out)
+    assert rc != 0
+    assert capsys.readouterr().err.strip() != ""
+    assert not out.exists()

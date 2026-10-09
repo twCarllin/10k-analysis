@@ -28,6 +28,9 @@ SPEC = [
 ]
 
 
+EXPENSE = {"cogs", "total_opex", "income_tax"}  # Spec §3 絕對值語義的減項
+
+
 def _rows(vals: dict[str, tuple[float | None, float | None]]) -> list[StatementRow]:
     return [
         StatementRow("bs", None, k, k, None, c, p, None, None, 1, i)
@@ -39,7 +42,12 @@ def _consistent(name: str) -> dict[str, tuple[float, float]]:
     """lhs 各項取 (10, 20)·序號，rhs 為其加總，保證相符。"""
     _, lk, rk = next(s for s in SPEC if s[0] == name)
     vals = {k: (10.0 * (i + 1), 20.0 * (i + 1)) for i, k in enumerate(lk)}
-    vals[rk[0]] = (sum(v[0] for v in vals.values()), sum(v[1] for v in vals.values()))
+    # Spec §3：費用項（營業成本、營業費用、所得稅）在勾稽中為減項（絕對值語義）
+    sgn = {k: -1 if k in EXPENSE else 1 for k in lk}
+    vals[rk[0]] = (
+        sum(sgn[k] * v[0] for k, v in vals.items() if k in sgn),
+        sum(sgn[k] * v[1] for k, v in vals.items() if k in sgn),
+    )
     return vals
 
 
