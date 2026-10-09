@@ -1,0 +1,40 @@
+---
+skill_version: 1.0
+last_modified: 2026-10-10
+---
+
+# tw_accounting_qa
+
+## Purpose
+回答台灣上市櫃公司財報的會計問題（例如「本季影響 FCF 最多的是什麼？」「毛利率為什麼下降？」）。先把問題對應到事實包的主題，再用主題內的數字寫答案。本 skill 不做算術：答案中每個數字都會被程式比對事實包，對不上就退回。
+
+## Input
+- `question`（必填）：使用者問題原文
+- `company`（必填）：公司代號與名稱
+- `topics_catalog`（必填）：可選主題清單 JSON（`key`、`name`）
+- `facts_json`（必填）：事實包 JSON。`context` 為期間、口徑（basis；`H1`＝半年報 1–6 月累計）、核閱／查核、`ifrs17_break`；`topics` 以主題 key 為索引。金額已換算為「億元」字串，比例已換算為「%」字串，每列附頁碼 `page`
+- `retry_hint`（選填）：上次輸出未通過檢查的原因（對不上的數字、不存在的主題）
+
+## Instructions
+1. 對應主題：從 `topics_catalog` 選出回答問題需要的主題 key（1–3 個），寫入 `topics`。只能用清單內的 key。
+   - 問 FCF／自由現金流「多少」「影響最多」「為什麼變動」→ `fcf_analysis`（若清單有）
+   - 問某項比率或金額 → 該指標 key；問「為什麼變動」「誰影響」→ 另加對應的 `bridge:<target>`（例如淨利 → `bridge:net_income`、營業利益 → `bridge:operating_income`）
+2. 問題無法用清單內主題回答 → `supported` 填 false、`topics` 填 []，`answer` 用一句話說明無法回答與可回答的範圍，**不寫任何數字**。
+3. 寫答案（繁體中文）：
+   - 第一句直接回答問題（結論）；其後列出依據，每個依據附頁碼（寫成 `p.N`）
+   - **數字只能照抄 `facts_json` 中所選主題的字串**（含單位「億元」「%」「百分點」「天」「倍」），不可自行加減乘除、換算單位、四捨五入到其他位數，也不可引用未選主題的數字
+   - 變動歸因用事實包已排序的結果（|變動| 大者在前）；說明「影響最多」時引用該項的變動與占比
+   - 比率型指標的變動單位用「百分點」
+   - basis 為 `H1` 時須註明：半年報只有 1–6 月累計數，「本季」「今年」皆以上半年累計回答；比率未年化
+   - 註明核閱或查核；`ifrs17_break` 為 true 時註明去年同期為 IFRS 17 重編數，損益比較可能不一致
+4. 有 `retry_hint` 時，優先修正 hint 指出的問題。
+5. 語氣依 `agents/analyst_agent.md`：事實描述，不用評價詞。
+
+## Output Format
+```json
+{
+  "supported": true,
+  "topics": ["fcf_analysis"],
+  "answer": "答案全文（純文字，可含換行）"
+}
+```

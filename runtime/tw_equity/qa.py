@@ -1,7 +1,8 @@
-"""qa.py — tw-equity 會計問答（工作包 G1：FCF 事實包＋模板答案＋數字核對；task/2026-10-09-tw-equity-qa-fcf.md）。
+"""qa.py — tw-equity 會計問答（G1：FCF 事實包＋模板答案＋數字核對；G2：主題事實包（FCF＋指標＋bridge）＋LLM 問答；
+task/2026-10-09-tw-equity-qa-fcf.md、task/2026-10-09-tw-equity-qa-llm.md）。
 
-CLI：./.venv/bin/python -m runtime.tw_equity.qa --ticker 2317 --ask "本季影響 FCF 最多的是什麼？" [--json]
-只讀本地財報 PDF 與 OCR 快取，不打外部 API。FCF＝cfo＋capex（同 metrics 的 fcf）。
+CLI：./.venv/bin/python -m runtime.tw_equity.qa --ticker 2317 --ask "本季影響 FCF 最多的是什麼？" [--json] [--llm]
+只讀本地財報 PDF 與 OCR 快取；加 --llm 才呼叫 Azure（qa_llm.py）。FCF＝cfo＋capex（同 metrics 的 fcf）。
 金額單位：帳本為新台幣仟元；答案換算為億元（1 億＝100,000 仟元）。
 """
 
@@ -16,6 +17,7 @@ from typing import Any
 
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_heading_sections
+from runtime.tw_equity.metrics import compute_metrics
 from runtime.tw_equity.statements import StatementLedger, StatementRow, extract_statements
 
 _YI = 100_000  # 仟元 → 億元
@@ -194,10 +196,61 @@ def render_fcf_answer(facts: dict[str, Any], *, company: str = "", source: str =
     return "\n".join(lines)
 
 
+# ── 主題事實包（G2） ─────────────────────────────────────────────────────────
+
+FCF_TOPIC = "fcf_analysis"
+
+
+def _row_page(ledger: StatementLedger, key: str) -> int | None:
+    return next((r.page for r in ledger.rows if r.key == key), None)
+
+
+def _row_label(ledger: StatementLedger, key: str, fallback: str) -> str:
+    return next((r.label for r in ledger.rows if r.key == key), fallback)
+
+
+def topic_pack(ledger: StatementLedger | None, group: str | None = None) -> dict[str, Any]:
+    """主題事實包：fcf_analysis（G1 事實包；金控不提供）＋ 指標 key ＋ bridge:<target>。ledger None → 不可答。"""
+    if ledger is None:
+        return {"answerable": False, "reason": "財報三表解析失敗（無帳本）"}
+    mp = compute_metrics(ledger, group=group)
+    topics: dict[str, dict[str, Any]] = {}
+    if group != "fh":
+        f = fcf_facts(ledger)
+        if f["answerable"]:
+            topics[FCF_TOPIC] = {"kind": "fcf", "name": "自由現金流變動歸因與本期構成", "facts": f}
+    metric_names = {m.key: m.name for m in mp.metrics}
+    metric_units = {m.key: m.unit for m in mp.metrics}
+    for key in dict.fromkeys(m.key for m in mp.metrics):
+        cur, pri = (next(m for m in mp.metrics if m.key == key and m.period == p) for p in ("current", "prior"))
+        topics[key] = {
+            "kind": "metric", "name": cur.name, "formula": cur.formula, "unit": cur.unit,
+            "current": cur.value, "prior": pri.value, "delta": _delta(cur.value, pri.value),
+            "inputs": [{"key": k, "label": "期間天數" if k == "days" else _row_label(ledger, k, metric_names.get(k, k)),
+                        "unit": "天" if k == "days" else metric_units.get(k, "仟元"),
+                        "current": cur.inputs.get(k), "prior": pri.inputs.get(k), "page": _row_page(ledger, k)}
+                       for k in cur.inputs]}
+    for b in mp.bridges:
+        topics[f"bridge:{b.target}"] = {
+            "kind": "bridge", "name": b.name, "current": b.target_current, "prior": b.target_prior,
+            "delta": b.target_delta, "residual": b.residual, "page": _row_page(ledger, b.target),
+            "components": [{"key": c.key, "label": c.name, "current": c.current, "prior": c.prior,
+                            "delta": c.delta, "share": c.share, "page": _row_page(ledger, c.key)}
+                           for c in b.components]}
+    return {"answerable": True, "unit": ledger.unit, "basis": ledger.basis, "assurance": ledger.assurance,
+            "periods": dict(ledger.periods), "ifrs17_break": bool(mp.ifrs17_break), "topics": topics}
+
+
 # ── 數字核對 ─────────────────────────────────────────────────────────────────
 
-_NUM_UNIT_RE = re.compile(r"(-?\d[\d,]*(?:\.\d+)?)\s*(億|%|仟元|千元|百萬元)")
+_NUM_UNIT_RE = re.compile(r"(-?\d[\d,]*(?:\.\d+)?)\s*(億|%|％|百分點|仟元|千元|百萬元|天|倍|x(?![A-Za-z]))")
 _UNIT_SCALE = {"億": _YI, "仟元": 1, "千元": 1, "百萬元": 1_000}
+_UNIT_KIND = {"%": "pct", "％": "pct", "百分點": "pct", "天": "day", "倍": "x", "x": "x"}  # 其餘＝金額（amt，仟元）
+_METRIC_KIND = {"仟元": "amt", "%": "pct", "天": "day", "x": "x"}
+
+
+def _vals(*vs: float | None) -> list[float]:
+    return [v for v in vs if v is not None]
 
 
 def _fact_amounts(facts: dict[str, Any]) -> tuple[list[float], list[float]]:
@@ -213,25 +266,132 @@ def _fact_amounts(facts: dict[str, Any]) -> tuple[list[float], list[float]]:
     return amounts, shares
 
 
-def verify_numbers(text: str, facts: dict[str, Any]) -> list[str]:
-    """答案中帶單位（億／%／仟元／千元／百萬元）的數字，比對事實包；容差＝該數字小數位的半個單位。回傳對不上的原文。"""
-    if not facts.get("answerable"):
-        return [m.group(0) for m in _NUM_UNIT_RE.finditer(text)]
-    amounts, shares = _fact_amounts(facts)
+def _topic_allowed(t: dict[str, Any]) -> dict[str, list[float]]:
+    """主題 → 各單位類別的允許值（amt＝仟元、pct＝百分數、day＝天、x＝倍）。"""
+    out: dict[str, list[float]] = {"amt": [], "pct": [], "day": [], "x": []}
+    if t["kind"] == "fcf":
+        amounts, shares = _fact_amounts(t["facts"])
+        out["amt"] += amounts
+        out["pct"] += [s * 100 for s in shares]
+    elif t["kind"] == "metric":
+        kind = _METRIC_KIND.get(t["unit"])
+        if kind:
+            out[kind] += _vals(t["current"], t["prior"], t["delta"])
+        for i in t["inputs"]:
+            out[_METRIC_KIND.get(i["unit"], "amt")] += _vals(i["current"], i["prior"])
+    else:
+        out["amt"] += _vals(t["current"], t["prior"], t["delta"], t["residual"])
+        for c in t["components"]:
+            out["amt"] += _vals(c["current"], c["prior"], c["delta"])
+            out["pct"] += _vals(None if c["share"] is None else c["share"] * 100)
+    return out
+
+
+def _unmatched(text: str, allowed: dict[str, list[float]]) -> list[str]:
+    """答案中帶單位的數字，比對允許值（取絕對值）；容差＝該數字小數位的半個單位。回傳對不上的原文。"""
     bad: list[str] = []
     for m in _NUM_UNIT_RE.finditer(text):
         raw, unit = m.group(1), m.group(2)
         x = float(raw.replace(",", ""))
         dec = len(raw.split(".")[1]) if "." in raw else 0
         tol = 0.5 * 10 ** -dec + 1e-9
-        if unit == "%":
-            ok = any(abs(abs(x) - abs(s * 100)) <= tol for s in shares)
-        else:
-            scale = _UNIT_SCALE[unit]
-            ok = any(abs(abs(x) - abs(a / scale)) <= tol for a in amounts)
-        if not ok:
+        kind = _UNIT_KIND.get(unit, "amt")
+        scale = _UNIT_SCALE.get(unit, 1)
+        if not any(abs(abs(x) - abs(a / scale)) <= tol for a in allowed.get(kind, [])):
             bad.append(m.group(0))
     return bad
+
+
+def verify_numbers(text: str, facts: dict[str, Any]) -> list[str]:
+    """答案中帶單位的數字比對 FCF 事實包（G1）；回傳對不上的原文。"""
+    if not facts.get("answerable"):
+        return [m.group(0) for m in _NUM_UNIT_RE.finditer(text)]
+    amounts, shares = _fact_amounts(facts)
+    return _unmatched(text, {"amt": amounts, "pct": [s * 100 for s in shares]})
+
+
+def verify_topics(text: str, pack: dict[str, Any], topics: list[str]) -> list[str]:
+    """答案中帶單位的數字只准來自 topics 所列主題；不存在的主題不提供允許值。回傳對不上的原文。"""
+    allowed: dict[str, list[float]] = {"amt": [], "pct": [], "day": [], "x": []}
+    for key in topics:
+        t = (pack.get("topics") or {}).get(key)
+        if t is not None:
+            for k, v in _topic_allowed(t).items():
+                allowed[k] += v
+    return _unmatched(text, allowed)
+
+
+# ── 主題模板答案（G2；也是 LLM 未通過核對時的退回答案） ─────────────────────
+
+def fmt_value(v: float | None, unit: str) -> str:
+    if v is None:
+        return "—"
+    if unit == "仟元":
+        return f"{_yi(v)} 億元"
+    if unit == "%":
+        return f"{v:.2f}%"
+    if unit == "天":
+        return f"{v:.1f} 天"
+    if unit == "x":
+        return f"{v:.2f} 倍"
+    return f"{v:,.2f}"
+
+
+def fmt_delta(v: float | None, unit: str) -> str:
+    return fmt_value(v, unit).replace("%", " 百分點") if unit == "%" else fmt_value(v, unit)
+
+
+def _page(p: int | None) -> str:
+    return "" if p is None else f"，p.{p}"
+
+
+def _render_metric(t: dict[str, Any]) -> list[str]:
+    u = t["unit"]
+    ins = "、".join(f"{i['label']} {fmt_value(i['current'], i['unit'])}{_page(i['page'])}"
+                   for i in t["inputs"])
+    return [f"■ {t['name']}：本期 {fmt_value(t['current'], u)}，去年同期 {fmt_value(t['prior'], u)}，"
+            f"變動 {fmt_delta(t['delta'], u)}",
+            f"  公式：{t['formula']}；本期輸入：{ins or '—'}"]
+
+
+def _render_bridge(t: dict[str, Any]) -> list[str]:
+    lines = [f"■ {t['name']}：本期 {fmt_value(t['current'], '仟元')}，去年同期 {fmt_value(t['prior'], '仟元')}，"
+             f"變動 {fmt_value(t['delta'], '仟元')}{_page(t['page'])}"]
+    comps = [c for c in t["components"] if c["delta"] is not None][:5]
+    lines += [f"  - {c['label']}：變動 {fmt_value(c['delta'], '仟元')}，占 {_pct(c['share'])}%{_page(c['page'])}"
+              for c in comps]
+    lines.append(f"  殘差 {fmt_value(t['residual'], '仟元')}（未歸入組成項的差額）")
+    return lines
+
+
+def _fcf_sections(facts: dict[str, Any], company: str, source: str) -> list[str]:
+    """與其他主題並用時只取 FCF 答案的結論與一、二節（期間與出處由 render_topics_answer 統一列）。"""
+    lines = render_fcf_answer(facts, company=company, source=source).splitlines()[2:]
+    return lines[:next((i for i, ln in enumerate(lines) if ln.startswith("三、")), len(lines))]
+
+
+def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: str = "", source: str = "") -> str:
+    if not pack.get("answerable"):
+        return f"{company} 無法回答：{pack.get('reason')}"
+    known = [k for k in topics if k in pack["topics"]]
+    if known == [FCF_TOPIC]:
+        return render_fcf_answer(pack["topics"][FCF_TOPIC]["facts"], company=company, source=source)
+    lines = [f"【{company}】"]
+    for k in known:
+        t = pack["topics"][k]
+        lines += [""] + (_fcf_sections(t["facts"], company, source)
+                         if t["kind"] == "fcf" else _render_metric(t) if t["kind"] == "metric" else _render_bridge(t))
+    per = pack["periods"]
+    lines += ["", "期間與限制",
+              f"  - 本期 {_period_text(per.get('flow_current'))}（資產負債表 {per.get('bs_current') or '—'}），"
+              f"去年同期 {_period_text(per.get('flow_prior'))}。",
+              "  - 半年報只有 1–6 月累計數，沒有單季數；比率為上半年數或期末數，未年化。"
+              if pack["basis"] == "H1" else f"  - 期間口徑：{pack['basis']}。",
+              f"  - 財報類型：{_ASSURANCE.get(pack['assurance'] or '', '未標示')}。",
+              *(["  - 保險子公司適用 IFRS 17，去年同期為重編數，本期與去年同期的損益比較可能不一致。"]
+                if pack.get("ifrs17_break") else []),
+              "", f"出處：{source or '財報 PDF'}"]
+    return "\n".join(lines)
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
@@ -247,22 +407,34 @@ def _cache_only_ocr(path, pages):
     raise _OcrCacheMiss(f"pages={pages}")
 
 
-def load_ledger(fs_path: Path) -> StatementLedger | None:
-    """財報 PDF → 帳本；有圖片頁或亂碼頁時改用 OCR 快取（未命中則沿用原文）。不打 API。"""
+def load_ledger(fs_path: Path, group: str | None = None) -> StatementLedger | None:
+    """財報 PDF → 帳本（group=="fh" 走金控 schema）；有圖片頁或亂碼頁時改用 OCR 快取（未命中則沿用原文）。不打 API。"""
     doc = pdf_doc.load_pdf(fs_path)
     if doc.image_pages or doc.garbled_pages:
         try:
             doc = pdf_doc.load_pdf(fs_path, ocr=_cache_only_ocr)
         except _OcrCacheMiss:
             pass
-    return extract_statements(doc, find_heading_sections(doc, FS_HEADING_ANCHORS, required=set()))
+    return extract_statements(doc, find_heading_sections(doc, FS_HEADING_ANCHORS, required=set()), group=group)
 
 
-def answer(ticker: str, question: str, *, base_dir: Path | None = None) -> tuple[str, dict[str, Any] | None]:
-    """→ (答案文字, 事實包或 None)。"""
+def answer(ticker: str, question: str, *, base_dir: Path | None = None,
+           use_llm: bool = False, llm: Any = None) -> tuple[str, dict[str, Any] | None]:
+    """→ (答案文字, 事實包或 None)。use_llm=False：G1 FCF 模板；True：G2 主題事實包＋LLM（qa_llm）。"""
     base = Path(".") if base_dir is None else base_dir
     raw = json.loads((base / "tw_equity_inputs" / f"{ticker}.json").read_text(encoding="utf-8"))
     company = f"{ticker} {raw.get('company_name', '')}".strip()
+    if use_llm:
+        fs_rel = raw.get("consolidated_fs_path")
+        if not fs_rel:
+            return f"{company} 無財報 PDF（consolidated_fs_path 未設定）。", None
+        group = raw.get("group")
+        pack = topic_pack(load_ledger(base / fs_rel, group=group), group)
+        if not pack["answerable"]:
+            return f"{company} 無法回答：{pack['reason']}", None
+        from runtime.tw_equity.qa_llm import answer_llm  # qa_llm 引用本模組，函式內 import 避開循環
+        text, _meta = answer_llm(pack, question, company=company, source=fs_rel, llm=llm)
+        return text, pack
     if not _FCF_Q_RE.search(question):
         return "G1 只支援 FCF 問題（問題需含「FCF」或「自由現金流」）。", None
     if raw.get("group") == "fh":
@@ -276,17 +448,19 @@ def answer(ticker: str, question: str, *, base_dir: Path | None = None) -> tuple
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="tw-equity 會計問答（G1：FCF）")
+    ap = argparse.ArgumentParser(description="tw-equity 會計問答（G1：FCF 模板；G2：--llm）")
     ap.add_argument("--ticker", required=True)
     ap.add_argument("--ask", required=True)
     ap.add_argument("--json", action="store_true", help="另輸出事實包 JSON")
+    ap.add_argument("--llm", action="store_true", help="以 LLM（config.json provider）對應問題並寫答案；程式核對數字")
     args = ap.parse_args(argv)
-    text, facts = answer(args.ticker, args.ask)
+    text, facts = answer(args.ticker, args.ask, use_llm=args.llm)
     print(text)
     if facts is not None:
-        bad = verify_numbers(text, facts)
-        if bad:
-            print(f"\n[數字核對] 對不上：{', '.join(bad)}")
+        if not args.llm:
+            bad = verify_numbers(text, facts)
+            if bad:
+                print(f"\n[數字核對] 對不上：{', '.join(bad)}")
         if args.json:
             print(json.dumps(facts, ensure_ascii=False, indent=2))
     return 0
