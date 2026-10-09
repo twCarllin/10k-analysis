@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from runtime.tw_equity.pdf_doc import PdfDoc
+    from runtime.tw_equity.fy_income import FyIncome
     from runtime.tw_equity.metrics import MetricsPack
     from runtime.tw_equity.statements import StatementLedger
 
@@ -1515,6 +1516,7 @@ class TablesBundle:
     top_shareholders: "TopShareholders | None" = None
     statements: "StatementLedger | None" = None
     metrics: "MetricsPack | None" = None            # 階段 2：帳本衍生指標與 bridge
+    fy_income: "FyIncome | None" = None             # FY 損益表（年報財務績效比較分析表；TTM 用）
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -1542,6 +1544,7 @@ class TablesBundle:
             "top_shareholders": self.top_shareholders.to_dict() if self.top_shareholders else None,
             "statements": self.statements.to_dict() if self.statements else None,
             "metrics": self.metrics.to_dict() if self.metrics else None,
+            "fy_income": self.fy_income.to_dict() if self.fy_income else None,
         }
 
 
@@ -1733,9 +1736,11 @@ def extract_tables(
             missing.append(name)
 
     # ── 階段 2：指標與 bridge（metrics.py；函式內 import 避開循環） ─────────
+    from runtime.tw_equity.fy_income import extract_fy_income
     from runtime.tw_equity.metrics import compute_metrics
 
-    metrics = compute_metrics(statements)
+    fy_income = extract_fy_income(ar, ar_anchors, roc_year=roc_year)
+    metrics = compute_metrics(statements, fy_income=fy_income)
 
     # ── parent_key_lines（個體損益表 ps_is） ─────────────────────────────────
     _, ps_is_text = _get_ps("ps_is")
@@ -1779,4 +1784,5 @@ def extract_tables(
         top_shareholders=top_shareholders,
         statements=statements,
         metrics=metrics,
+        fy_income=fy_income,
     )

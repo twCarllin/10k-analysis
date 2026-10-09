@@ -9,6 +9,7 @@ import calendar
 import re
 import unicodedata
 from dataclasses import asdict, dataclass, field
+from datetime import date
 from typing import TYPE_CHECKING, Any
 
 from runtime.tw_equity.tables import _norm_line, line_amounts, parse_amount  # noqa: F401
@@ -54,6 +55,9 @@ class CrossCheck:
         return asdict(self)
 
 
+_PERIOD_TAGS = ("flow_current", "flow_prior", "bs_current", "bs_prior_same", "bs_prior_fy_end")
+
+
 @dataclass
 class StatementLedger:
     unit: str
@@ -73,6 +77,11 @@ class StatementLedger:
         default_factory=lambda: {"bs": None, "is": None, "cf": None}
     )
     parse_warnings: list[str] = field(default_factory=list)
+    # 期間模型（Spec 2026-10-09-tw-equity-period-model §1.1）
+    basis: str = "other"  # "H1" | "FY" | "other"
+    periods: dict[str, str | None] = field(default_factory=lambda: dict.fromkeys(_PERIOD_TAGS))
+    days: dict[str, int | None] = field(default_factory=lambda: {"current": None, "prior": None})
+    assurance: str | None = None  # "reviewed" | "audited" | None
 
     def get(
         self, key: str, statement: str | None = None
@@ -82,6 +91,27 @@ class StatementLedger:
             if r.key == key and (statement is None or r.statement == statement):
                 return (r.current, r.prior)
         return (None, None)
+
+    def value_at(self, key: str, tag: str) -> float | None:
+        """第一個 key 相符列在 `tag` 期間欄的值（Spec §1.2）；不相容／無標籤／欄不存在／無列 → None。"""
+        row = next((r for r in self.rows if r.key == key), None)
+        if row is None or tag not in _PERIOD_TAGS:
+            return None
+        is_bs_tag = tag.startswith("bs_")
+        if (row.statement == "bs") != is_bs_tag:
+            return None
+        if not row.columns:  # 舊帳本／合成帳本：退回 current／prior
+            v = row.current if tag in ("flow_current", "bs_current") else row.prior
+            return 0.0 if v is None else v
+        label = self.periods.get(tag)
+        cols = self.column_periods.get(row.statement, [])
+        if label is None or label not in cols:
+            return None
+        i = cols.index(label)
+        if i >= len(row.columns):
+            return None
+        v = row.columns[i]
+        return 0.0 if v is None else v
 
     def to_dict(self) -> dict[str, Any]:
         counts = {"bs": 0, "is": 0, "cf": 0}
@@ -99,6 +129,10 @@ class StatementLedger:
             "current_col": dict(self.current_col),
             "prior_col": dict(self.prior_col),
             "parse_warnings": list(self.parse_warnings),
+            "basis": self.basis,
+            "periods": dict(self.periods),
+            "days": dict(self.days),
+            "assurance": self.assurance,
         }
 
 
@@ -1059,6 +1093,88 @@ def run_cross_checks(
 # ── 入口（Spec §2.3） ─────────────────────────────────────────────────────────
 
 
+def _label_dates(label: str | None):
+    """"115-01-01~115-06-30" → ((115,1,1),(115,6,30))；單日 "115-06-30" → (None,(115,6,30))；無法解析 → None。"""
+    if not label:
+        return None
+    parts = label.split("~")
+    try:
+        pts = [tuple(int(x) for x in p.split("-")) for p in parts]
+    except ValueError:
+        return None
+    if any(len(t) != 3 for t in pts) or len(pts) > 2:
+        return None
+    return (pts[0], pts[1]) if len(pts) == 2 else (None, pts[0])
+
+
+def _col_label(cols: list[str], idx: int | None) -> str | None:
+    return cols[idx] if idx is not None and 0 <= idx < len(cols) else None
+
+
+def _flow_labels(column_periods, current_col, prior_col) -> tuple[str | None, str | None]:
+    for st in ("is", "cf"):
+        cur = _col_label(column_periods.get(st, []), current_col.get(st))
+        if cur:
+            return cur, _col_label(column_periods.get(st, []), prior_col.get(st))
+    return None, None
+
+
+def _basis_of(flow_current: str | None) -> str:
+    dates = _label_dates(flow_current)
+    if not dates or dates[0] is None:
+        return "other"
+    (y1, m1, d1), (y2, m2, d2) = dates
+    if y1 == y2 and (m1, d1) == (1, 1):
+        if (m2, d2) == (6, 30):
+            return "H1"
+        if (m2, d2) == (12, 31):
+            return "FY"
+    return "other"
+
+
+def _days_between(label: str | None) -> int | None:
+    dates = _label_dates(label)
+    if not dates or dates[0] is None:
+        return None
+    try:
+        a = date(dates[0][0] + 1911, dates[0][1], dates[0][2])
+        b = date(dates[1][0] + 1911, dates[1][1], dates[1][2])
+    except ValueError:
+        return None
+    return (b - a).days + 1
+
+
+def _periods_of(column_periods, current_col, prior_col) -> dict[str, str | None]:
+    out: dict[str, str | None] = dict.fromkeys(_PERIOD_TAGS)
+    fc, fp = _flow_labels(column_periods, current_col, prior_col)
+    out["flow_current"], out["flow_prior"] = fc, fp
+    bs = column_periods.get("bs", [])
+    out["bs_current"] = _col_label(bs, current_col.get("bs"))
+    cur_end = _label_dates(out["bs_current"] or fc)
+    fp_dates = _label_dates(fp)
+    if fp_dates:
+        py, pm, pd = fp_dates[1]
+        for lab in bs:
+            d = _label_dates(lab)
+            if d and d[0] is None and d[1] == (py, pm, pd):
+                out["bs_prior_same"] = lab
+                break
+    if cur_end:
+        target = (cur_end[1][0] - 1, 12, 31)
+        for lab in bs:
+            d = _label_dates(lab)
+            if d and d[0] is None and d[1] == target:
+                out["bs_prior_fy_end"] = lab
+                break
+    return out
+
+
+def _assurance_of(fs: "PdfDoc") -> str | None:
+    text = "\f".join(p.text or "" for p in fs.pages[:5])
+    hits = [(text.find(w), v) for w, v in (("核閱報告", "reviewed"), ("查核報告", "audited")) if w in text]
+    return min(hits)[1] if hits else None
+
+
 def extract_statements(
     fs: "PdfDoc | None", fs_anchors: dict | None
 ) -> StatementLedger | None:
@@ -1100,6 +1216,7 @@ def extract_statements(
         if periods.get(st, ("", ""))[0]:
             pc, pp = periods[st]
             break
+    flow_cur, flow_pri = _flow_labels(column_periods, current_col, prior_col)
     unmapped: list[str] = []
     for r in rows:
         if r.key is None and r.label not in unmapped:
@@ -1115,4 +1232,8 @@ def extract_statements(
         current_col=current_col,
         prior_col=prior_col,
         parse_warnings=parse_warnings,
+        basis=_basis_of(flow_cur),
+        periods=_periods_of(column_periods, current_col, prior_col),
+        days={"current": _days_between(flow_cur), "prior": _days_between(flow_pri)},
+        assurance=_assurance_of(fs),
     )

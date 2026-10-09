@@ -652,7 +652,11 @@ def _appendix_e(bundle: TablesBundle) -> list[str]:
         return ["無帳本，未計算指標"]
     d = mp.to_dict()
     cur, pri = _t(d["period_current"]), _t(d["period_prior"])
-    L = ["### 指標", "", f"期間：本期 {cur}、上期 {pri}；金額單位仟元，比率 %，天數天，倍數 x", ""]
+    days = d["days"]
+    L = ["### 指標", "", f"期間：本期 {cur}、上期 {pri}；金額單位仟元，比率 %，天數天，倍數 x", "",
+         f"期間模型：基準 {_t(d['basis'])}；本期 {_t(d['periods'].get('flow_current'))}、"
+         f"上期 {_t(d['periods'].get('flow_prior'))}；天數 {_num(days.get('current'))}／{_num(days.get('prior'))}；"
+         f"確信等級 {_t(d['assurance'])}", ""]
     idx = d["index"]
     seen: list[tuple[str, str, str, str]] = []
     for m in d["metrics"]:
@@ -669,6 +673,34 @@ def _appendix_e(bundle: TablesBundle) -> list[str]:
                  None if c["share"] is None else c["share"] * 100] for c in b["components"]]
         rows.append(["殘差", None, None, b["residual"], None])
         L += _md_table(["組成項", "本期", "上期", "Δ", "占比%"], rows) + [""]
+    L += _ttm_section(d["ttm_vs_fy"])
+    return L
+
+
+def _ttm_section(t: dict | None) -> list[str]:
+    """「### TTM vs FY」小節；ttm 為 None（FY 帳本）不輸出。"""
+    if t is None:
+        return []
+    L = ["### TTM vs FY", ""]
+    if t["status"] != "ok":
+        return L + [f"TTM 不可用：{_t(t['reason'])}"]
+    L += [f"TTM 期間迄 {_t(t['period_ttm'])}；FY {_t(t['period_fy'])}（年報第 {_num(t['source_page'])} 頁）；"
+          f"確信等級 {_t(t['assurance'])}；金額單位仟元", "", "#### TTM 損益組成", ""]
+    L += _md_table(["科目", "FY", "H1 本期", "H1 上期", "TTM"],
+                   [[k + ("（歸母代用）" if v.get("basis") == "parent" else ""),
+                     v["fy"], v["h1_current"], v["h1_prior"], v["ttm"]] for k, v in t["values"].items()])
+    idx = t["index"]
+    seen = [(m["key"], m["name"], m["unit"]) for m in t["metrics"] if m["period"] == "ttm"]
+    L += ["", "#### TTM 指標", ""]
+    L += _md_table(["指標", "TTM", "FY", "單位"],
+                   [[f"{name}（{key}）", idx[key]["ttm"], idx[key]["fy"], unit] for key, name, unit in seen])
+    for b in t["bridges"]:
+        L += ["", f"#### TTM {_t(b['name'])}（{b['target']}）：TTM {_num(b['target_current'])}、FY "
+              f"{_num(b['target_prior'])}、Δ {_num(b['target_delta'])}；主要驅動：{_t('、'.join(b['top_drivers'])) or _NA}", ""]
+        rows = [[f"{_t(c['name'])}（{c['key']}）", c["current"], c["prior"], c["delta"],
+                 None if c["share"] is None else c["share"] * 100] for c in b["components"]]
+        rows.append(["殘差", None, None, b["residual"], None])
+        L += _md_table(["組成項", "TTM", "FY", "Δ", "占比%"], rows)
     return L
 
 

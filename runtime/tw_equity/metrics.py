@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from runtime.tw_equity.fy_income import FyIncome, normalize_sign
 from runtime.tw_equity.statements import StatementLedger
 
 _Vals = dict[str, float]
@@ -84,12 +85,51 @@ class BridgeResult:
                 "residual": self.residual, "top_drivers": list(self.top_drivers)}
 
 
+TTM_KEYS = ("revenue", "cogs", "gross_profit", "total_opex", "operating_income", "nonoperating_total",
+            "pretax_income", "income_tax", "net_income")
+
+
+@dataclass
+class TtmView:
+    """TTM vs FY 視圖（Spec §3.2）。status 為 "unavailable" 時 reason 為一句原因、其餘欄為空。"""
+    status: str                                 # "ok" | "unavailable"
+    reason: str = ""
+    period_ttm: str | None = None
+    period_fy: str | None = None
+    assurance: str = "mixed"
+    source_page: int | None = None
+    values: dict[str, dict[str, Any]] = field(default_factory=dict)
+    metrics: list[MetricResult] = field(default_factory=list)
+    bridges: list[BridgeResult] = field(default_factory=list)
+
+    def get(self, key: str, period: str = "ttm") -> float | None:
+        for m in self.metrics:
+            if m.key == key and m.period == period:
+                return m.value
+        return None
+
+    def to_dict(self) -> dict[str, Any]:
+        index: dict[str, dict[str, float | None]] = {}
+        for m in self.metrics:
+            index.setdefault(m.key, {})[m.period] = m.value
+        return {"status": self.status, "reason": self.reason, "period_ttm": self.period_ttm,
+                "period_fy": self.period_fy, "assurance": self.assurance, "source_page": self.source_page,
+                "values": {k: dict(v) for k, v in self.values.items()},
+                "metrics": [m.to_dict() for m in self.metrics],
+                "bridges": [b.to_dict() for b in self.bridges], "index": index}
+
+
 @dataclass
 class MetricsPack:
     period_current: str
     period_prior: str
     metrics: list[MetricResult] = field(default_factory=list)
     bridges: list[BridgeResult] = field(default_factory=list)
+    basis: str = "other"
+    days: dict[str, int | None] = field(default_factory=lambda: {"current": None, "prior": None})
+    assurance: str | None = None
+    periods: dict[str, str | None] = field(default_factory=dict)
+    ttm: TtmView | None = None
 
     def get(self, key: str, period: str = "current") -> float | None:
         for m in self.metrics:
@@ -103,7 +143,10 @@ class MetricsPack:
             index.setdefault(m.key, {})[m.period] = m.value
         return {"period_current": self.period_current, "period_prior": self.period_prior,
                 "metrics": [m.to_dict() for m in self.metrics],
-                "bridges": [b.to_dict() for b in self.bridges], "index": index}
+                "bridges": [b.to_dict() for b in self.bridges], "index": index,
+                "basis": self.basis, "days": dict(self.days), "assurance": self.assurance,
+                "periods": dict(self.periods),
+                "ttm_vs_fy": None if self.ttm is None else self.ttm.to_dict()}
 
 
 # ── 指標登錄表（§1.2；順序固定） ─────────────────────────────────────────────
@@ -134,13 +177,14 @@ METRIC_SPECS: list[MetricSpec] = [
     MetricSpec("capex_to_revenue", "資本支出率", "abs(capex) / revenue * 100", ("capex", "revenue"), "%",
                lambda v: _pct(abs(v["capex"]), v["revenue"])),
     MetricSpec("dso", "應收帳款天數（期末）",
-               "(accounts_receivable + accounts_receivable_related) / revenue * 365",
-               ("accounts_receivable", "accounts_receivable_related", "revenue"), "天",
-               lambda v: _div((v["accounts_receivable"] + v["accounts_receivable_related"]) * 365, v["revenue"])),
-    MetricSpec("dio", "存貨天數（期末）", "inventories / abs(cogs) * 365", ("inventories", "cogs"), "天",
-               lambda v: _div(v["inventories"] * 365, abs(v["cogs"]))),
-    MetricSpec("dpo", "應付帳款天數（期末）", "accounts_payable / abs(cogs) * 365",
-               ("accounts_payable", "cogs"), "天", lambda v: _div(v["accounts_payable"] * 365, abs(v["cogs"]))),
+               "(accounts_receivable + accounts_receivable_related) / revenue * days",
+               ("accounts_receivable", "accounts_receivable_related", "revenue", "days"), "天",
+               lambda v: _div((v["accounts_receivable"] + v["accounts_receivable_related"]) * v["days"], v["revenue"])),
+    MetricSpec("dio", "存貨天數（期末）", "inventories / abs(cogs) * days", ("inventories", "cogs", "days"), "天",
+               lambda v: _div(v["inventories"] * v["days"], abs(v["cogs"]))),
+    MetricSpec("dpo", "應付帳款天數（期末）", "accounts_payable / abs(cogs) * days",
+               ("accounts_payable", "cogs", "days"), "天",
+               lambda v: _div(v["accounts_payable"] * v["days"], abs(v["cogs"]))),
     MetricSpec("ccc", "現金轉換循環", "dso + dio - dpo", ("dso", "dio", "dpo"), "天",
                lambda v: v["dso"] + v["dio"] - v["dpo"]),
     MetricSpec("current_ratio", "流動比率", "total_current_assets / total_current_liabilities * 100",
@@ -228,19 +272,29 @@ BRIDGE_SPECS: list[BridgeSpec] = [
         "intangible_assets", "refundable_deposits")),
 ]
 
-_PERIODS = (("current", 0), ("prior", 1))
+_PERIODS = ("current", "prior")
 
 
 # ── 計算（§2.1、§2.2） ───────────────────────────────────────────────────────
 
 
-def _ledger_value(ledger: StatementLedger, key: str, idx: int) -> float | None:
-    """帳本第一個相符列的該期值；列存在但為 `-`（None）→ 0.0（財報的「-」即 0）；無該列 → None。"""
+def _ledger_value(ledger: StatementLedger, key: str, period: str, bs_prior_tag: str = "bs_prior_same") -> float | None:
+    """帳本第一個相符列的該期值（走 `value_at`；IS／CF 用 flow_*、BS 用 bs_*）；列存在但為 `-` → 0.0；無該列 → None。"""
     for r in ledger.rows:
         if r.key == key:
-            v = (r.current, r.prior)[idx]
-            return 0.0 if v is None else v
+            if r.statement == "bs":
+                tag = "bs_current" if period == "current" else bs_prior_tag
+            else:
+                tag = "flow_current" if period == "current" else "flow_prior"
+            return ledger.value_at(key, tag)
     return None
+
+
+def _days_value(ledger: StatementLedger, period: str) -> float | None:
+    d = ledger.days.get(period)
+    if d is None and not ledger.column_periods.get("is"):
+        return 365.0  # 舊帳本／合成帳本：退回舊行為
+    return d
 
 
 def _label_of(ledger: StatementLedger, key: str) -> str:
@@ -251,54 +305,157 @@ def _label_of(ledger: StatementLedger, key: str) -> str:
     return _METRIC_NAMES.get(key, key)
 
 
-def compute_metrics(ledger: StatementLedger | None) -> MetricsPack | None:
-    """依 METRIC_SPECS 對兩期各算一次；再填 bridges。ledger None → None。"""
+def _spec_value(spec: MetricSpec, inputs: dict[str, float | None]) -> float | None:
+    if spec.optional_inputs:
+        return None if all(v is None for v in inputs.values()) else spec.fn(
+            {k: (0.0 if v is None else v) for k, v in inputs.items()})
+    return None if any(v is None for v in inputs.values()) else spec.fn(inputs)  # type: ignore[arg-type]
+
+
+def compute_metrics(ledger: StatementLedger | None, fy_income: FyIncome | None = None) -> MetricsPack | None:
+    """依 METRIC_SPECS 對兩期各算一次；再填 bridges。ledger None → None。H1 帳本另填 TTM 視圖（§3.2）。"""
     if ledger is None:
         return None
-    pack = MetricsPack(period_current=ledger.period_current, period_prior=ledger.period_prior)
+    pack = MetricsPack(period_current=ledger.period_current, period_prior=ledger.period_prior,
+                       basis=ledger.basis, days=dict(ledger.days), assurance=ledger.assurance,
+                       periods=dict(ledger.periods))
     computed: dict[str, dict[str, float | None]] = {"current": {}, "prior": {}}
     for spec in METRIC_SPECS:
-        for period, idx in _PERIODS:
+        for period in _PERIODS:
             done = computed[period]
             inputs: dict[str, float | None] = {
-                k: (done[k] if k in done else _ledger_value(ledger, k, idx)) for k in spec.inputs
+                k: (_days_value(ledger, period) if k == "days"
+                    else done[k] if k in done else _ledger_value(ledger, k, period))
+                for k in spec.inputs
             }
-            if spec.optional_inputs:
-                value = None if all(v is None for v in inputs.values()) else spec.fn(
-                    {k: (0.0 if v is None else v) for k, v in inputs.items()})
-            else:
-                value = None if any(v is None for v in inputs.values()) else spec.fn(inputs)  # type: ignore[arg-type]
+            value = _spec_value(spec, inputs)
             done[spec.key] = value
             pack.metrics.append(MetricResult(spec.key, spec.name, spec.formula, spec.unit, period, value, inputs))
     pack.bridges = compute_bridges(ledger, pack)
+    pack.ttm = compute_ttm(ledger, fy_income)
     return pack
 
 
-def _value(ledger: StatementLedger, pack: MetricsPack, key: str, period: str, idx: int) -> float | None:
+def _value(ledger: StatementLedger, pack: MetricsPack, key: str, period: str,
+           bs_prior_tag: str = "bs_prior_same") -> float | None:
     if key in _METRIC_NAMES:
         return pack.get(key, period)
-    return _ledger_value(ledger, key, idx)
+    return _ledger_value(ledger, key, period, bs_prior_tag)
+
+
+def _build_bridge(target: str, name: str, components: tuple[str, ...],
+                  get: Callable[[str, str], float | None],
+                  label_of: Callable[[str], str]) -> BridgeResult:
+    """target 與 components 的 get(key, "cur"／"pri") 變動；|delta| 降序（None 殿後）；殘差＝target_delta − Σ非 None delta。"""
+    t_cur, t_pri = get(target, "cur"), get(target, "pri")
+    t_delta = None if t_cur is None or t_pri is None else t_cur - t_pri
+    comps: list[BridgeComponent] = []
+    for key in components:
+        cur, pri = get(key, "cur"), get(key, "pri")
+        delta = None if cur is None or pri is None else cur - pri
+        share = None if (delta is None or not t_delta) else delta / t_delta
+        comps.append(BridgeComponent(key, label_of(key), cur, pri, delta, share))
+    known = [c for c in comps if c.delta is not None]
+    unknown = [c for c in comps if c.delta is None]
+    known.sort(key=lambda c: -abs(c.delta))  # type: ignore[arg-type]
+    ordered = known + unknown
+    residual = None if t_delta is None else t_delta - sum(c.delta for c in known)  # type: ignore[misc]
+    return BridgeResult(target, name, t_cur, t_pri, t_delta, ordered, residual, [c.key for c in known[:3]])
 
 
 def compute_bridges(ledger: StatementLedger, pack: MetricsPack) -> list[BridgeResult]:
     """每個 BridgeSpec：target 與 components 的本期−上期變動；|delta| 降序（None 殿後）；殘差＝target_delta − Σ非 None delta。"""
     out: list[BridgeResult] = []
     for spec in BRIDGE_SPECS:
-        t_cur = _value(ledger, pack, spec.target, "current", 0)
-        t_pri = _value(ledger, pack, spec.target, "prior", 1)
-        t_delta = None if t_cur is None or t_pri is None else t_cur - t_pri
-        comps: list[BridgeComponent] = []
-        for key in spec.components:
-            cur = _value(ledger, pack, key, "current", 0)
-            pri = _value(ledger, pack, key, "prior", 1)
-            delta = None if cur is None or pri is None else cur - pri
-            share = None if (delta is None or not t_delta) else delta / t_delta
-            comps.append(BridgeComponent(key, _label_of(ledger, key), cur, pri, delta, share))
-        known = [c for c in comps if c.delta is not None]
-        unknown = [c for c in comps if c.delta is None]
-        known.sort(key=lambda c: -abs(c.delta))  # type: ignore[arg-type]
-        ordered = known + unknown
-        residual = None if t_delta is None else t_delta - sum(c.delta for c in known)  # type: ignore[misc]
-        out.append(BridgeResult(spec.target, spec.name, t_cur, t_pri, t_delta, ordered, residual,
-                                [c.key for c in known[:3]]))
+        tag = "bs_prior_fy_end" if spec.target == "total_assets" else "bs_prior_same"
+
+        def get(key: str, which: str, tag: str = tag) -> float | None:
+            return _value(ledger, pack, key, "current" if which == "cur" else "prior", tag)
+
+        out.append(_build_bridge(spec.target, spec.name, spec.components, get,
+                                 lambda k: _label_of(ledger, k)))
     return out
+
+
+# ── TTM 視圖（§3.2；Spec §2.7 第 4、6 點） ───────────────────────────────────
+
+_TTM_BRIDGES = (BridgeSpec("operating_income", "營業利益變動", ("revenue", "cogs", "total_opex")),
+                BridgeSpec("net_income", "淨利變動",
+                           ("revenue", "cogs", "total_opex", "nonoperating_total", "income_tax")))
+
+
+def _h1_normalized(ledger: StatementLedger, key: str, tag: str, cogs_tag: str,
+                   source_key: str | None = None) -> float | None:
+    """帳本 H1 值依 §2.4 正規化（與 FY 同一規則）；source_key 為實際取值的帳本 key（淨利代用）。"""
+    src = source_key or key
+    row = next((r for r in ledger.rows if r.key == src), None)
+    if row is None:
+        return None
+    return normalize_sign(key, row.label, ledger.value_at(src, tag),
+                          cogs_raw=ledger.value_at("cogs", cogs_tag))
+
+
+def _ttm_unavailable_reason(ledger: StatementLedger, fy: FyIncome | None) -> str | None:
+    if ledger.basis != "H1":
+        return "ledger_not_h1"
+    if fy is None:
+        return "fy_income_missing"
+    if not fy.usable:
+        return "fy_income_unusable"
+    prior = ledger.periods.get("flow_prior")
+    if prior is None or not prior[:3].isdigit() or fy.roc_year != int(prior[:3]):
+        return "fy_year_mismatch"
+    if "仟元" not in ledger.unit and "千元" not in ledger.unit:
+        return "unit_mismatch"
+    return None
+
+
+def compute_ttm(ledger: StatementLedger, fy: FyIncome | None) -> TtmView | None:
+    """FY 帳本 → None；H1 但條件不成立 → status "unavailable"；否則 TTM = FY + H1 本期 − H1 上期。"""
+    if ledger.basis == "FY":
+        return None
+    reason = _ttm_unavailable_reason(ledger, fy)
+    if reason is not None:
+        return TtmView(status="unavailable", reason=reason)
+    assert fy is not None
+    parent = fy.net_income_basis == "parent"
+    values: dict[str, dict[str, Any]] = {}
+    for k in TTM_KEYS:
+        src = "net_income_parent" if (k == "net_income" and parent) else None
+        f = fy.normalized(k, "current")
+        cur = _h1_normalized(ledger, k, "flow_current", "flow_current", src)
+        pri = _h1_normalized(ledger, k, "flow_prior", "flow_prior", src)
+        ttm = None if f is None or cur is None or pri is None else f + cur - pri
+        values[k] = {"fy": f, "h1_current": cur, "h1_prior": pri, "ttm": ttm}
+        if src:
+            values[k]["basis"] = "parent"
+
+    bs_keys = {r.key for r in ledger.rows if r.statement == "bs"}
+    bs_tag = {"ttm": "bs_current", "fy": "bs_prior_fy_end"}
+
+    def raw(key: str, period: str) -> float | None:
+        if key in TTM_KEYS:
+            return values[key][period]
+        if key in bs_keys:
+            return ledger.value_at(key, bs_tag[period])
+        return None  # CF／非 TTM 損益 key 一律 None
+
+    view = TtmView(status="ok", period_ttm=(ledger.periods.get("flow_current") or "").split("~")[-1] or None,
+                   period_fy=str(fy.roc_year), source_page=fy.page, values=values)
+    computed: dict[str, dict[str, float | None]] = {"ttm": {}, "fy": {}}
+    for spec in METRIC_SPECS:
+        for period in ("ttm", "fy"):
+            done = computed[period]
+            inputs = {k: (365.0 if k == "days" else done[k] if k in done else raw(k, period))
+                      for k in spec.inputs}
+            value = _spec_value(spec, inputs)
+            done[spec.key] = value
+            view.metrics.append(MetricResult(spec.key, spec.name, spec.formula, spec.unit, period, value, inputs))
+
+    def get(key: str, which: str) -> float | None:
+        period = "ttm" if which == "cur" else "fy"
+        return computed[period][key] if key in computed[period] else raw(key, period)
+
+    view.bridges = [_build_bridge(b.target, b.name, b.components, get,
+                                  lambda k: _label_of(ledger, k)) for b in _TTM_BRIDGES]
+    return view

@@ -39,3 +39,39 @@ def test_without_fs_metrics_none(ar):
     assert b.metrics is None and b.statements is None
     assert b.to_dict()["metrics"] is None
     assert {"FS_BS", "FS_IS", "FS_CF"} <= set(b.missing_tables)
+
+
+# ── item 3.3：fy_income 接線（Spec §5）。契約 row：
+#   W1: bundle.to_dict()["fy_income"] 為 dict 或 None；FY 帳本 → metrics.ttm is None
+#   W2: [邊界] 無可解析 FY 損益頁（fy_income None）＋ H1 帳本 → 不拋例外、ttm unavailable；fin_performance 輸出不受影響
+
+
+def test_fy_income_wired_and_fy_ledger_has_no_ttm(ar):
+    doc, ara = ar
+    fs = _load("fs_3653_pages.json")
+    b = extract_tables(doc, ara, fs, find_heading_sections(fs, FS_HEADING_ANCHORS, required=set()),
+                       None, None, roc_year=114)
+    d = b.to_dict()
+    assert d["fy_income"] is None or isinstance(d["fy_income"], dict)
+    assert b.metrics.ttm is None
+    assert d["metrics"]["ttm_vs_fy"] is None
+    json.dumps(d)
+
+
+def test_no_fy_income_pages_gives_unavailable_ttm_for_h1(ar):
+    from runtime.tw_equity.pdf_doc import Page, PdfDoc
+
+    doc, ara = ar
+    base = extract_tables(doc, ara, None, None, None, None, roc_year=114)
+    blank = PdfDoc(path=doc.path, pages=[Page(1, "", [], [])])
+    h1 = json.loads((_FIX / "fs_h1_pages.json").read_text(encoding="utf-8"))["2308"]
+    h1_doc = from_json(h1["doc"])
+    from runtime.tw_equity.doc_anchor import PageRange
+    h1_anchors = {k: (PageRange(*r) if r else None) for k, r in h1["fs_anchors"].items()}
+    b = extract_tables(blank, {}, h1_doc, h1_anchors, None, None, roc_year=114)
+    assert b.fy_income is None and b.to_dict()["fy_income"] is None
+    assert b.metrics.ttm.status == "unavailable" and b.metrics.ttm.reason
+    # 改用真年報不影響 fin_performance
+    again = extract_tables(doc, ara, None, None, None, None, roc_year=114)
+    assert (again.fin_performance.to_dict() if again.fin_performance else None) == \
+           (base.fin_performance.to_dict() if base.fin_performance else None)

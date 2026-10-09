@@ -54,3 +54,42 @@ def test_appendix_e_without_metrics(tmp_path):
     assert "未計算指標" in text[text.index("## 附錄 E"):]
     assert raw["bundle"]["metrics"] is None
     assert text.index("## 附錄 D") < text.index("## 附錄 E")
+
+
+# ── item 3.3：附錄 E 期間行與 TTM vs FY 小節。契約 row：
+#   R1: 有 fy_income 且 H1 → 含「### TTM vs FY」、組成表 4 欄（FY、H1 本期、H1 上期、TTM）、2 個 bridge 標題
+#   R2: ttm unavailable → 該小節只有一行且含 reason
+#   R3: ttm is None（FY 帳本）→ 不含「TTM vs FY」
+#   R4: 期間行顯示 basis、期間標籤、天數、assurance
+# fixture：合成帳本／FyIncome 沿用 test_metrics_ttm_values.py（單一出處）
+from tests.tw_equity.test_metrics_ttm_values import _fy as _ttm_fy, _ledger as _ttm_ledger  # noqa: E402
+
+
+def _ttm_section(text):
+    sec = text[text.index("## 附錄 E"):]
+    return sec[sec.index("### TTM vs FY"):]
+
+
+def test_appendix_e_ttm_ok(tmp_path):
+    led = _ttm_ledger()
+    led.assurance = "reviewed"
+    text, raw = _run(tmp_path, _bundle(compute_metrics(led, _ttm_fy())))
+    sec = text[text.index("## 附錄 E"):]
+    assert "基準 H1" in sec and "115-01-01~115-06-30" in sec and "181／181" in sec and "reviewed" in sec  # R4
+    t = _ttm_section(text)
+    assert "| 科目 | FY | H1 本期 | H1 上期 | TTM |" in t
+    assert "| revenue | 1,000 | 600 | 500 | 1,100 |" in t
+    assert len(re.findall(r"^#### TTM .*（(?:operating_income|net_income)）：", t, flags=re.M)) == 2
+    assert raw["bundle"]["metrics"]["ttm_vs_fy"]["status"] == "ok"
+
+
+def test_appendix_e_ttm_unavailable_one_line(tmp_path):
+    text, _ = _run(tmp_path, _bundle(compute_metrics(_ttm_ledger(), _ttm_fy(usable=False))))
+    t = _ttm_section(text)
+    body = [l for l in t.splitlines()[1:] if l.strip()]
+    assert len(body) == 1 and "fy_income_unusable" in body[0]
+
+
+def test_appendix_e_no_ttm_section_for_fy_ledger(tmp_path):
+    text, _ = _run(tmp_path, _bundle(compute_metrics(_ttm_ledger(basis="FY"), _ttm_fy())))
+    assert "TTM vs FY" not in text
