@@ -2,7 +2,7 @@
  "2881": {
   "_source": "tw_report/2881_2026Q2財報.pdf p290,291,354（pdf_doc 頁文字輸出；Spec fh-schema §0.4 F7／F8）",
   "doc": {
-   "version": 4,
+   "version": 5,
    "path": "tw_report/2881_2026Q2財報.pdf",
    "pages": [
     {
@@ -587,7 +587,7 @@
  "2882": {
   "_source": "tw_report/2882_2026Q2財報.pdf p280,285（pdf_doc 頁文字輸出；Spec fh-schema §0.4 F7／F8）",
   "doc": {
-   "version": 4,
+   "version": 5,
    "path": "tw_report/2882_2026Q2財報.pdf",
    "pages": [
     {
@@ -909,7 +909,7 @@
  "2885": {
   "_source": "tw_report/2885_2026Q2財報.pdf p212,247（pdf_doc 頁文字輸出；Spec fh-schema §0.4 F7／F8）",
   "doc": {
-   "version": 4,
+   "version": 5,
    "path": "tw_report/2885_2026Q2財報.pdf",
    "pages": [
     {
@@ -992,7 +992,7 @@
  "2886": {
   "_source": "tw_report/2886_2026Q2財報.pdf p114,115,159,160（pdf_doc 頁文字輸出；Spec fh-schema §0.4 F7／F8）",
   "doc": {
-   "version": 4,
+   "version": 5,
    "path": "tw_report/2886_2026Q2財報.pdf",
    "pages": [
     {
@@ -1234,7 +1234,7 @@
  "2887": {
   "_source": "tw_report/2887_2026Q2財報.pdf p220,240,242,257,259（pdf_doc 頁文字輸出；Spec fh-schema §0.4 F7／F8）",
   "doc": {
-   "version": 4,
+   "version": 5,
    "path": "tw_report/2887_2026Q2財報.pdf",
    "pages": [
     {
@@ -1763,7 +1763,7 @@
  "2891": {
   "_source": "tw_report/2891_2026Q2財報.pdf p95,118（pdf_doc 頁文字輸出；Spec fh-schema §0.4 F7／F8）",
   "doc": {
-   "version": 4,
+   "version": 5,
    "path": "tw_report/2891_2026Q2財報.pdf",
    "pages": [
     {

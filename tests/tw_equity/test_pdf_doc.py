@@ -316,9 +316,9 @@ class TestLines:
                 cache_dir=tmp_path / "cache",
             )
 
-    def test_cache_version_is_4(self):
-        """_CACHE_VERSION 現值 4（橫向頁轉正，2026-10-08）。"""
-        assert _CACHE_VERSION == 4
+    def test_cache_version_is_5(self):
+        """_CACHE_VERSION 現值 5（Page.image_cover／PdfDoc.image_pages，2026-10-09；4＝橫向頁轉正）。"""
+        assert _CACHE_VERSION == 5
 
     def test_requirements_has_pymupdf(self):
         """requirements.txt 含 PyMuPDF>=1.27。"""

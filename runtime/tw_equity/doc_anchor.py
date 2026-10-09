@@ -184,6 +184,8 @@ class HeadingAnchor:
     keywords: list[str]          # 依優先序
     enum: bool                   # True＝須有編號前綴；False＝整列（去空白後）等於關鍵字
     after: str | None = None     # 起頁須 ≥ 指定 key 的起頁
+    tail: tuple[str, ...] = ()       # keywords 找不到時的備援：標題行（去空白、去尾冒號）以任一字串結尾即命中
+    tail_after: str | None = None    # 備援起頁須 ≥ 指定 key 的起頁
 
 
 _PREFIX = r"(?:[壹貳參肆伍陸柒捌玖拾]+、|[一二三四五六七八九十]+、|[（(][一二三四五六七八九十]+[)）]|\d+\.)"
@@ -219,6 +221,35 @@ def _page_hits(lines: list[str], anchors: dict[str, HeadingAnchor]) -> set[str]:
     }
 
 
+_LISTING_HEAD_RE = re.compile(r"^(?:[一二三四五六七八九十]+、|\d{2,3}(?![年月日\d])[\u4e00-\u9fff])")  # 「一、」或 2–3 位頁碼在前（1 位數常是表格序號）
+_LISTING_MIN = 4
+_LISTING_RATIO = 0.3
+_TOC_LEADER_RE = re.compile(r"[-.·…─—_]{5,}\d{1,3}$")  # 引導線後接頁碼（單獨框線列不算）
+
+
+def _is_toc_page(lines: list[str]) -> bool:
+    """任一列為「引導線＋頁碼」；或 ≥4 列且 ≥30% 的列以「一、」／頁碼開頭（目錄／章節分隔頁）→ 視為目錄頁。
+    標題斷行時 hits≥3 的目錄判定會漏；不用「列尾數字」判定，因表格列也以數字結尾。"""
+    norms = [_norm(l) for l in lines]
+    if any(_TOC_LEADER_RE.search(n) for n in norms):
+        return True
+    heads = sum(1 for n in norms if _LISTING_HEAD_RE.match(n))
+    return heads >= _LISTING_MIN and heads >= _LISTING_RATIO * len(norms)
+
+
+def _tail_start(pages: list, anchor: HeadingAnchor, toc_last: int, after_start: int | None) -> int | None:
+    """備援：toc_last 之後（且 ≥ after_start）第一個有標題行以 anchor.tail 任一字串結尾的頁；目錄頁不算。"""
+    floor = max(toc_last + 1, after_start or 0)
+    kws = [_norm(k) for k in anchor.tail]
+    for p in pages:
+        if p.number < floor or _is_toc_page(p.lines):
+            continue
+        for n in (_norm(l).rstrip(":") for l in p.lines):
+            if any(n.endswith(k) for k in kws):
+                return p.number
+    return None
+
+
 def find_heading_sections(
     doc: PdfDoc,
     anchors: dict[str, HeadingAnchor],
@@ -247,6 +278,9 @@ def find_heading_sections(
             (n for n in sorted(hits) if n > toc_last and n >= floor and key in hits[n]),
             None,
         )
+        if start[key] is None and a.tail:
+            start[key] = _tail_start(pages, a, toc_last, _resolve(a.tail_after, seen | {key})
+                                     if a.tail_after in anchors and a.tail_after not in seen else None)
         return start[key]
 
     for key in anchors:
@@ -290,7 +324,8 @@ FS_HEADING_ANCHORS: dict[str, HeadingAnchor] = {
 
 GOVERNANCE_HEADING_ANCHORS: dict[str, HeadingAnchor] = {
     "ar_governance": HeadingAnchor(["公司治理報告"], True),
-    "ar_pledge":     HeadingAnchor(["股權質押資訊"], True),
+    "ar_pledge":     HeadingAnchor(["股權質押資訊"], True,
+                                   tail=("質押變動情形", "質押情形"), tail_after="ar_governance"),
     "ar_top10":      HeadingAnchor(["持股比例占前十名之股東"], True),
     "ar_capital":    HeadingAnchor(["參、募資情形"], False),
     "ar_operations": HeadingAnchor(["肆、營運概況"], False),
@@ -354,6 +389,28 @@ def _fh_starts(doc: PdfDoc, starts: dict[str, int]) -> None:
                 break
 
 
+# ── 主要進銷貨客戶標題行備援（D1）────────────────────────────────────────────
+# 頁首 300 字找不到時才用：標題常在頁中段。須有編號前綴（「(四)」「2.」「4.2.4」「1、」），
+# 起頁 ≥ ar_market（缺則 ar_business）且 < ar_mdna；結尾為頁碼者（目錄行）不算。
+_CUST_PREFIX_RE = re.compile(r"^(?:[(][一二三四五六七八九十\d]+[)]|[一二三四五六七八九十]+、|\d+(?:\.\d+)*[.、]?)")
+_CUST_HEAD_RE = re.compile(
+    r"主要(?:進銷貨|銷貨)客戶|主要進貨廠商|主要供應商名單|主要客戶名單|[占佔](?:進\(銷\)|銷|進)貨(?:總額|淨額)百分之十以上"
+)
+
+
+def _customers_heading_start(pages: list, floor: int, ceil: int | None) -> int | None:
+    if ceil is not None and ceil <= floor:  # ar_mdna 落在目錄頁等前段 → 不當上限
+        ceil = None
+    for p in pages:
+        if p.number < floor or (ceil is not None and p.number >= ceil) or _is_toc_page(p.lines):
+            continue
+        for n in (_norm(l) for l in p.lines):
+            m = _CUST_PREFIX_RE.match(n)
+            if m and m.end() > 0 and _CUST_HEAD_RE.search(n[m.end():]) and not _PAGE_TAIL_RE.search(n):
+                return p.number
+    return None
+
+
 # key 的起頁必須 ≥ 另一 key 的起頁：泛用關鍵字（「風險事項」）在前段章節被交叉引用時改往後找
 _AR_START_AFTER: dict[str, str] = {"ar_risk": "ar_mdna"}
 
@@ -394,6 +451,13 @@ def find_annual_report_sections(
         got = find_heading_sections(doc, sub, required=set())
         if got[key] is not None:
             starts[key] = got[key].start
+
+    if "ar_customers" not in starts:
+        floor = starts.get("ar_market", starts.get("ar_business"))
+        if floor is not None:
+            hit = _customers_heading_start(pages_sorted, floor, starts.get("ar_mdna"))
+            if hit is not None:
+                starts["ar_customers"] = hit
 
     pages = sorted(doc.pages, key=lambda p: p.number)
     last_page = pages[-1].number if pages else 0

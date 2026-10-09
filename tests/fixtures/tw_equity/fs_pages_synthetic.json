@@ -1,6 +1,6 @@
 {
   "_source": "依據 Spec §2.4 T4/T5/T6；合成資料，非真實財報",
-  "version": 4,
+  "version": 5,
   "path": "synthetic/fs_pages",
   "pages": [
     {

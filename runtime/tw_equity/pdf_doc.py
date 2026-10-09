@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-_CACHE_VERSION = 4  # 4：橫向頁轉正後抽取
+_CACHE_VERSION = 5  # 4：橫向頁轉正後抽取；5：Page.image_cover／PdfDoc.image_pages
 _DEFAULT_CACHE_DIR = Path("data/cache/tw_equity")
 
 
@@ -24,6 +24,7 @@ class Page:
     text: str                                # pdfplumber extract_text()，None → ""
     tables: list[list[list[str | None]]]     # pdfplumber extract_tables() 原樣
     lines: list[str] = field(default_factory=list)  # PyMuPDF words 重組的列文字
+    image_cover: float = 0.0                 # 圖片矩形面積合計／頁面積（PyMuPDF；可 >1）
 
 
 @dataclass
@@ -32,6 +33,7 @@ class PdfDoc:
     pages: list[Page]
     garbled_pages: list[int] = field(default_factory=list)  # 偵測到的亂碼頁
     ocr_pages: list[int] = field(default_factory=list)      # 已以 OCR 取代內容的頁
+    image_pages: list[int] = field(default_factory=list)    # 偵測到的整頁圖片頁
 
     def text_of(self, start: int, end: int) -> str:
         """回傳頁碼 start..end（含兩端）的文字，頁間以 '\\f' 接。"""
@@ -68,23 +70,36 @@ def is_garbled(page: Page) -> bool:
     return len(_CID_RE.findall(page.text)) >= _GARBLED_THRESHOLD
 
 
+_IMAGE_TEXT_MAX = 50     # 去空白後文字 <50 字
+_IMAGE_COVER_MIN = 0.9   # 且圖片覆蓋頁面 ≥90%
+
+
+def is_image_page(page: Page) -> bool:
+    """整頁圖片（掃描／圖檔頁）：去空白文字 <50 字且圖片覆蓋率 ≥0.9；章節分隔頁、封面覆蓋率低不算。"""
+    return len("".join(page.text.split())) < _IMAGE_TEXT_MAX and page.image_cover >= _IMAGE_COVER_MIN
+
+
 def apply_ocr_policy(doc: PdfDoc, ocr: OcrFn | None = None) -> PdfDoc:
-    """偵測亂碼頁；有 ocr 則呼叫一次並取代，未取代的亂碼頁清空。
+    """偵測亂碼頁與圖片頁；有 ocr 則對兩者聯集呼叫一次並取代。
+    未取代的亂碼頁清空，未取代的圖片頁原樣保留。
 
     ocr 例外不吞，原樣往上拋。回傳新 PdfDoc（不改傳入物件的頁）。
     """
     garbled = [p.number for p in doc.pages if is_garbled(p)]
+    image = [p.number for p in doc.pages if is_image_page(p) and p.number not in garbled]
+    targets = sorted(garbled + image)
     replaced: dict[int, Page] = {}
-    if ocr is not None and garbled:
-        got = ocr(doc.path, list(garbled))
-        replaced = {n: got[n] for n in garbled if n in got}
+    if ocr is not None and targets:
+        got = ocr(doc.path, list(targets))
+        replaced = {n: got[n] for n in targets if n in got}
     pages: list[Page] = []
     for p in doc.pages:
         if p.number in replaced:
             r = replaced[p.number]
-            pages.append(Page(number=p.number, text=r.text, tables=r.tables, lines=r.lines))
+            pages.append(Page(number=p.number, text=r.text, tables=r.tables, lines=r.lines,
+                              image_cover=p.image_cover))
         elif p.number in garbled:
-            pages.append(Page(number=p.number, text="", tables=[], lines=[]))
+            pages.append(Page(number=p.number, text="", tables=[], lines=[], image_cover=p.image_cover))
         else:
             pages.append(p)
     return PdfDoc(
@@ -92,6 +107,7 @@ def apply_ocr_policy(doc: PdfDoc, ocr: OcrFn | None = None) -> PdfDoc:
         pages=pages,
         garbled_pages=garbled,
         ocr_pages=sorted(replaced),
+        image_pages=image,
     )
 
 
@@ -108,11 +124,13 @@ def to_json(doc: PdfDoc) -> dict[str, Any]:
                 "text": p.text,
                 "tables": p.tables,
                 "lines": p.lines,
+                "image_cover": p.image_cover,
             }
             for p in doc.pages
         ],
         "garbled_pages": list(doc.garbled_pages),
         "ocr_pages": list(doc.ocr_pages),
+        "image_pages": list(doc.image_pages),
     }
 
 
@@ -126,6 +144,7 @@ def from_json(data: dict[str, Any]) -> PdfDoc | None:
             text=pg["text"],
             tables=pg["tables"],
             lines=pg.get("lines", []),
+            image_cover=pg.get("image_cover", 0.0),
         )
         for pg in data["pages"]
     ]
@@ -134,6 +153,7 @@ def from_json(data: dict[str, Any]) -> PdfDoc | None:
         pages=pages,
         garbled_pages=list(data.get("garbled_pages", [])),
         ocr_pages=list(data.get("ocr_pages", [])),
+        image_pages=list(data.get("image_pages", [])),
     )
 
 
@@ -171,7 +191,7 @@ def load_pdf(
         _line_opener: 測試注入點——支援 __getitem__／__len__，每頁有
                  get_text("words")；預設 fitz.open。_opener 提供時若未提供
                  本參數，lines 為空（不開真實 PDF）。
-        ocr: 亂碼頁 OCR 備援；None 則亂碼頁清空。
+        ocr: 亂碼頁與圖片頁 OCR 備援；None 則亂碼頁清空、圖片頁原樣保留。
 
     Returns:
         PdfDoc 實例。
@@ -269,6 +289,17 @@ def _words_to_lines(words: Any) -> list[str]:
     return lines
 
 
+def _image_cover(fitz_page: Any) -> float:
+    """圖片矩形面積合計／頁面積；注入的假 opener 無 get_images 時回 0.0。"""
+    if not hasattr(fitz_page, "get_images"):
+        return 0.0
+    area = fitz_page.rect.width * fitz_page.rect.height
+    if not area:
+        return 0.0
+    total = sum(r.width * r.height for img in fitz_page.get_images() for r in fitz_page.get_image_rects(img[0]))
+    return total / area
+
+
 def _lines_from_opener(line_opener: Any, n_pages: int) -> list[list[str]]:
     if len(line_opener) != n_pages:
         raise ValueError(
@@ -300,12 +331,14 @@ def _build_from_pdfplumber(path: Path, line_opener: Any = None) -> PdfDoc:
     try:
         with pdfplumber.open(source) as pdf:
             all_lines = _lines_from_opener(line_opener, len(pdf.pages))
+            covers = [_image_cover(line_opener[i]) for i in range(len(pdf.pages))]
             pages = []
             for i, pg in enumerate(pdf.pages, start=1):
                 text = pg.extract_text() or ""
                 tables = pg.extract_tables() or []
                 pages.append(
-                    Page(number=i, text=text, tables=tables, lines=all_lines[i - 1])
+                    Page(number=i, text=text, tables=tables, lines=all_lines[i - 1],
+                         image_cover=covers[i - 1])
                 )
     finally:
         if close_fitz is not None:

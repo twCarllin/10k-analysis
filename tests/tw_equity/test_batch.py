@@ -93,3 +93,36 @@ def test_real_3653_fills_ledger_fields():
     assert rec["values"]["revenue"]["current"] > 0
     assert rec["metrics"]["fcf"]["current"] is not None
     assert rec["bridges"] and {"target", "target_delta", "top_drivers"} <= set(rec["bridges"][0])
+
+
+# ── --ocr 旗標（run 2026-10-09-tw-equity-anchor-ocr，item 2.2）──────────────
+
+
+@pytest.fixture
+def load_calls(monkeypatch, fake_pipeline):
+    calls: list[dict] = []
+
+    def fake_load(p, **kw):
+        calls.append(kw)
+        return SimpleNamespace(path=p)
+
+    monkeypatch.setattr(batch.pdf_doc, "load_pdf", fake_load)
+    return calls
+
+
+def test_main_without_ocr_does_not_pass_ocr(tmp_path, monkeypatch, load_calls):
+    _write_input(tmp_path, "1111")
+    monkeypatch.chdir(tmp_path)
+    assert batch.main(["--tickers", "1111", "--out", str(tmp_path / "out")]) == 0
+    assert load_calls == [{}, {}]
+
+
+def test_main_with_ocr_passes_pipeline_ocr_chain(tmp_path, monkeypatch, load_calls):
+    from runtime.tw_equity import tw_pipeline
+
+    fake_ocr = object()
+    monkeypatch.setattr(tw_pipeline, "_build_ocr", lambda: fake_ocr)
+    _write_input(tmp_path, "1111")
+    monkeypatch.chdir(tmp_path)
+    assert batch.main(["--tickers", "1111", "--out", str(tmp_path / "out"), "--ocr"]) == 0
+    assert load_calls == [{"ocr": fake_ocr}, {"ocr": fake_ocr}]
