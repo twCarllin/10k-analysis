@@ -24,7 +24,7 @@ from runtime.tw_equity.doc_anchor import (
     find_annual_report_sections,
     find_heading_sections,
 )
-from runtime.tw_equity.inputs import load_inputs
+from runtime.tw_equity.inputs import load_inputs, uses_fh_schema
 from runtime.tw_equity.metrics import _fh_bridge_value, _ledger_value
 from runtime.tw_equity.tables import extract_tables
 
@@ -121,7 +121,7 @@ def run_company(ticker: str, *, base_dir: Path | None = None, ocr_fn=None) -> di
     t0 = time.monotonic()
     try:
         raw = json.loads((base / "tw_equity_inputs" / f"{ticker}.json").read_text(encoding="utf-8"))
-        if raw.get("group") == "fh":
+        if uses_fh_schema(raw.get("group")):
             rec = _empty_record(ticker, "fh")
         rec["group"], rec["fs_period"] = raw.get("group"), raw.get("fs_period")
         inp = load_inputs(ticker, base_dir=base_dir)
@@ -132,8 +132,9 @@ def run_company(ticker: str, *, base_dir: Path | None = None, ocr_fn=None) -> di
                                              "sha256_16": _sha16(fs_path)}}
         kw = {"ocr": ocr_fn} if ocr_fn is not None else {}
         ar = pdf_doc.load_pdf(ar_path, **kw)
-        fs = pdf_doc.load_pdf(fs_path, **kw) if fs_path else None
-        ar_anchors = find_annual_report_sections(ar, required=set(), **({"group": "fh"} if inp.group == "fh" else {}))
+        fs_kw = {**kw, "ocr_scanned": True} if kw else kw  # 財報：全頁掃描頁一律送 OCR（D-6；無 OCR 時此旗標無作用）
+        fs = pdf_doc.load_pdf(fs_path, **fs_kw) if fs_path else None
+        ar_anchors = find_annual_report_sections(ar, required=set(), **({"group": "fh"} if uses_fh_schema(inp.group) else {}))
         gov_anchors = find_heading_sections(ar, GOVERNANCE_HEADING_ANCHORS, required=set())
         fs_anchors = find_heading_sections(fs, FS_HEADING_ANCHORS, required=set()) if fs else None
         bundle = extract_tables(ar, ar_anchors, fs, fs_anchors, None, None,

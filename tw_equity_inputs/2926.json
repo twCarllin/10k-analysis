@@ -4,7 +4,7 @@
   "fiscal_year": 2025,
   "group": "industrial",
   "annual_report_path": "tw_report/2025_2926_年報pdf.pdf",
-  "consolidated_fs_path": null,
-  "fs_period": null,
+  "consolidated_fs_path": "tw_report/2926_2026Q2財報.pdf",
+  "fs_period": "2026H1",
   "parent_fs_path": null
 }

@@ -19,6 +19,7 @@ from typing import Any
 
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_annual_report_sections, find_heading_sections
+from runtime.tw_equity.inputs import uses_fh_schema
 from runtime.tw_equity.metrics import TtmView, _build_bridge, _label_of, _value, compute_metrics
 from runtime.tw_equity.statements import StatementLedger, StatementRow, extract_statements
 
@@ -311,16 +312,16 @@ def topic_pack(ledger: StatementLedger | None, group: str | None = None, *, fy_i
     fy_income（年報 FY 損益表）給定且 TTM 可用 → 另加 ttm:*；notes（金控附註）給定 → 附註三指標。ledger None → 不可答。"""
     if ledger is None:
         return {"answerable": False, "reason": "財報三表解析失敗（無帳本）"}
-    mp = compute_metrics(ledger, fy_income, group=group, notes=notes)
+    mp = compute_metrics(ledger, fy_income, group="fh" if uses_fh_schema(group) else group, notes=notes)
     topics: dict[str, dict[str, Any]] = {}
-    if group != "fh":
+    if not uses_fh_schema(group):
         f = fcf_facts(ledger)
         if f["answerable"]:
             topics[FCF_TOPIC] = {"kind": "fcf", "name": "自由現金流變動歸因與本期構成", "facts": f}
     topics.update(_metric_topics(ledger, mp.metrics))
     for b in mp.bridges:
         topics[f"bridge:{b.target}"] = _bridge_topic(ledger, b)
-    if group != "fh":
+    if not uses_fh_schema(group):
         topics.update(_gross_topics(ledger, mp))
     ttm = mp.ttm
     if ttm is not None and ttm.status == "ok":
@@ -663,8 +664,8 @@ def load_fy_income(ar_path: Path, roc_year: int, group: str | None = None) -> tu
     from runtime.tw_equity.fy_income import extract_fy_income
     try:
         ar = _load_doc(ar_path)
-        anchors = find_annual_report_sections(ar, required=set(), **({"group": "fh"} if group == "fh" else {}))
-        return extract_fy_income(ar, anchors, roc_year=roc_year, group=group), None
+        anchors = find_annual_report_sections(ar, required=set(), **({"group": "fh"} if uses_fh_schema(group) else {}))
+        return extract_fy_income(ar, anchors, roc_year=roc_year, group="fh" if uses_fh_schema(group) else group), None
     except Exception as e:
         return None, f"{type(e).__name__}: {e}"
 
@@ -693,7 +694,7 @@ def build_pack(base: Path, raw: dict[str, Any]) -> tuple[dict[str, Any], str]:
             err = "annual_report_path 或 fiscal_year 未設定"
         else:
             fy, err = load_fy_income(base / ar_rel, int(raw["fiscal_year"]) - 1911, group)
-    notes = load_fh_notes(base / fs_rel, ledger) if group == "fh" else None
+    notes = load_fh_notes(base / fs_rel, ledger) if uses_fh_schema(group) else None
     pack = topic_pack(ledger, group, fy_income=fy, notes=notes, ttm_error=err)
     return pack, fs_rel + (f"；年報 {ar_rel}" if ar_rel and pack.get("ttm_status") == "ok" else "")
 
@@ -716,7 +717,7 @@ def answer(ticker: str, question: str, *, base_dir: Path | None = None,
         return text, pack
     if not _FCF_Q_RE.search(question):
         return "G1 只支援 FCF 問題（問題需含「FCF」或「自由現金流」）。", None
-    if raw.get("group") == "fh":
+    if uses_fh_schema(raw.get("group")):
         return (f"{company} 為金控，FCF（營業現金流＋資本支出）不適用於金融業："
                 "放款與存款變動都列在營業活動，數字不代表可自由運用的現金。"), None
     fs_rel = raw.get("consolidated_fs_path")

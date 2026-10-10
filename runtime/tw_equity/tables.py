@@ -12,6 +12,8 @@ import unicodedata
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from runtime.tw_equity.inputs import uses_fh_schema
+
 if TYPE_CHECKING:
     from runtime.tw_equity.pdf_doc import PdfDoc
     from runtime.tw_equity.fy_income import FyIncome
@@ -610,8 +612,12 @@ _LINE_PAREN_RE = re.compile(r"\(\s*\$?\s*([\d,.%]+)\s*\)")
 _ABS_LABELS = frozenset(["營業成本", "營業費用"])
 
 
+_LONE_DASH_RE = re.compile(r"(?<!\S)[\u2014\u2013\u2015](?!\S)")  # 獨立的 em／en dash（財報以它表 0／空）
+
+
 def _norm_line(line: str) -> str:
     s = unicodedata.normalize("NFKC", line)
+    s = _LONE_DASH_RE.sub("-", s)
     s = _LINE_PAREN_RE.sub(r"(\1)", s)
     return s.replace("$", "")
 
@@ -1593,6 +1599,8 @@ def extract_tables(
     """
     missing: list[str] = []
     unit_notes: dict[str, str] = {}
+    if uses_fh_schema(group):  # bank 與 fh 同走金控 schema；下游（fy_income／metrics）只認 "fh"
+        group = "fh"
 
     # ── 內部輔助：取頁範圍 tables 與 text ────────────────────────────────────
 
@@ -1768,7 +1776,7 @@ def extract_tables(
         log.warning(msg)
     fh_notes = None
     fh_notes_error: str | None = None
-    if group == "fh" and fs is not None:
+    if uses_fh_schema(group) and fs is not None:
         from runtime.tw_equity.fh_notes import extract_fh_notes
 
         bs_cur = None

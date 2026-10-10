@@ -10,6 +10,8 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
+from runtime.tw_equity.inputs import uses_fh_schema
+
 UNSUPPORTED_GROUPS: dict[str, str] = {}  # fh 已支援（fh-schema Spec §8.2）；保留表結構供日後新類別
 
 
@@ -76,7 +78,7 @@ FH_IFRS17_NOTE = "FY 為 IFRS 4、H1 為 IFRS 17"
 
 
 def _is_fh(r: dict) -> bool:
-    return r.get("schema") == "fh" or r.get("group") == "fh"
+    return r.get("schema") == "fh" or uses_fh_schema(r.get("group"))
 
 
 def _fh_row(r: dict, base: dict) -> dict:

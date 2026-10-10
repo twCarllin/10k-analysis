@@ -125,4 +125,4 @@ def test_main_with_ocr_passes_pipeline_ocr_chain(tmp_path, monkeypatch, load_cal
     _write_input(tmp_path, "1111")
     monkeypatch.chdir(tmp_path)
     assert batch.main(["--tickers", "1111", "--out", str(tmp_path / "out"), "--ocr"]) == 0
-    assert load_calls == [{"ocr": fake_ocr}, {"ocr": fake_ocr}]
+    assert load_calls == [{"ocr": fake_ocr}, {"ocr": fake_ocr, "ocr_scanned": True}]  # 年報照舊；財報帶 ocr_scanned（Spec D-6）

@@ -10,6 +10,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+FH_SCHEMA_GROUPS: frozenset[str] = frozenset({"fh", "bank"})
+
+
+def uses_fh_schema(group: str | None) -> bool:
+    """金控（fh）與銀行（bank）同走金控三表 schema；group 標籤本身不改。"""
+    return group in FH_SCHEMA_GROUPS
+
+
 @dataclass(frozen=True)
 class PriorYearInputs:
     fiscal_year: int
@@ -32,7 +40,7 @@ class TwEquityInputs:
     consolidated_fs_path: Path | None
     parent_fs_path: Path | None
     prior: PriorYearInputs | None = None
-    group: str | None = None  # 公司類別（"fh" 金控）；缺 → None（工業流程）
+    group: str | None = None  # 公司類別（"fh" 金控、"bank" 銀行；兩者同走 fh schema）；缺 → None（工業流程）
 
     @property
     def roc_year(self) -> int:

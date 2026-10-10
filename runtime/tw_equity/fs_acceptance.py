@@ -4,6 +4,9 @@ CLI：./.venv/bin/python -m runtime.tw_equity.fs_acceptance [--out run/fs_accept
 讀 29 份驗收文件（28 檔 2026Q2 半年報＋3653 年度財報），每份跑
 load_pdf → find_heading_sections(FS_HEADING_ANCHORS) → extract_statements。不打外部 API。
 `--ocr-cache`：另驗 OCR_FILES（三表為圖片頁），OCR 只讀既有 .ocr.json 快取；未命中記 error `ocr_cache_miss`。
+`--all70`：70 家驗收（Spec 2026-10-10-tw-equity-70-conform §1）。依 tw_equity_inputs/*.json 的 group 產清單
+（工業／石化 22 項、金控／銀行 18 項）；OCR 只讀快取、未命中改不做 OCR 載入（不打 API）；
+例外只有 ACCEPTANCE_EXCEPTIONS 兩筆（ticker＋check 鍵）。輸出每家結果與 SUMMARY 行。
 """
 
 from __future__ import annotations
@@ -15,6 +18,7 @@ from pathlib import Path
 
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_heading_sections
+from runtime.tw_equity.inputs import load_inputs, uses_fh_schema
 from runtime.tw_equity.statements import extract_statements
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -31,6 +35,14 @@ ACCEPTANCE_FILES: tuple[str, ...] = tuple(
 ) + ("3653_2025Q4合併財報.pdf",)
 
 OCR_FILES: tuple[str, ...] = ("2330_2026Q2財報.pdf", "3711_2026Q2財報.pdf")
+
+
+# 70 家驗收：每家應有的勾稽項數；例外＝(ticker, "<check 名>/<period>")，停業單位損益未納入勾稽（Spec §5 Q3），僅此 2 筆
+EXPECTED_CHECKS = {"industrial": 22, "fh": 18}
+ACCEPTANCE_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset({
+    ("2449", "is_net_income/prior"),
+    ("2890", "is_net_income/current"),
+})
 
 
 class OcrCacheMiss(Exception):
@@ -75,6 +87,43 @@ def _check_one(name: str, report_dir: Path, *, ocr_cache: bool = False) -> dict:
     }
 
 
+def acceptance_tickers(base_dir: Path) -> list[tuple[str, str | None]]:
+    """tw_equity_inputs/*.json → [(ticker, group)]，依代號排序。"""
+    return [(p.stem, load_inputs(p.stem, base_dir=base_dir).group)
+            for p in sorted((base_dir / "tw_equity_inputs").glob("*.json"))]
+
+
+def check_company(ticker: str, group: str | None, base_dir: Path) -> dict:
+    """單家驗收：財報 OCR 只讀快取（ocr_scanned 政策同 batch），未命中改不做 OCR 載入；扣除例外後 failed／none 須為 0。"""
+    expected = EXPECTED_CHECKS["fh" if uses_fh_schema(group) else "industrial"]
+    rec: dict = {"ticker": ticker, "group": group, "expected": expected}
+    try:
+        inp = load_inputs(ticker, base_dir=base_dir)
+        if inp.consolidated_fs_path is None:
+            return {**rec, "error": "no_fs_path"}
+        try:
+            doc = pdf_doc.load_pdf(inp.consolidated_fs_path, ocr=_cache_only_ocr, ocr_scanned=True)
+        except OcrCacheMiss:
+            doc = pdf_doc.load_pdf(inp.consolidated_fs_path)
+        led = extract_statements(doc, find_heading_sections(doc, FS_HEADING_ANCHORS, required=set()), group=group)
+    except Exception as e:  # 單家失敗不中斷全量
+        return {**rec, "error": f"{type(e).__name__}: {e}"}
+    if led is None:
+        return {**rec, "error": "no_statements"}
+    return {**rec, **evaluate_checks(ticker, group, led.checks)}
+
+
+def evaluate_checks(ticker: str, group: str | None, checks: list) -> dict:
+    """勾稽結果 → 驗收判定：項數須等於該 group 的期望數；扣除 ACCEPTANCE_EXCEPTIONS（ticker＋check 鍵）後無任何未通過。"""
+    expected = EXPECTED_CHECKS["fh" if uses_fh_schema(group) else "industrial"]
+    bad = [f"{c.name}/{c.period}" for c in checks if c.passed is not True]
+    excepted = [k for k in bad if (ticker, k) in ACCEPTANCE_EXCEPTIONS]
+    rest = [k for k in bad if k not in excepted]
+    return {"total": len(checks), "passed": sum(1 for c in checks if c.passed is True),
+            "excepted": excepted, "not_passed": rest,
+            "conform": len(checks) == expected and not rest}
+
+
 def _all_pass(rec: dict) -> bool:
     return (
         "error" not in rec
@@ -86,9 +135,12 @@ def _all_pass(rec: dict) -> bool:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="台股財報三表解析驗收")
-    ap.add_argument("--out", default="run/fs_acceptance.json")
+    ap.add_argument("--out", default=None, help="結果 JSON；預設 run/fs_acceptance.json（--all70：run/conform_acceptance.json）")
     ap.add_argument("--ocr-cache", action="store_true", help="另驗 OCR_FILES（只讀 OCR 快取，不打 API）")
+    ap.add_argument("--all70", action="store_true", help="70 家驗收（依 tw_equity_inputs 的 group；不打 API）")
     args = ap.parse_args(argv)
+    if args.all70:
+        return _main_all70(Path(args.out or "run/conform_acceptance.json"))
     jobs = [(n, False) for n in ACCEPTANCE_FILES] + ([(n, True) for n in OCR_FILES] if args.ocr_cache else [])
     result = {"files": [], "all_pass_files": 0, "total_files": len(jobs)}
     for name, ocr_cache in jobs:
@@ -104,10 +156,28 @@ def main(argv: list[str] | None = None) -> int:
                 flush=True,
             )
     result["all_pass_files"] = sum(1 for r in result["files"] if _all_pass(r))
-    out = Path(args.out)
+    out = Path(args.out or "run/fs_acceptance.json")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"SUMMARY all_pass_files={result['all_pass_files']} total_files={result['total_files']}")
+    return 0
+
+
+def _main_all70(out: Path) -> int:
+    recs = []
+    for ticker, group in acceptance_tickers(_REPO_ROOT):
+        rec = check_company(ticker, group, _REPO_ROOT)
+        recs.append(rec)
+        if "error" in rec:
+            print(f"{ticker} [{group}]: ERROR {rec['error']}", flush=True)
+        else:
+            print(f"{ticker} [{group}]: {'OK' if rec['conform'] else 'FAIL'} {rec['passed']}/{rec['total']}"
+                  + (f" excepted={','.join(rec['excepted'])}" if rec["excepted"] else "")
+                  + (f" failed={','.join(rec['not_passed'])}" if rec["not_passed"] else ""), flush=True)
+    n_ok = sum(1 for r in recs if r.get("conform"))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(recs, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"SUMMARY conform={n_ok}/{len(recs)} exceptions={sum(len(r.get('excepted', [])) for r in recs)}")
     return 0
 
 

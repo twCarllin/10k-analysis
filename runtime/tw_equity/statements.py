@@ -20,6 +20,7 @@ from runtime.tw_equity.fh_schema import (
     FH_OPTIONAL_KEYS,
     FH_SECTION_HEADERS,
 )
+from runtime.tw_equity.inputs import uses_fh_schema
 from runtime.tw_equity.tables import _norm_line, line_amounts, parse_amount  # noqa: F401
 
 if TYPE_CHECKING:
@@ -148,7 +149,7 @@ class StatementLedger:
 
 # ── 正規化與常數 ──────────────────────────────────────────────────────────────
 
-_CN_NUM = "一二三四五六七八九十"
+_CN_NUM = "一二三四五六七八九十廿卅"
 # 附註欄 token：`六(一)`、`(二十六)及七`、`四及六.1`、`四、六.21及七`、`六.20、六.21、`（結尾頓號＝跨列）
 _NOTE_UNIT = rf"[{_CN_NUM}]+(?:\.\d+|\([{_CN_NUM}]+\))*"
 _NOTE_PAREN = rf"\([{_CN_NUM}]+\)"
@@ -192,6 +193,7 @@ _FH_LESS_PREFIX_RE = re.compile(r"^減[:：]")
 _FH_EXTRA_SECTION_HEADERS: dict[str, frozenset[str]] = {
     "bs": frozenset({"股本", "保留盈餘"}),
 }
+_DANGLING_NOTE_RE = re.compile(r"\(附註.*$")  # 區段標題後括號未閉合的附註
 _FH_DANGLING_NOTE_RE = re.compile(r"\(附註?$")  # 並排頁右半附註被切在續行：`…金融負債(附`
 
 _TITLE_KW = {"bs": "資產負債表", "is": "綜合損益表", "cf": "現金流量表"}
@@ -265,7 +267,7 @@ _BS_KEYS = _build({
     "refundable_deposits": ("存出保證金",),
     "other_noncurrent_assets": ("其他非流動資產-其他", "其他非流動資產"),
     "total_noncurrent_assets": ("非流動資產合計", "非流動資產總計"),
-    "total_assets": ("資產總計",),
+    "total_assets": ("資產總計", "資產總額"),
     "short_term_borrowings": ("短期借款",),
     "contract_liabilities_current": ("合約負債-流動",),
     "notes_payable": ("應付票據",),
@@ -300,7 +302,7 @@ _BS_KEYS = _build({
     ),
     "noncontrolling_interests": ("非控制權益",),
     "total_equity": ("權益總計", "權益合計"),
-    "total_liabilities_and_equity": ("負債及權益總計", "負債與權益總計"),
+    "total_liabilities_and_equity": ("負債及權益總計", "負債與權益總計", "負債及權益總額"),
 })
 
 _IS_KEYS = _build({
@@ -312,7 +314,7 @@ _IS_KEYS = _build({
     "selling_expenses": ("推銷費用", "行銷費用", "推銷(費用)"),
     "admin_expenses": ("管理費用", "管理(費用)"),
     "rd_expenses": ("研究發展費用", "研究發展(費用)"),
-    "total_opex": ("營業費用合計", "營業(費用)合計"),
+    "total_opex": ("營業費用合計", "營業(費用)合計", "營業費用"),
     "other_operating_net": ("其他收益及費損淨額", "其他營業收益及費損淨額"),  # 位於營業費用之後、營業利益之前者屬營業項目
     "operating_income": (
         "營業利益", "營業淨利", "營業利益(損失)", "營業淨利(損)", "營業利益(損)",
@@ -324,10 +326,10 @@ _IS_KEYS = _build({
     "equity_method_share": ("採用權益法認列之關聯企業及合資損益之份額",),
     "nonoperating_total": ("營業外收入及支出合計", "營業外收入及(支出)合計"),
     "pretax_income": (
-        "稅前淨利", "稅前淨利(損)", "繼續營業單位稅前淨利", "繼續營業部門稅前淨利",
+        "稅前淨利", "稅前淨利(損)", "稅前淨利(淨損)", "繼續營業單位稅前淨利", "繼續營業部門稅前淨利",
     ),
     "income_tax": (
-        "所得稅費用", "所得稅費用(利益)", "所得稅(費用)利益", "減:所得稅費用", "減:所得稅費用(利益)",
+        "所得稅費用", "所得稅費用(利益)", "所得稅利益(費用)", "所得稅(費用)利益", "減:所得稅費用", "減:所得稅費用(利益)",
     ),
     "net_income": (
         "本期淨利", "本期淨利(損)", "本期淨利(淨損)", "本年度淨利", "淨利",
@@ -350,7 +352,7 @@ _IS_KEYS = _build({
 
 _CF_KEYS = _build({
     "pretax_income_cf": (
-        "本期稅前淨利", "稅前淨利", "本期稅前淨利(損)", "本期稅前淨利(淨損)", "繼續營業單位稅前淨利",
+        "本期稅前淨利", "稅前淨利", "本年度稅前淨利", "本期稅前淨利(損)", "本期稅前淨利(淨損)", "繼續營業單位稅前淨利",
     ),
     "fvtpl_gain_adj": ("透過損益按公允價值衡量之金融資產利益",),
     "ppe_disposal_loss_adj": ("處分不動產、廠房及設備之損失(利益)",),
@@ -394,7 +396,7 @@ _CF_KEYS = _build({
     "income_tax_paid": ("支付之所得稅", "支付所得稅", "退還(支付)之所得稅"),
     "cfo": (
         "營業活動之淨現金流入", "營業活動之淨現金流入(流出)", "營業活動之淨現金流出",
-        "營業活動之淨現金流入(出)", "營業活動之淨現金流(出)入", "營運活動之淨現金(流出)流入",
+        "營業活動之淨現金流入(出)", "營業活動之淨現金流(出)入", "營業活動之淨現金(流出)流入", "營運活動之淨現金(流出)流入",
     ),
     "capex": ("取得不動產、廠房及設備", "購置不動產、廠房及設備", "取得不動產、廠房及設備:支付之成本"),
     "ppe_disposal_proceeds": ("處分不動產、廠房及設備價款",),
@@ -421,7 +423,7 @@ _CF_KEYS = _build({
     ),
     "fx_effect": (
         "匯率變動對現金及約當現金影響數", "匯率變動對現金及約當現金之影響", "匯率影響數",
-        "匯率影響對現金及約當現金之影響",
+        "匯率影響對現金及約當現金之影響", "匯率變動影響數",
     ),
     "net_change_in_cash": (
         "本期現金及約當現金增加(減少)數", "本期現金及約當現金增加數", "本期現金及約當現金減少數",
@@ -429,11 +431,11 @@ _CF_KEYS = _build({
         "現金及約當現金淨增加數", "現金及約當現金淨增加(減少)", "現金及約當現金淨(減少)增加",
         "現金及約當現金增加(減少)數", "本期現金及約當現金淨增加(減少)數",
         "本期現金及約當現金(減少)增加數", "現金及約當現金淨(減少)增加數",
-        "本期現金及約當現金淨增加數", "現金及約當現金淨減少",
+        "本期現金及約當現金淨增加數", "現金及約當現金淨減少", "現金及約當現金增加", "現金及約當現金減少",
     ),
-    "cash_beginning": ("期初現金及約當現金餘額",),
-    "cash_ending": ("期末現金及約當現金餘額",),
-    "cash_per_bs_in_cf": ("資產負債表帳列之現金及約當現金", "合併資產負債表帳列之現金及約當現金"),
+    "cash_beginning": ("期初現金及約當現金餘額", "年初現金及約當現金餘額"),
+    "cash_ending": ("期末現金及約當現金餘額", "年底現金及約當現金餘額"),
+    "cash_per_bs_in_cf": ("資產負債表帳列之現金及約當現金", "合併資產負債表帳列之現金及約當現金", "合併資產負債表列示之現金及約當現金"),
 })
 
 CANONICAL_KEYS: dict[str, dict[str, str]] = {
@@ -525,7 +527,7 @@ _PERIOD_TOKEN_RE = re.compile(
     r"|(?P<date>(?P<y>\d{2,3})年(?P<m>\d{1,2})月(?P<d>\d{1,2})日)"               # 115年6月30日
     r"|(?P<drange>(?P<ry>\d{2,3})\.(?P<rm1>\d{1,2})\.(?P<rd1>\d{1,2})[〜~]\d{2,3}\.(?P<rm2>\d{1,2})\.(?P<rd2>\d{1,2}))"  # 115.4.1〜115.6.30
     r"|(?P<dot>(?P<dy>\d{2,3})\.(?P<dm>\d{1,2})\.(?P<dd>\d{1,2}))"              # 115.6.30
-    r"|(?P<end>至(?P<em>\d{1,2})月(?P<ed>\d{1,2})日)"                              # 至6月30日
+    r"|(?P<end>至(?P<em>\d{1,2})月(?P<ed>\d{1,2})(?:日|(?=\d{2,3}年)|$))"          # 至6月30日（OCR 可能少末尾「日」）
     r"|(?P<qtr>(?P<qy>\d{2,3})年第(?P<qn>[1-4])季)"                               # 115年第2季
     r"|(?P<half>(?P<hy>\d{2,3})年上半年度?)"                                       # 115年上半年度
     r"|(?P<year>(?P<yy>\d{2,3})年度)"                                              # 114年度
@@ -541,6 +543,7 @@ class StatementHeader:
     has_pct: bool             # 表頭是否有 `%` 欄標題（有 → 每欄 2 個 token）
     side_by_side: bool        # 左右並排頁（期間數 2n 且含「資產」「負債」）
     skip_idx: frozenset[int]  # 該頁表頭區內應跳過的列索引（期間列、`民國…` 標題列）
+    twd_pair: bool = False    # 每期間兩欄「美金 新台幣」（雙幣別報表）→ 取新台幣欄
 
     @property
     def n(self) -> int:
@@ -649,9 +652,10 @@ def detect_header(lines: list[str], fh: bool = False) -> StatementHeader:
         if fh and _DOT_DATE_LINE_RE.match(unicodedata.normalize("NFKC", raw).strip()):
             cmp = "|".join(unicodedata.normalize("NFKC", raw).split())
         all_text.append(cmp)
-        if "民國" in cmp:
+        if "民國" in cmp and not (cmp.count("民國") >= 2 and not any(c in cmp for c in "及暨、至")):
             skip.add(idx)
             continue
+        cmp = cmp.replace("民國", "")  # 欄名帶「民國」（每欄 `民國115年6月30日`，6446）：去掉後當期間列
         ar = _arabize(cmp)
         if _END_DATES_ONLY_RE.match(ar):  # 起日列只寫「…日至」、迄日另起一列：`6月30日6月30日…`
             end_dates.extend(re.findall(r"(\d{1,2})月(\d{1,2})日", ar))
@@ -661,7 +665,11 @@ def detect_header(lines: list[str], fh: bool = False) -> StatementHeader:
             skip.add(idx)
             texts.append(ar)
     periods = _periods_from_text("".join(texts))
-    if fh and len(texts) >= 2:
+    if not periods:  # 年份一列（`一一五年 一一四年`）＋「上半年度」另一列（3034）
+        year_lines = [re.findall(r"\d{2,3}", _arabize(t)) for t in all_text if re.fullmatch(r"(?:\d{2,3}年)+", _arabize(t))]
+        if year_lines and "".join(all_text).count("上半年度") == len(year_lines[0]):
+            periods = [_period(int(y), 1, 1, 6, 30) for y in year_lines[0]]
+    if len(texts) >= 2:
         periods = _fh_reorder_two_line_periods(periods)
     joined = "".join(all_text)
     if end_dates and len(end_dates) == len(periods) and "日至" in joined and all("~" not in p for p in periods):
@@ -675,11 +683,16 @@ def detect_header(lines: list[str], fh: bool = False) -> StatementHeader:
             and (("資產" in joined and "負債" in joined) or joined.count("代碼") >= 2):
         side = True
         periods = periods[: n // 2]
+    elif n >= 2 and n % 2 == 0 and all(periods.count(p) == 2 for p in periods) \
+            and "資產" in joined and "負債" in joined:
+        side = True  # 並排 BS 日期分兩列（左右各一日期）：每個期間恰出現 2 次
+        periods = list(dict.fromkeys(periods))
     return StatementHeader(
         periods=periods,
         has_pct="%" in joined,
         side_by_side=side,
         skip_idx=frozenset(skip),
+        twd_pair=bool(periods) and joined.replace("新臺幣", "新台幣").count("美金新台幣") == len(periods),
     )
 
 
@@ -847,7 +860,7 @@ def _distribute(
 
 
 def _columns(
-    statement: str, n: int, amounts: list[float | None]
+    statement: str, n: int, amounts: list[float | None], twd_pair: bool = False
 ) -> tuple[list[float | None], list[float | None] | None, int] | None:
     """金額 token 分配（§2.2）→ (columns, pcts, warn_k)；warn_k＝無法確定時的 token 數（0＝正常）；無金額（視為無資料列）→ None。
 
@@ -857,6 +870,8 @@ def _columns(
     if k == 0:
         return None
     if n >= 1 and k == 2 * n:
+        if twd_pair:
+            return amounts[1::2], None, 0  # 每期間「美金 新台幣」兩欄：取新台幣
         return amounts[0::2], (None if statement == "cf" else amounts[1::2]), 0
     if n >= 1 and k == n:
         return list(amounts), None, 0
@@ -901,6 +916,11 @@ def _split_sides(text: str, h: int, fh: bool = False, cf: bool = False) -> tuple
         return " ".join(toks), ""  # 並排 CF 左半 A 碼列、同列右半空白（`A32125 合約負債(減少) …`）
     counts = [_tok_amount_count(t, fh) for t in toks]
     total = sum(counts)
+    if (
+        not fh and total > 0 and toks[0].endswith((":", "："))
+        and _norm_label(toks[0]).rstrip(":") in (BS_SECTION_HEADERS | CF_SECTION_HEADERS)
+    ):
+        return toks[0], " ".join(toks[1:])  # 左半區段標題（`非流動資產：`）與右半科目／金額同列：標題歸左、其餘歸右（6488、3081）
     if total >= h > 0:
         acc, cut = 0, len(toks)
         for i, c in enumerate(counts):
@@ -935,11 +955,12 @@ def _make_entry(
     idx: int,
     text: str,
     fh: bool = False,
+    twd_pair: bool = False,
 ) -> tuple | None:
     """單一（半）列 → (page, idx, label, note, code, cols)；備忘／雜訊列 → None。"""
     label, note, code, amounts = _split_line(text, fh)
     label = _strip_note_parens(label)
-    cols = _columns(statement, n, amounts)
+    cols = _columns(statement, n, amounts, twd_pair)
     is_hdr = _is_header(label, section_headers)
     if cols is None and code is None and note and _NOTE_BARE_RE.match(note) and not is_hdr:
         return None  # 僅帶單獨數字附註、無金額的備忘列（重大或有負債 九）
@@ -948,8 +969,34 @@ def _make_entry(
     if cols is None and code is None and (
         not label or label.startswith("(") or label.count(")") > label.count("(")
     ):
-        return None  # 附註殘片（`(二)及(二十三))`、`六)及七)`）：屬上一列，不另成列
+        # 附註殘片（`(二)及(二十三))`、`六)及七)`）：屬上一列，不另成列。回 marker（空 label、無代碼、無金額）而非 None，
+        # 讓科目名跨多行時的合併迴圈能跳過它（1216、1326）；非殘片的列首裸中文數字（`七`）不走此路
+        return (page, idx, "", label + note, None, None)
+    if cols is None and not fh and label.count("(") > label.count(")"):
+        stripped = _DANGLING_NOTE_RE.sub("", label)
+        if _is_header(stripped, section_headers):
+            label = stripped  # 區段標題的附註斷行、括號未閉合（`其他非流動資產(附註`）→ 去附註當區段標題（3081）
     return (page, idx, label, note, code, cols)
+
+
+def _fragment_side(
+    streams: list[list[tuple | None]], s_i: int, entry: tuple | None, section_headers: frozenset[str],
+) -> int:
+    """並排頁單邊金額列的歸屬修正：無代碼、科目為空或附註殘片的金額列（右半科目續行的金額），
+    若對側最後一筆是「有代碼無金額」（等金額）而本側不是 → 歸對側（6488）。"""
+    def awaiting(st: list[tuple | None]) -> bool:
+        last = next((x for x in reversed(st) if x is not None), None)
+        return (
+            last is not None and last[5] is None and bool(last[2]) and last[4] is not None
+            and not _is_header(last[2], section_headers)
+        )
+
+    if entry is None or entry[5] is None or entry[4] is not None:
+        return s_i
+    label = entry[2]
+    is_frag = not label or label.startswith("(") or label.count(")") > label.count("(")
+    other = 1 - s_i
+    return other if is_frag and awaiting(streams[other]) and not awaiting(streams[s_i]) else s_i
 
 
 def _row_of(
@@ -990,7 +1037,7 @@ def _subtotal_label(
     label = f"{section}合計"
     if map_key(statement, label, section, schema) is None:
         return None
-    vals = [r.current for r in rows if r.label and head_pos < _pos(r) < pos and r.current is not None]
+    vals = [r.current for r in rows if (r.label or r.code) and head_pos < _pos(r) < pos and r.current is not None]
     if not vals:
         return None
     total, tol = sum(vals), len(vals)  # 容差：每列 1 單位四捨五入
@@ -1095,9 +1142,14 @@ def parse_statement_lines(
         segs = [text]
         if side:
             segs = list(_split_sides(text, half, fh, cf=statement == "cf"))
-        for st, seg in zip(streams, segs):
-            if seg.strip():
-                st.append(_make_entry(statement, section_headers, n, page, idx, seg, fh))
+        ents = [
+            (s_i, _make_entry(statement, section_headers, n, page, idx, seg, fh, bool(stmt_hdr and stmt_hdr.twd_pair)))
+            for s_i, seg in enumerate(segs) if seg.strip()
+        ]
+        if side and not fh and len(ents) == 1:
+            ents = [(_fragment_side(streams, *ents[0], section_headers), ents[0][1])]
+        for s_i, entry in ents:
+            streams[s_i].append(entry)
 
     stream_rows: list[list[StatementRow]] = []
     stream_heads: list[list[tuple[tuple[int, int], str]]] = []  # 各 stream 的區段標題 (位置, section)
@@ -1115,12 +1167,33 @@ def parse_statement_lines(
             if item is None:
                 continue
             page, idx, label, note, code, cols = item
+            if cols is None and not label and code is None:
+                continue  # 附註殘片 marker
             if cols is None:
                 if _is_header(label, section_headers):
                     section = label if label in section_headers else label.rstrip(":")
                     heads.append(((page, idx), section))
                     continue
+                while i < len(parsed) and parsed[i] is not None and parsed[i][5] is None \
+                        and not parsed[i][2] and parsed[i][4] is None:
+                    note = note + parsed[i][3]  # 跨過附註殘片（科目附註斷成 ≥3 行）
+                    i += 1
                 nxt = parsed[i] if i < len(parsed) else None
+                if fh and code is not None:
+                    # 金控科目名分 3–4 行：帶代碼首行與「無代碼有金額」行之間，最多 4 行（可跳 None 行與純附註 marker）的中段名稱／附註行併入科目名
+                    j = i
+                    while j < len(parsed) and j - i < 4 and (parsed[j] is None or (
+                            parsed[j][5] is None and parsed[j][4] is None
+                            and not _is_header(parsed[j][2], section_headers))):
+                        j += 1
+                    if i < j < len(parsed) and parsed[j] is not None and parsed[j][5] is not None \
+                            and parsed[j][4] is None:
+                        for k2 in range(i, j):
+                            if parsed[k2] is not None:
+                                label += parsed[k2][2]
+                                note += parsed[k2][3]
+                        i = j
+                        nxt = parsed[i]
                 if nxt is None or nxt[5] is None or nxt[4] is not None:
                     continue  # 尾列：下一列無金額（或自帶代碼＝另一筆）或不存在 → 丟棄
                 label = label + nxt[2]
@@ -1218,11 +1291,17 @@ def statement_pages(doc: "PdfDoc", rng: "PageRange | None", title_kw: str) -> li
     if rng is None:
         return []
     out: list[int] = []
+    ccy0: set[str] = set()  # 首頁的幣別；同名報表有新台幣與美金兩份時，只收第一份
     for p in doc.pages:
         if not (rng.start <= p.number <= rng.end):
             continue
         head = _norm_label(" ".join(p.lines[:5]))
         if title_kw in head:
+            ccy = {c for c in ("美金", "新台幣", "人民幣") if c in head.replace("新臺幣", "新台幣")}
+            if out and ccy and ccy0 and not (ccy & ccy0):
+                break
+            if not out:
+                ccy0 = ccy
             out.append(p.number)
         elif out and _is_continuation(head, title_kw):
             out.append(p.number)
@@ -1298,12 +1377,20 @@ def _run_fh_cross_checks(rows: list[StatementRow], warnings: list[str] | None) -
                 continue
             if k not in first and k in FH_OPTIONAL_KEYS:
                 continue
+            if k == "total_opex" and k not in first:  # PDF 只印營業費用標題、無合計列 → 組成項加總代用
+                parts = [val(c, idx) for c in ("employee_benefits", "depreciation_amortization", "other_ga")]
+                if any(x is None for x in parts):
+                    return None
+                total += -sum(abs(x) for x in parts)
+                continue
             v = val(k, idx)
             if v is None:
                 return None
             if k == "income_tax":
                 lab = _norm_label(first[k].label)
-                total += v if "(費用)" in lab else -v if "(利益)" in lab else -abs(v)
+                total += -v if lab.startswith("減:") else v if ("(費用)" in lab or "(利益)" in lab) else -abs(v)
+            elif k == "provision" and "迴轉" in _norm_label(first[k].label):
+                total += v  # 「(提存)迴轉」已依印出正負號表示（迴轉為正），不取 −|v|
             elif k in FH_EXPENSE_KEYS:
                 total += -abs(v)
             else:
@@ -1485,7 +1572,7 @@ def extract_statements(
     """
     if fs is None or fs_anchors is None:
         return None
-    schema = "fh" if group == "fh" else "industrial"
+    schema = "fh" if uses_fh_schema(group) else "industrial"
     section_map = (
         {st: FH_SECTION_HEADERS[st] | _FH_EXTRA_SECTION_HEADERS.get(st, frozenset()) for st in FH_SECTION_HEADERS}
         if schema == "fh" else SECTION_HEADERS

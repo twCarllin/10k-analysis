@@ -79,14 +79,22 @@ def is_image_page(page: Page) -> bool:
     return len("".join(page.text.split())) < _IMAGE_TEXT_MAX and page.image_cover >= _IMAGE_COVER_MIN
 
 
-def apply_ocr_policy(doc: PdfDoc, ocr: OcrFn | None = None) -> PdfDoc:
+def _is_scanned_page(page: Page) -> bool:
+    """全頁掃描（image_cover ≥0.9），不論文字層字數（掃描頁常帶低品質垃圾文字層）。"""
+    return page.image_cover >= _IMAGE_COVER_MIN
+
+
+def apply_ocr_policy(doc: PdfDoc, ocr: OcrFn | None = None, *, ocr_scanned: bool = False) -> PdfDoc:
     """偵測亂碼頁與圖片頁；有 ocr 則對兩者聯集呼叫一次並取代。
     未取代的亂碼頁清空，未取代的圖片頁原樣保留。
+
+    ocr_scanned=True：image_cover ≥0.9 的頁不管字數一律視為圖片頁（送 OCR）；預設 False 判定不變。
 
     ocr 例外不吞，原樣往上拋。回傳新 PdfDoc（不改傳入物件的頁）。
     """
     garbled = [p.number for p in doc.pages if is_garbled(p)]
-    image = [p.number for p in doc.pages if is_image_page(p) and p.number not in garbled]
+    is_img = _is_scanned_page if ocr_scanned else is_image_page
+    image = [p.number for p in doc.pages if is_img(p) and p.number not in garbled]
     targets = sorted(garbled + image)
     replaced: dict[int, Page] = {}
     if ocr is not None and targets:
@@ -165,8 +173,8 @@ def _sha256_prefix(path: Path) -> str:
     return digest[:16]
 
 
-def _cache_path(pdf_path: Path, cache_dir: Path, *, with_ocr: bool = False) -> Path:
-    suffix = ".ocr.json" if with_ocr else ".json"
+def _cache_path(pdf_path: Path, cache_dir: Path, *, with_ocr: bool = False, scanned: bool = False) -> Path:
+    suffix = (".ocr-scan.json" if scanned else ".ocr.json") if with_ocr else ".json"
     return cache_dir / f"{_sha256_prefix(pdf_path)}{suffix}"
 
 
@@ -179,6 +187,7 @@ def load_pdf(
     _opener: Any = None,
     _line_opener: Any = None,
     ocr: OcrFn | None = None,
+    ocr_scanned: bool = False,
 ) -> PdfDoc:
     """載入 PDF 並回傳 PdfDoc，第二次呼叫讀快取。
 
@@ -192,21 +201,24 @@ def load_pdf(
                  get_text("words")；預設 fitz.open。_opener 提供時若未提供
                  本參數，lines 為空（不開真實 PDF）。
         ocr: 亂碼頁與圖片頁 OCR 備援；None 則亂碼頁清空、圖片頁原樣保留。
+        ocr_scanned: True 時 image_cover ≥0.9 的頁不管字數都送 OCR（ocr 為 None 時無作用）；
+                 快取檔名加 `.ocr-scan` 後綴避開舊快取。預設 False，判定與快取同修改前。
 
     Returns:
         PdfDoc 實例。
     """
     if cache_dir is None:
         cache_dir = _DEFAULT_CACHE_DIR
+    scanned = ocr_scanned and ocr is not None
 
     # 有注入點時，跳過快取讀取（直接用注入資料），但仍寫快取
     if _opener is not None:
-        doc = apply_ocr_policy(_build_from_opener(path, _opener, _line_opener), ocr)
-        _write_cache(doc, path, cache_dir, with_ocr=ocr is not None)
+        doc = apply_ocr_policy(_build_from_opener(path, _opener, _line_opener), ocr, ocr_scanned=scanned)
+        _write_cache(doc, path, cache_dir, with_ocr=ocr is not None, scanned=scanned)
         return doc
 
     # 嘗試讀快取
-    cp = _cache_path(path, cache_dir, with_ocr=ocr is not None)
+    cp = _cache_path(path, cache_dir, with_ocr=ocr is not None, scanned=scanned)
     if cp.exists():
         try:
             cached = from_json(json.loads(cp.read_text(encoding="utf-8")))
@@ -214,22 +226,37 @@ def load_pdf(
                 return cached
         except Exception:
             pass  # 快取損毀：重抽
+    if scanned:  # 舊政策快取若無任何多出的掃描頁 → 判定相同、直接沿用（不重打 OCR）
+        legacy = _cache_path(path, cache_dir, with_ocr=True)
+        if legacy.exists():
+            try:
+                cached = from_json(json.loads(legacy.read_text(encoding="utf-8")))
+                if cached is not None and not _extra_scanned_pages(cached):
+                    return cached
+            except Exception:
+                pass
 
     # 從真實 PDF 抽取
     import pdfplumber  # 延遲 import
 
-    doc = apply_ocr_policy(_build_from_pdfplumber(path, _line_opener), ocr)
-    _write_cache(doc, path, cache_dir, with_ocr=ocr is not None)
+    doc = apply_ocr_policy(_build_from_pdfplumber(path, _line_opener), ocr, ocr_scanned=scanned)
+    _write_cache(doc, path, cache_dir, with_ocr=ocr is not None, scanned=scanned)
     return doc
 
 
+def _extra_scanned_pages(doc: PdfDoc) -> list[int]:
+    """舊政策處理過的文件中，ocr_scanned 政策會多送 OCR 的頁（掃描頁、非亂碼、非舊政策圖片頁）。"""
+    old = set(doc.garbled_pages) | set(doc.image_pages) | set(doc.ocr_pages)
+    return [p.number for p in doc.pages if _is_scanned_page(p) and p.number not in old]
+
+
 def _write_cache(
-    doc: PdfDoc, pdf_path: Path, cache_dir: Path, *, with_ocr: bool = False
+    doc: PdfDoc, pdf_path: Path, cache_dir: Path, *, with_ocr: bool = False, scanned: bool = False
 ) -> None:
     """寫快取；失敗靜默忽略。"""
     try:
         cache_dir.mkdir(parents=True, exist_ok=True)
-        cp = _cache_path(pdf_path, cache_dir, with_ocr=with_ocr)
+        cp = _cache_path(pdf_path, cache_dir, with_ocr=with_ocr, scanned=scanned)
         cp.write_text(
             json.dumps(to_json(doc), ensure_ascii=False),
             encoding="utf-8",

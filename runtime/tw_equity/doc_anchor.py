@@ -19,6 +19,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 
+from runtime.tw_equity.inputs import uses_fh_schema
 from runtime.tw_equity.pdf_doc import PdfDoc
 
 
@@ -311,9 +312,9 @@ def find_heading_sections(
 
 FS_HEADING_ANCHORS: dict[str, HeadingAnchor] = {
     "fs_audit_kam":           HeadingAnchor(["關鍵查核事項"], False),
-    "fs_bs":                  HeadingAnchor(["合併資產負債表"], False),
-    "fs_is":                  HeadingAnchor(["合併綜合損益表"], False),
-    "fs_cf":                  HeadingAnchor(["合併現金流量表"], False),
+    "fs_bs":                  HeadingAnchor(["合併資產負債表", "資產負債表"], False),
+    "fs_is":                  HeadingAnchor(["合併綜合損益表", "綜合損益表"], False),
+    "fs_cf":                  HeadingAnchor(["合併現金流量表", "現金流量表"], False),
     "fs_note_items":          HeadingAnchor(["重要會計項目之說明"], True),
     "fs_note_inventory":      HeadingAnchor(["存貨"], True, after="fs_note_items"),
     "fs_note_expense_nature": HeadingAnchor(["費用性質之額外資訊"], True, after="fs_note_items"),
@@ -427,7 +428,7 @@ def find_annual_report_sections(
     first = find_sections(doc, ANNUAL_REPORT_ANCHORS, required=set(), order=order)
     starts: dict[str, int] = {k: r.start for k, r in first.items() if r is not None}
 
-    if group == "fh":
+    if uses_fh_schema(group):
         _fh_starts(doc, starts)
 
     pages_sorted = sorted(doc.pages, key=lambda p: p.number)
