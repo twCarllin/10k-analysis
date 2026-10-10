@@ -1,6 +1,7 @@
 """qa.py — tw-equity 會計問答（G1：FCF 事實包＋模板答案＋數字核對；G2：主題事實包（FCF＋指標＋bridge）＋LLM 問答；
-G3a：萬元／兆／pp 單位、方向詞核對、毛利 bridge 與毛利率拆解；
-task/2026-10-09-tw-equity-qa-fcf.md、task/2026-10-09-tw-equity-qa-llm.md、task/2026-10-10-tw-equity-qa-g3a.md）。
+G3a：萬元／兆／pp 單位、方向詞核對、毛利 bridge 與毛利率拆解；G3b：TTM（ttm:*）與金控附註指標，--llm 時一併讀年報；
+task/2026-10-09-tw-equity-qa-fcf.md、task/2026-10-09-tw-equity-qa-llm.md、task/2026-10-10-tw-equity-qa-g3a.md、
+task/2026-10-10-tw-equity-qa-g3b.md）。
 
 CLI：./.venv/bin/python -m runtime.tw_equity.qa --ticker 2317 --ask "本季影響 FCF 最多的是什麼？" [--json] [--llm]
 只讀本地財報 PDF 與 OCR 快取；加 --llm 才呼叫 Azure（qa_llm.py）。FCF＝cfo＋capex（同 metrics 的 fcf）。
@@ -17,8 +18,8 @@ from pathlib import Path
 from typing import Any
 
 from runtime.tw_equity import pdf_doc
-from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_heading_sections
-from runtime.tw_equity.metrics import _build_bridge, _label_of, _value, compute_metrics
+from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_annual_report_sections, find_heading_sections
+from runtime.tw_equity.metrics import TtmView, _build_bridge, _label_of, _value, compute_metrics
 from runtime.tw_equity.statements import StatementLedger, StatementRow, extract_statements
 
 _YI = 100_000  # 仟元 → 億元
@@ -210,12 +211,61 @@ def _row_label(ledger: StatementLedger, key: str, fallback: str) -> str:
     return next((r.label for r in ledger.rows if r.key == key), fallback)
 
 
-def _bridge_topic(ledger: StatementLedger, b) -> dict[str, Any]:
-    return {"kind": "bridge", "name": b.name, "current": b.target_current, "prior": b.target_prior,
-            "delta": b.target_delta, "residual": b.residual, "page": _row_page(ledger, b.target),
-            "components": [{"key": c.key, "label": c.name, "current": c.current, "prior": c.prior,
-                            "delta": c.delta, "share": c.share, "page": _row_page(ledger, c.key)}
-                           for c in b.components]}
+def _bridge_topic(ledger: StatementLedger, b, ttm: TtmView | None = None) -> dict[str, Any]:
+    """ttm 給定 → TTM vs FY 的 bridge（頁碼不適用，TTM 值的出處見 ttm:values）。"""
+    page = (lambda k: None) if ttm else (lambda k: _row_page(ledger, k))
+    t = {"kind": "bridge", "name": b.name, "current": b.target_current, "prior": b.target_prior,
+         "delta": b.target_delta, "residual": b.residual, "page": page(b.target),
+         "components": [{"key": c.key, "label": c.name, "current": c.current, "prior": c.prior,
+                         "delta": c.delta, "share": c.share, "page": page(c.key)}
+                        for c in b.components]}
+    if ttm:
+        t.update(compare="ttm_vs_fy", period_ttm=ttm.period_ttm, period_fy=ttm.period_fy)
+    return t
+
+
+def _metric_topics(ledger: StatementLedger, metrics: list, periods: tuple[str, str] = ("current", "prior"),
+                   ttm: TtmView | None = None) -> dict[str, dict[str, Any]]:
+    """指標主題（每個 key 一個）；ttm 給定 → TTM vs FY（key 加 ttm: 前綴，TTM 值為 None 的不加）。"""
+    names = {m.key: m.name for m in metrics}
+    units = {m.key: m.unit for m in metrics}
+    out: dict[str, dict[str, Any]] = {}
+    for key in dict.fromkeys(m.key for m in metrics):
+        cur, pri = (next(m for m in metrics if m.key == key and m.period == p) for p in periods)
+        if ttm and cur.value is None:
+            continue
+        t = {
+            "kind": "metric", "name": cur.name, "formula": cur.formula, "unit": cur.unit,
+            "current": cur.value, "prior": pri.value, "delta": _delta(cur.value, pri.value),
+            "inputs": [{"key": k, "label": "期間天數" if k == "days" else _row_label(ledger, k, names.get(k, k)),
+                        "unit": "天" if k == "days" else units.get(k, "仟元"),
+                        "current": cur.inputs.get(k), "prior": pri.inputs.get(k),
+                        "page": None if ttm and k in ttm.values else _row_page(ledger, k)}
+                       for k in cur.inputs]}
+        if cur.source is not None:  # 金控附註指標（G3b）：出處在財報附註，無帳本輸入
+            t["source"] = {"current": cur.source, "prior": pri.source}
+        if ttm:
+            t.update(compare="ttm_vs_fy", period_ttm=ttm.period_ttm, period_fy=ttm.period_fy)
+        out[f"ttm:{key}" if ttm else key] = t
+    return out
+
+
+def _ttm_topics(ledger: StatementLedger, ttm: TtmView) -> dict[str, dict[str, Any]]:
+    """G3b：ttm:values（TTM＝FY＋H1 本期−H1 去年同期）＋ ttm:<指標> ＋ ttm:bridge:<target>（工業）。"""
+    rows = []
+    for k, v in ttm.values.items():
+        src = "net_income_parent" if v.get("basis") == "parent" else k
+        rows.append({"key": k, "label": _row_label(ledger, src, k), "fy": v["fy"], "h1_current": v["h1_current"],
+                     "h1_prior": v["h1_prior"], "ttm": v["ttm"], "page": _row_page(ledger, src),
+                     "basis": v.get("basis")})
+    out = {"ttm:values": {
+        "kind": "ttm_values", "name": "近四季（TTM）損益", "formula": "TTM＝FY＋H1 本期−H1 去年同期",
+        "period_ttm": ttm.period_ttm, "period_fy": ttm.period_fy, "fy_page": ttm.source_page,
+        "scope": ttm.scope, "comparability_note": ttm.comparability_note, "rows": rows}}
+    out.update(_metric_topics(ledger, ttm.metrics, ("ttm", "fy"), ttm))
+    for b in ttm.bridges:
+        out[f"ttm:bridge:{b.target}"] = _bridge_topic(ledger, b, ttm)
+    return out
 
 
 GROSS_KEYS = ("revenue", "cogs", "gross_profit")
@@ -248,33 +298,43 @@ def _gross_topics(ledger: StatementLedger, mp) -> dict[str, dict[str, Any]]:
     return out
 
 
-def topic_pack(ledger: StatementLedger | None, group: str | None = None) -> dict[str, Any]:
-    """主題事實包：fcf_analysis（G1 事實包；金控不提供）＋ 指標 key ＋ bridge:<target>。ledger None → 不可答。"""
+_TTM_REASONS = {
+    "ledger_is_fy": "財報已是年度數，不需 TTM", "ledger_not_h1": "財報不是半年報",
+    "fy_income_missing": "年報找不到 FY 損益比較表", "fy_income_unusable": "年報 FY 損益表勾稽未通過",
+    "fy_year_mismatch": "年報年度與半年報去年同期年度不符", "unit_mismatch": "年報與財報金額單位不同",
+}
+
+
+def topic_pack(ledger: StatementLedger | None, group: str | None = None, *, fy_income: Any = None,
+               notes: Any = None, ttm_error: str | None = None) -> dict[str, Any]:
+    """主題事實包：fcf_analysis（G1 事實包；金控不提供）＋ 指標 key ＋ bridge:<target>；
+    fy_income（年報 FY 損益表）給定且 TTM 可用 → 另加 ttm:*；notes（金控附註）給定 → 附註三指標。ledger None → 不可答。"""
     if ledger is None:
         return {"answerable": False, "reason": "財報三表解析失敗（無帳本）"}
-    mp = compute_metrics(ledger, group=group)
+    mp = compute_metrics(ledger, fy_income, group=group, notes=notes)
     topics: dict[str, dict[str, Any]] = {}
     if group != "fh":
         f = fcf_facts(ledger)
         if f["answerable"]:
             topics[FCF_TOPIC] = {"kind": "fcf", "name": "自由現金流變動歸因與本期構成", "facts": f}
-    metric_names = {m.key: m.name for m in mp.metrics}
-    metric_units = {m.key: m.unit for m in mp.metrics}
-    for key in dict.fromkeys(m.key for m in mp.metrics):
-        cur, pri = (next(m for m in mp.metrics if m.key == key and m.period == p) for p in ("current", "prior"))
-        topics[key] = {
-            "kind": "metric", "name": cur.name, "formula": cur.formula, "unit": cur.unit,
-            "current": cur.value, "prior": pri.value, "delta": _delta(cur.value, pri.value),
-            "inputs": [{"key": k, "label": "期間天數" if k == "days" else _row_label(ledger, k, metric_names.get(k, k)),
-                        "unit": "天" if k == "days" else metric_units.get(k, "仟元"),
-                        "current": cur.inputs.get(k), "prior": pri.inputs.get(k), "page": _row_page(ledger, k)}
-                       for k in cur.inputs]}
+    topics.update(_metric_topics(ledger, mp.metrics))
     for b in mp.bridges:
         topics[f"bridge:{b.target}"] = _bridge_topic(ledger, b)
     if group != "fh":
         topics.update(_gross_topics(ledger, mp))
+    ttm = mp.ttm
+    if ttm is not None and ttm.status == "ok":
+        topics.update(_ttm_topics(ledger, ttm))
+        ttm_status, ttm_reason = "ok", ""
+    else:
+        ttm_status = "unavailable"
+        code = "ledger_is_fy" if ttm is None else ttm.reason
+        ttm_reason = f"年報讀取失敗：{ttm_error}" if ttm_error else f"{_TTM_REASONS.get(code, code)}（{code}）"
     return {"answerable": True, "unit": ledger.unit, "basis": ledger.basis, "assurance": ledger.assurance,
-            "periods": dict(ledger.periods), "ifrs17_break": bool(mp.ifrs17_break), "topics": topics}
+            "periods": dict(ledger.periods), "ifrs17_break": bool(mp.ifrs17_break),
+            "ttm_status": ttm_status, "ttm_reason": ttm_reason,
+            "ttm_period": None if ttm is None else ttm.period_ttm, "fy_period": None if ttm is None else ttm.period_fy,
+            "topics": topics}
 
 
 # ── 數字核對 ─────────────────────────────────────────────────────────────────
@@ -361,6 +421,10 @@ def _topic_values(t: dict[str, Any]) -> tuple[Levels, list[Delta]]:
             deltas += _dir("pct", None, None, c["value"])
             levels["pct"] += _vals(None if c["share"] is None else c["share"] * 100)
         _input_values(t["inputs"], levels, deltas)
+    elif t["kind"] == "ttm_values":  # 變動值＝TTM−FY（＝H1 本期−H1 去年同期）
+        for r in t["rows"]:
+            levels["amt"] += _vals(r["fy"], r["h1_current"], r["h1_prior"], r["ttm"])
+            deltas += _dir("amt", r["ttm"], r["fy"], _delta(r["ttm"], r["fy"]), component=True)
     else:
         levels["amt"] += _vals(t["current"], t["prior"], t["residual"])
         deltas += _dir("amt", t["current"], t["prior"], t["delta"])
@@ -462,17 +526,54 @@ def _page(p: int | None) -> str:
     return "" if p is None else f"，p.{p}"
 
 
+def _labels(t: dict[str, Any]) -> tuple[str, str]:
+    """→ (本期稱呼, 比較期稱呼)；TTM 主題為「近四季（TTM，迄 X）」對「FY Y 年度」。"""
+    if t.get("compare") == "ttm_vs_fy":
+        return f"近四季（TTM，迄 {t.get('period_ttm') or '—'}）", f"FY {t.get('period_fy') or '—'} 年度"
+    return "本期", "去年同期"
+
+
+def _source_text(src: dict[str, Any] | None) -> str:
+    if not src:
+        return "—"
+    if src.get("page") is None:
+        return f"未取得（{src.get('reason') or '未揭露'}）"
+    return (f"財報附註 p.{src['page']}（期間 {src.get('period') or '—'}、{src.get('entity') or '—'}"
+            + ("；非最新期" if src.get("stale") else "") + "）")
+
+
 def _render_metric(t: dict[str, Any]) -> list[str]:
     u = t["unit"]
+    a, b = _labels(t)
+    head = (f"■ {t['name']}：{a} {fmt_value(t['current'], u)}，{b} {fmt_value(t['prior'], u)}，"
+            f"變動 {fmt_delta(t['delta'], u)}")
+    if "source" in t:
+        return [head, f"  出處：{a} {_source_text(t['source']['current'])}；{b} {_source_text(t['source']['prior'])}"]
     ins = "、".join(f"{i['label']} {fmt_value(i['current'], i['unit'])}{_page(i['page'])}"
                    for i in t["inputs"])
-    return [f"■ {t['name']}：本期 {fmt_value(t['current'], u)}，去年同期 {fmt_value(t['prior'], u)}，"
-            f"變動 {fmt_delta(t['delta'], u)}",
-            f"  公式：{t['formula']}；本期輸入：{ins or '—'}"]
+    return [head, f"  公式：{t['formula']}；{a}輸入：{ins or '—'}"]
+
+
+def _render_ttm_values(t: dict[str, Any]) -> list[str]:
+    lines = [f"■ {t['name']}（迄 {t['period_ttm'] or '—'}）：{t['formula']}；FY {t['period_fy']} 年度數出自年報"
+             f"{_page(t['fy_page'])}，H1 數出自財報"]
+    for r in t["rows"]:
+        if r["ttm"] is None:
+            continue
+        note = "（歸屬母公司淨利）" if r.get("basis") == "parent" else ""
+        lines.append(f"  - {r['label']}{note}：TTM {fmt_value(r['ttm'], '仟元')}＝FY {fmt_value(r['fy'], '仟元')}"
+                     f"＋本期 {fmt_value(r['h1_current'], '仟元')}−去年同期 {fmt_value(r['h1_prior'], '仟元')}"
+                     f"{_page(r['page'])}；較 FY 變動 {fmt_value(_delta(r['ttm'], r['fy']), '仟元')}")
+    if t.get("scope") == "parent_only":
+        lines.append("  年報只有個體損益表，TTM 只算歸屬母公司淨利。")
+    if t.get("comparability_note"):
+        lines.append(f"  可比性：{t['comparability_note']}。")
+    return lines
 
 
 def _render_bridge(t: dict[str, Any]) -> list[str]:
-    lines = [f"■ {t['name']}：本期 {fmt_value(t['current'], '仟元')}，去年同期 {fmt_value(t['prior'], '仟元')}，"
+    a, b = _labels(t)
+    lines = [f"■ {t['name']}：{a} {fmt_value(t['current'], '仟元')}，{b} {fmt_value(t['prior'], '仟元')}，"
              f"變動 {fmt_value(t['delta'], '仟元')}{_page(t['page'])}"]
     comps = [c for c in t["components"] if c["delta"] is not None][:5]
     lines += [f"  - {c['label']}：變動 {fmt_value(c['delta'], '仟元')}，占 {_pct(c['share'])}%{_page(c['page'])}"
@@ -510,7 +611,8 @@ def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: st
         t = pack["topics"][k]
         lines += [""] + (_fcf_sections(t["facts"], company, source)
                          if t["kind"] == "fcf" else _render_metric(t) if t["kind"] == "metric"
-                         else _render_margin(t) if t["kind"] == "margin_bridge" else _render_bridge(t))
+                         else _render_margin(t) if t["kind"] == "margin_bridge"
+                         else _render_ttm_values(t) if t["kind"] == "ttm_values" else _render_bridge(t))
     per = pack["periods"]
     lines += ["", "期間與限制",
               f"  - 本期 {_period_text(per.get('flow_current'))}（資產負債表 {per.get('bs_current') or '—'}），"
@@ -520,6 +622,8 @@ def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: st
               f"  - 財報類型：{_ASSURANCE.get(pack['assurance'] or '', '未標示')}。",
               *(["  - 保險子公司適用 IFRS 17，去年同期為重編數，本期與去年同期的損益比較可能不一致。"]
                 if pack.get("ifrs17_break") else []),
+              *(["  - 近四季（TTM）＝年報 FY 年度數＋半年報本期−半年報去年同期；FY 為查核數、H1 為核閱數。"]
+                if any(k.startswith("ttm:") for k in known) else []),
               "", f"出處：{source or '財報 PDF'}"]
     return "\n".join(lines)
 
@@ -537,15 +641,61 @@ def _cache_only_ocr(path, pages):
     raise _OcrCacheMiss(f"pages={pages}")
 
 
-def load_ledger(fs_path: Path, group: str | None = None) -> StatementLedger | None:
-    """財報 PDF → 帳本（group=="fh" 走金控 schema）；有圖片頁或亂碼頁時改用 OCR 快取（未命中則沿用原文）。不打 API。"""
-    doc = pdf_doc.load_pdf(fs_path)
+def _load_doc(path: Path) -> pdf_doc.PdfDoc:
+    """有圖片頁或亂碼頁時改用 OCR 快取（未命中則沿用原文）。不打 API。"""
+    doc = pdf_doc.load_pdf(path)
     if doc.image_pages or doc.garbled_pages:
         try:
-            doc = pdf_doc.load_pdf(fs_path, ocr=_cache_only_ocr)
+            doc = pdf_doc.load_pdf(path, ocr=_cache_only_ocr)
         except _OcrCacheMiss:
             pass
+    return doc
+
+
+def load_ledger(fs_path: Path, group: str | None = None) -> StatementLedger | None:
+    """財報 PDF → 帳本（group=="fh" 走金控 schema）。"""
+    doc = _load_doc(fs_path)
     return extract_statements(doc, find_heading_sections(doc, FS_HEADING_ANCHORS, required=set()), group=group)
+
+
+def load_fy_income(ar_path: Path, roc_year: int, group: str | None = None) -> tuple[Any, str | None]:
+    """年報 PDF → (FyIncome 或 None, 錯誤)；任何例外 → (None, "<類型>: <訊息>")（G3b：問答照常、無 TTM 主題）。"""
+    from runtime.tw_equity.fy_income import extract_fy_income
+    try:
+        ar = _load_doc(ar_path)
+        anchors = find_annual_report_sections(ar, required=set(), **({"group": "fh"} if group == "fh" else {}))
+        return extract_fy_income(ar, anchors, roc_year=roc_year, group=group), None
+    except Exception as e:
+        return None, f"{type(e).__name__}: {e}"
+
+
+def load_fh_notes(fs_path: Path, ledger: StatementLedger | None) -> Any:
+    """金控財報附註（集團資本適足率、逾放比、覆蓋率）；bs_current 取法同 tables.extract_tables；例外 → 附註抽取失敗。"""
+    from runtime.tw_equity.fh_notes import CarResult, FhNotes, extract_fh_notes
+    bs_cur = None
+    if ledger is not None:
+        ci = ledger.current_col.get("bs")
+        cols = ledger.column_periods.get("bs") or []
+        bs_cur = cols[ci] if ci is not None and ci < len(cols) else None
+    try:
+        return extract_fh_notes(_load_doc(fs_path), bs_current_period=bs_cur)
+    except Exception:
+        return FhNotes(group_car=CarResult(value=None, reason="附註抽取失敗"), npl=None)
+
+
+def build_pack(base: Path, raw: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    """--llm 路徑的事實包：財報帳本＋年報 FY 損益表（TTM）＋金控附註 → (pack, 出處)。"""
+    fs_rel, ar_rel, group = raw["consolidated_fs_path"], raw.get("annual_report_path"), raw.get("group")
+    ledger = load_ledger(base / fs_rel, group=group)
+    fy, err = None, None
+    if ledger is not None and ledger.basis == "H1":  # 年度帳本不需 TTM，不讀年報
+        if not ar_rel or not raw.get("fiscal_year"):
+            err = "annual_report_path 或 fiscal_year 未設定"
+        else:
+            fy, err = load_fy_income(base / ar_rel, int(raw["fiscal_year"]) - 1911, group)
+    notes = load_fh_notes(base / fs_rel, ledger) if group == "fh" else None
+    pack = topic_pack(ledger, group, fy_income=fy, notes=notes, ttm_error=err)
+    return pack, fs_rel + (f"；年報 {ar_rel}" if ar_rel and pack.get("ttm_status") == "ok" else "")
 
 
 def answer(ticker: str, question: str, *, base_dir: Path | None = None,
@@ -558,12 +708,11 @@ def answer(ticker: str, question: str, *, base_dir: Path | None = None,
         fs_rel = raw.get("consolidated_fs_path")
         if not fs_rel:
             return f"{company} 無財報 PDF（consolidated_fs_path 未設定）。", None
-        group = raw.get("group")
-        pack = topic_pack(load_ledger(base / fs_rel, group=group), group)
+        pack, source = build_pack(base, raw)
         if not pack["answerable"]:
             return f"{company} 無法回答：{pack['reason']}", None
         from runtime.tw_equity.qa_llm import answer_llm  # qa_llm 引用本模組，函式內 import 避開循環
-        text, _meta = answer_llm(pack, question, company=company, source=fs_rel, llm=llm)
+        text, _meta = answer_llm(pack, question, company=company, source=source, llm=llm)
         return text, pack
     if not _FCF_Q_RE.search(question):
         return "G1 只支援 FCF 問題（問題需含「FCF」或「自由現金流」）。", None

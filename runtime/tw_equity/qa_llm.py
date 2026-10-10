@@ -55,16 +55,35 @@ def _fcf_view(f: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _compare(t: dict[str, Any]) -> dict[str, Any]:
+    """TTM 主題（G3b）：current＝近四季 TTM、prior＝FY 年度。"""
+    if t.get("compare") != "ttm_vs_fy":
+        return {}
+    return {"compare": f"current＝近四季 TTM（迄 {t.get('period_ttm')}），prior＝FY {t.get('period_fy')} 年度"}
+
+
 def _topic_view(t: dict[str, Any]) -> dict[str, Any]:
     if t["kind"] == "fcf":
         return _fcf_view(t["facts"])
     if t["kind"] == "metric":
         u = t["unit"]
-        return {"name": t["name"], "formula": t["formula"], "current": fmt_value(t["current"], u),
-                "prior": fmt_value(t["prior"], u), "delta": fmt_delta(t["delta"], u),
-                "inputs": [{"label": i["label"], "current": fmt_value(i["current"], i["unit"]),
-                            "prior": fmt_value(i["prior"], i["unit"]), "page": i["page"]}
-                           for i in t["inputs"]]}
+        v = {"name": t["name"], "formula": t["formula"], "current": fmt_value(t["current"], u),
+             "prior": fmt_value(t["prior"], u), "delta": fmt_delta(t["delta"], u), **_compare(t),
+             "inputs": [{"label": i["label"], "current": fmt_value(i["current"], i["unit"]),
+                         "prior": fmt_value(i["prior"], i["unit"]), "page": i["page"]}
+                        for i in t["inputs"]]}
+        if "source" in t:
+            v["source"] = t["source"]
+        return v
+    if t["kind"] == "ttm_values":
+        return {"name": t["name"], "formula": t["formula"], "period_ttm": t["period_ttm"],
+                "period_fy": t["period_fy"], "fy_page": t["fy_page"], "scope": t["scope"],
+                "comparability_note": t["comparability_note"],
+                "rows": [{"label": r["label"] + ("（歸屬母公司淨利）" if r.get("basis") == "parent" else ""),
+                          "ttm": _amt(r["ttm"]), "fy": _amt(r["fy"]), "h1_current": _amt(r["h1_current"]),
+                          "h1_prior": _amt(r["h1_prior"]),
+                          "ttm_minus_fy": _amt(None if r["ttm"] is None or r["fy"] is None else r["ttm"] - r["fy"]),
+                          "page": r["page"]} for r in t["rows"] if r["ttm"] is not None]}
     if t["kind"] == "margin_bridge":
         return {"name": t["name"], "formula": t["formula"], "current": fmt_value(t["current"], "%"),
                 "prior": fmt_value(t["prior"], "%"), "delta": fmt_delta(t["delta"], "%"),
@@ -73,7 +92,7 @@ def _topic_view(t: dict[str, Any]) -> dict[str, Any]:
                 "inputs": [{"label": i["label"], "current": _amt(i["current"]), "prior": _amt(i["prior"]),
                             "page": i["page"]} for i in t["inputs"]]}
     return {"name": t["name"], "current": _amt(t["current"]), "prior": _amt(t["prior"]),
-            "delta": _amt(t["delta"]), "page": t["page"], "residual": _amt(t["residual"]),
+            "delta": _amt(t["delta"]), **_compare(t), "page": t["page"], "residual": _amt(t["residual"]),
             "components": [{"label": c["label"], "current": _amt(c["current"]), "prior": _amt(c["prior"]),
                             "delta": _amt(c["delta"]), "share_of_delta": _share(c["share"]), "page": c["page"]}
                            for c in t["components"] if c["delta"] is not None]}
@@ -82,7 +101,9 @@ def _topic_view(t: dict[str, Any]) -> dict[str, Any]:
 def llm_inputs(pack: dict[str, Any], question: str, company: str) -> dict[str, Any]:
     catalog = [{"key": k, "name": t["name"]} for k, t in pack["topics"].items()]
     facts = {"context": {"periods": pack["periods"], "basis": pack["basis"], "assurance": pack["assurance"],
-                         "ifrs17_break": pack.get("ifrs17_break", False), "amount_unit": "億元"},
+                         "ifrs17_break": pack.get("ifrs17_break", False), "amount_unit": "億元",
+                         "ttm_status": pack.get("ttm_status"), "ttm_reason": pack.get("ttm_reason"),
+                         "ttm_period": pack.get("ttm_period"), "fy_period": pack.get("fy_period")},
              "topics": {k: _topic_view(t) for k, t in pack["topics"].items()}}
     return {"question": question, "company": company,
             "topics_catalog": json.dumps(catalog, ensure_ascii=False),

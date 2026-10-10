@@ -1,5 +1,5 @@
 ---
-skill_version: 1.1
+skill_version: 1.2
 last_modified: 2026-10-10
 ---
 
@@ -12,7 +12,7 @@ last_modified: 2026-10-10
 - `question`（必填）：使用者問題原文
 - `company`（必填）：公司代號與名稱
 - `topics_catalog`（必填）：可選主題清單 JSON（`key`、`name`）
-- `facts_json`（必填）：事實包 JSON。`context` 為期間、口徑（basis；`H1`＝半年報 1–6 月累計）、核閱／查核、`ifrs17_break`；`topics` 以主題 key 為索引。金額已換算為「億元」字串，比例已換算為「%」字串，每列附頁碼 `page`
+- `facts_json`（必填）：事實包 JSON。`context` 為期間、口徑（basis；`H1`＝半年報 1–6 月累計）、核閱／查核、`ifrs17_break`、`ttm_status`／`ttm_reason`（近四季 TTM 可不可用與原因）；`topics` 以主題 key 為索引。金額已換算為「億元」字串，比例已換算為「%」字串，每列附頁碼 `page`
 - `retry_hint`（選填）：上次輸出未通過檢查的原因（對不上的數字、不存在的主題）
 
 ## Instructions
@@ -20,6 +20,8 @@ last_modified: 2026-10-10
    - 問 FCF／自由現金流「多少」「影響最多」「為什麼變動」→ `fcf_analysis`（若清單有）
    - 問某項比率或金額 → 該指標 key；問「為什麼變動」「誰影響」→ 另加對應的 `bridge:<target>`（例如淨利 → `bridge:net_income`、營業利益 → `bridge:operating_income`）
    - 問毛利「為什麼變動」→ `bridge:gross_profit`（營收變動、成本變動）；問毛利率「為什麼上升／下降」→ `gross_margin` 加 `bridge:gross_margin`（營收變動效果、成本變動效果，單位百分點）
+   - 問「近四季」「TTM」「過去 12 個月」「最近一年」→ `ttm:values`（TTM＝FY 年度數＋H1 本期−H1 去年同期）、`ttm:<指標 key>`（current＝TTM、prior＝FY 年度）、`ttm:bridge:<target>`（TTM vs FY 的營業利益／淨利變動）。`context.ttm_status` 不是 `ok` 時沒有 `ttm:*` 主題，依步驟 2 回答無法回答，並寫出 `ttm_reason`
+   - 金控問集團資本適足率、逾放比、備抵呆帳覆蓋率 → `group_car`、`npl_ratio`、`coverage_ratio`。數字出自財報附註，引用時寫 `source` 的頁碼與銀行名；`stale` 為 true 時註明不是最新一期；值為「—」時寫出 `source.reason`
 2. 問題無法用清單內主題回答 → `supported` 填 false、`topics` 填 []，`answer` 用一句話說明無法回答與可回答的範圍，**不寫任何數字**。
 3. 寫答案（繁體中文）：
    - 第一句直接回答問題（結論）；其後列出依據，每個依據附頁碼（寫成 `p.N`）
@@ -30,6 +32,7 @@ last_modified: 2026-10-10
    - 程式核對認得的單位：億元、萬元、兆元、仟元、千元、百萬元、%、百分點（pp）、天、倍
    - basis 為 `H1` 時須註明：半年報只有 1–6 月累計數，「本季」「今年」皆以上半年累計回答；比率未年化
    - 註明核閱或查核；`ifrs17_break` 為 true 時註明去年同期為 IFRS 17 重編數，損益比較可能不一致
+   - 用 `ttm:*` 主題時，寫明 TTM 迄日與比較的 FY 年度，並註明 TTM 由年報 FY 數（查核）與半年報數（核閱）組成；`ttm:values` 有 `comparability_note` 時照寫
 4. 有 `retry_hint` 時，優先修正 hint 指出的問題。
 5. 語氣依 `agents/analyst_agent.md`：事實描述，不用評價詞。
 
