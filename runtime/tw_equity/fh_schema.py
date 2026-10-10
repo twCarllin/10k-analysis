@@ -66,7 +66,7 @@ _FH_BS_KEYS = _build({
     "equity_parent": ("歸屬於母公司業主之權益總計", "歸屬於母公司業主之權益合計", "歸屬於本公司業主之權益合計", "歸屬於本公司業主之權益總計"),
     "nci": ("非控制權益",),
     "total_equity": ("權益總計", "權益合計"),
-    "total_liabilities_and_equity": ("負債及權益總計", "負債及權益合計", "負債與權益總計", "負債與權益合計"),
+    "total_liabilities_and_equity": ("負債及權益總計", "負債及權益合計", "負債與權益總計", "負債與權益合計", "負債權益總計"),
     # Spec §2.2 未列、但 F3 2886 原文有、契約要求皆有對照者（最小必要集外新增）
     "current_tax_assets": ("本期所得稅資產",),
     "right_of_use_assets": ("使用權資產", "使用權資產-淨額"),
@@ -104,7 +104,7 @@ _FH_IS_KEYS = _build({
     "interest_income": ("利息收入",),
     "interest_expense": ("利息費用", "減：利息費用"),
     "net_interest_income": ("利息淨收益",),
-    "fee_income_net": ("手續費及佣金淨收益",),
+    "fee_income_net": ("手續費及佣金淨收益", "手續費淨收益"),
     "insurance_service_result": ("保險服務結果",),
     "fvtpl_gain": ("透過損益按公允價值衡量之金融資產及負債損益", "透過損益按公允價值衡量之金融資產及負債(損失)利益", "透過損益按公允價值衡量之金融資產及負債利益(損失)"),
     "fx_gain": ("兌換損益", "兌換(損失)利益", "兌換利益(損失)"),
@@ -150,6 +150,8 @@ _FH_IS_KEYS = _build({
     "advisory_income": ("顧問服務收入",),
     "misc_net_gain": ("其他什項淨損益", "其他什項淨利益(損失)"),
     "lottery_levy": ("彩券回饋金",),
+    "brokerage_income_net": ("證券經紀收入淨額",),
+    "net_income_continuing": ("繼續營業單位本期淨利",),
 })
 
 # ── CF：僅金控特有鍵；cfo／cfi／cff 等沿用鍵由 statements 與工業 CF 表合併 ─────
@@ -202,7 +204,7 @@ FH_NON_INTEREST_COMPONENT_KEYS: tuple[str, ...] = (
     "fvoci_realized_gain", "derecognition_gain", "fx_gain", "impairment_loss",
     "equity_method_share", "separate_account_result", "insurance_finance_result",
     "reinsurance_finance_result", "other_non_interest",
-    "npl_sale_gain", "advisory_income", "misc_net_gain", "lottery_levy",
+    "npl_sale_gain", "advisory_income", "misc_net_gain", "lottery_levy", "brokerage_income_net",
 )
 
 # 金控 TTM（Spec §6.5）：consolidated 的 key；parent_only 只算 net_income_parent

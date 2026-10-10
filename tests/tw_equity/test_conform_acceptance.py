@@ -243,5 +243,5 @@ def test_main_all70_prints_summary_line(tmp_path, monkeypatch, capsys) -> None:
     assert fs_acceptance.main(["--all70", "--out", str(out)]) == 0
     text = capsys.readouterr().out
     assert "1111 [None]: OK 22/22" in text and "2801 [bank]: ERROR no_statements" in text
-    assert text.strip().splitlines()[-1] == "SUMMARY conform=1/2 exceptions=0"
+    assert text.strip().splitlines()[-1] == "SUMMARY conform=1/2 known_limitations=0 exceptions=0"
     assert len(json.loads(out.read_text(encoding="utf-8"))) == 2

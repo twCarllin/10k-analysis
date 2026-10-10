@@ -155,8 +155,10 @@ _NOTE_UNIT = rf"[{_CN_NUM}]+(?:\.\d+|\([{_CN_NUM}]+\))*"
 _NOTE_PAREN = rf"\([{_CN_NUM}]+\)"
 _NOTE_SUFFIXED = rf"[{_CN_NUM}]+(?:\.\d+|\([{_CN_NUM}]+\))+"
 _NOTE_MORE = rf"(?:[及、](?:{_NOTE_UNIT}|{_NOTE_PAREN}))"
+_NOTE_DOT_ITEM = rf"[{_CN_NUM}]+、\d+"  # `六、1`（章、節以頓號分隔的阿拉伯數字附註，6139）
 _NOTE_RE = re.compile(
-    rf"^(?:(?:{_NOTE_PAREN}|{_NOTE_SUFFIXED}){_NOTE_MORE}*|{_NOTE_UNIT}{_NOTE_MORE}+)、?$"
+    rf"^(?:(?:{_NOTE_PAREN}|{_NOTE_SUFFIXED}){_NOTE_MORE}*|{_NOTE_UNIT}{_NOTE_MORE}+"
+    rf"|{_NOTE_DOT_ITEM}(?:及(?:{_NOTE_DOT_ITEM}|\d+))*)、?$"
 )
 # 續行開頭的「及七」「及七(二)」片段
 _NOTE_CONT_RE = re.compile(rf"^及[{_CN_NUM}]+(?:\([{_CN_NUM}]+\))*$")
@@ -175,7 +177,7 @@ _CN_DIGITS = "〇零一二三四五六七八九十"
 _END_ONLY_RE = re.compile(rf"^(?:附註)?至[\d{_CN_DIGITS}]+月")
 _HEADER_TOP_LINES = 5  # 頁首這幾列內且無金額者視為公司名／表名／日期／單位列
 # 會計代碼（F2）：`1100`、`130X`、`11XX`；CF 的 `A10000`、`AAAA`；與科目黏在一起的 `A21200利息收入`
-_CODE_STD_RE = re.compile(r"^[0-9][0-9Xx]{3}$")  # 含 `11xx`／`1xxx` 小寫 x 的合計列代碼
+_CODE_STD_RE = re.compile(r"^(?:[0-9][0-9Xx]{3}|[0-9]-[0-9][Xx]{3})$")  # 含 `11xx`／`1xxx` 小寫 x 的合計列代碼；另含區間合計代碼 `2-3XXX`（6139）
 _CODE_ALPHA_RE = re.compile(r"^(?:[A-Z]\d{4,5}|[A-Z]{4})$")
 _CODE_GLUE_RE = re.compile(r"^([A-Z]{1,4}\d{0,6}|\d{4})(?=[\u4e00-\u9fff])")
 _RIGHT_CODE_RE = re.compile(r"^[23][0-9Xx]{3}$")  # 並排頁右半（負債／權益）的代碼
@@ -244,7 +246,7 @@ def _build(spec: dict[str, tuple[str, ...]]) -> dict[str, str]:
 
 
 _BS_KEYS = _build({
-    "cash": ("現金及約當現金",),
+    "cash": ("現金及約當現金", "現金"),
     "fvtpl_current": ("透過損益按公允價值衡量之金融資產-流動",),
     "notes_receivable": ("應收票據淨額", "應收票據"),
     "accounts_receivable": ("應收帳款淨額", "應收帳款"),
@@ -309,6 +311,8 @@ _IS_KEYS = _build({
     "revenue": ("營業收入", "營業收入淨額"),
     "revenue_total": ("營業收入合計",),  # 含其他營業收入；毛利勾稽優先取此列
     "cogs": ("營業成本", "銷貨成本", "營業(成本)"),
+    "cogs_total": ("營業成本合計",),  # 含工程成本等；毛利勾稽優先取此列（1519、5871）
+    "ecl_operating": ("預期信用減損損失",),  # 營業費用之後、營業利益之前獨立列示者才計入營業利益勾稽（5871）
     "gross_profit": ("營業毛利", "營業毛利(損)"),
     "gross_profit_net": ("營業毛利淨額", "營業毛利(損)淨額", "已實現營業毛利", "已實現營業毛利淨額"),  # 扣除未實現銷貨損益後；營業利益由此起算
     "selling_expenses": ("推銷費用", "行銷費用", "推銷(費用)"),
@@ -324,7 +328,7 @@ _IS_KEYS = _build({
     "other_gains_losses": ("其他利益及損失",),
     "finance_costs": ("財務成本", "利息費用", "財務(成本)"),
     "equity_method_share": ("採用權益法認列之關聯企業及合資損益之份額",),
-    "nonoperating_total": ("營業外收入及支出合計", "營業外收入及(支出)合計"),
+    "nonoperating_total": ("營業外收入及支出合計", "營業外收入及支出淨額", "營業外收入及(支出)合計"),
     "pretax_income": (
         "稅前淨利", "稅前淨利(損)", "稅前淨利(淨損)", "繼續營業單位稅前淨利", "繼續營業部門稅前淨利",
     ),
@@ -346,6 +350,8 @@ _IS_KEYS = _build({
     "oci_nonreclass_total": ("不重分類至損益之項目總額",),
     "fx_translation_difference": ("國外營運機構財務報表換算之兌換差額",),
     "oci_reclass_total": ("後續可能重分類至損益之項目總額",),
+    "income_total": ("收入合計",),  # 單步式損益表（2207）：收入合計－支出合計＝稅前淨利
+    "expense_total": ("支出合計",),
     "eps_basic": ("基本每股盈餘",),
     "eps_diluted": ("稀釋每股盈餘",),
 })
@@ -353,6 +359,7 @@ _IS_KEYS = _build({
 _CF_KEYS = _build({
     "pretax_income_cf": (
         "本期稅前淨利", "稅前淨利", "本年度稅前淨利", "本期稅前淨利(損)", "本期稅前淨利(淨損)", "繼續營業單位稅前淨利",
+        "繼續營業單位稅前淨利(損)", "本期稅前淨(損)利",
     ),
     "fvtpl_gain_adj": ("透過損益按公允價值衡量之金融資產利益",),
     "ppe_disposal_loss_adj": ("處分不動產、廠房及設備之損失(利益)",),
@@ -420,10 +427,11 @@ _CF_KEYS = _build({
     "cff": (
         "籌資活動之淨現金流入(流出)", "籌資活動之淨現金流入", "籌資活動之淨現金流出",
         "籌資活動之淨現金流入(出)", "籌資活動之淨現金(流出)流入",
+        "籌資活動之淨現金流(出)入", "籌資活動之現金流出",
     ),
     "fx_effect": (
         "匯率變動對現金及約當現金影響數", "匯率變動對現金及約當現金之影響", "匯率影響數",
-        "匯率影響對現金及約當現金之影響", "匯率變動影響數",
+        "匯率影響對現金及約當現金之影響", "匯率變動影響數", "匯率變動對現金之影響",
     ),
     "net_change_in_cash": (
         "本期現金及約當現金增加(減少)數", "本期現金及約當現金增加數", "本期現金及約當現金減少數",
@@ -432,6 +440,7 @@ _CF_KEYS = _build({
         "現金及約當現金增加(減少)數", "本期現金及約當現金淨增加(減少)數",
         "本期現金及約當現金(減少)增加數", "現金及約當現金淨(減少)增加數",
         "本期現金及約當現金淨增加數", "現金及約當現金淨減少", "現金及約當現金增加", "現金及約當現金減少",
+        "本期現金及約當現金(減少)數", "本期現金及約當現金增(減)數", "本期現金及約當現金淨增加(減少)",
     ),
     "cash_beginning": ("期初現金及約當現金餘額", "年初現金及約當現金餘額"),
     "cash_ending": ("期末現金及約當現金餘額", "年底現金及約當現金餘額"),
@@ -457,7 +466,10 @@ _CONDITIONAL_IS_ALIASES: dict[str, tuple[str, frozenset[str]]] = {
         _norm_label(a): ("revenue", frozenset({"revenue", "revenue_total"}))
         for a in ("銷貨收入", "銷貨收入-淨額", "銷貨收入淨額")
     },
-    _norm_label("繼續營業單位本期淨利"): ("net_income", frozenset({"net_income"})),
+    **{
+        _norm_label(a): ("net_income", frozenset({"net_income"}))
+        for a in ("繼續營業單位本期淨利", "繼續營業單位本期淨利(損)")
+    },
 }
 
 
@@ -634,6 +646,17 @@ def _fh_reorder_two_line_periods(periods: list[str]) -> list[str]:
     return periods
 
 
+_AD_YEAR_RE = re.compile(r"(?<!\d)((?:19|20)\d{2})(?=\s*年|\.\d{1,2}\.\d)")
+_CN_AD_TITLE_RE = re.compile(r"二[○〇零][一二三四五六七八九〇○零]{2}年")
+
+
+def _ad_to_roc(raw: str) -> str:
+    """西元年欄名（`2026年6月30日`、`2026.6.30`、`西元2026 年…`）→ 民國年；「西元」改寫為「民國」（表題列同民國處理）。"""
+    nfkc = unicodedata.normalize("NFKC", raw)
+    out = _AD_YEAR_RE.sub(lambda m: str(int(m.group(1)) - 1911), nfkc)
+    return raw if out == nfkc else out.replace("西元", "民國")
+
+
 def detect_header(lines: list[str], fh: bool = False) -> StatementHeader:
     """單頁表頭偵測：掃頁首至第一個資料列（含千分位金額或 `$`）為止，最多 14 列。
 
@@ -646,9 +669,13 @@ def detect_header(lines: list[str], fh: bool = False) -> StatementHeader:
     all_text: list[str] = []
     end_dates: list[tuple[str, str]] = []
     for idx, raw in enumerate(lines[:_HEADER_ZONE_MAX]):
+        raw = _ad_to_roc(raw)
         cmp = _norm_label(raw)
         if _AMOUNT_RE.search(cmp) or "$" in cmp:
             break
+        if _CN_AD_TITLE_RE.search(cmp):  # 中文西元年表題（`二○二六年…`），同「民國」表題不當欄標題
+            skip.add(idx)
+            continue
         if fh and _DOT_DATE_LINE_RE.match(unicodedata.normalize("NFKC", raw).strip()):
             cmp = "|".join(unicodedata.normalize("NFKC", raw).split())
         all_text.append(cmp)
@@ -747,6 +774,7 @@ def _is_header(text: str, section_headers: frozenset[str]) -> bool:
         text in section_headers
         or text.rstrip(":") in section_headers
         or text.rstrip(":").endswith("歸屬於")
+        or text == "營業成本:"  # 只帶冒號者才是區段標題（5871）；`5000 營業成本(附註…` 跨行科目名不是（2301）
     )
 
 
@@ -999,6 +1027,28 @@ def _fragment_side(
     return other if is_frag and awaiting(streams[other]) and not awaiting(streams[s_i]) else s_i
 
 
+_NOTE_FRAGMENT_RE = re.compile(rf"[(]?(?:附註)?[{_CN_NUM}〇\d及、.()]+")  # 只含附註編號字元的殘片，如 `一)及(廿二))`
+
+
+def _reclaim_right_amounts(streams: list[list[tuple | None]], cur: tuple | None, prev_single: bool) -> None:
+    """並排 BS：本列左半是「無代碼的非空附註殘片＋金額」（左科目續行的金額），而左側上一筆是「帶代碼帶金額」、
+    且上一列只有左半 → 上一筆的金額其實屬右半（右科目續行或無名小計，2409）：金額移到右 stream，左筆改等金額。"""
+    if not prev_single or cur is None or cur[5] is None or cur[4] is not None:
+        return
+    lab = cur[2]
+    if not _NOTE_FRAGMENT_RE.fullmatch(lab) or (lab.count(")") <= lab.count("(") and "附註" not in lab):
+        return  # 只收非空附註殘片；空殘片＝左半無名小計（2382、2615）、一般科目名（如「(減：備抵…)」）不動
+    left = streams[0]
+    k = next((i for i in range(len(left) - 1, -1, -1) if left[i] is not None), None)
+    if k is None:
+        return
+    p = left[k]
+    if p[4] is None or p[5] is None:
+        return
+    left[k] = (p[0], p[1], p[2], p[3], p[4], None)
+    streams[1].append((p[0], p[1], "", "", None, p[5]))
+
+
 def _row_of(
     statement: str, section: str | None, label: str, note: str | None, page: int, idx: int,
     code: str | None, columns: list[float | None], pcts: list[float | None] | None,
@@ -1124,6 +1174,7 @@ def parse_statement_lines(
 
     # 預處理：每列 → 各 stream 的 entry；跳過列與期間列為 None（並排頁分左右兩條 stream）
     streams: list[list[tuple | None]] = [[], []] if side else [[]]
+    prev_single = False
     for page, idx, text in lines:
         cmp = _norm_label(_norm_line(text))
         skipped = _is_skip(cmp) or idx in headers[page].skip_idx
@@ -1148,6 +1199,9 @@ def parse_statement_lines(
         ]
         if side and not fh and len(ents) == 1:
             ents = [(_fragment_side(streams, *ents[0], section_headers), ents[0][1])]
+        if side and not fh and statement == "bs" and ents and ents[0][0] == 0:
+            _reclaim_right_amounts(streams, ents[0][1], prev_single)
+        prev_single = len(ents) == 1 and ents[0][0] == 0
         for s_i, entry in ents:
             streams[s_i].append(entry)
 
@@ -1169,14 +1223,25 @@ def parse_statement_lines(
             page, idx, label, note, code, cols = item
             if cols is None and not label and code is None:
                 continue  # 附註殘片 marker
+            nxt0 = parsed[i] if i < len(parsed) else None
+            frag_amt = (
+                not fh and code is not None and cols is None and _is_header(label, section_headers)
+                and nxt0 is not None and nxt0[5] is not None and nxt0[4] is None and nxt0[2].startswith("(")
+            )  # 帶代碼的標題列＋下一列為「`(` 開頭的附註殘片＋金額」→ 是科目不是區段標題（2618 `6000 營業費用(附註…` 斷行）
             if cols is None:
-                if _is_header(label, section_headers):
+                if _is_header(label, section_headers) and not frag_amt:
                     section = label if label in section_headers else label.rstrip(":")
                     heads.append(((page, idx), section))
                     continue
                 while i < len(parsed) and parsed[i] is not None and parsed[i][5] is None \
                         and not parsed[i][2] and parsed[i][4] is None:
                     note = note + parsed[i][3]  # 跨過附註殘片（科目附註斷成 ≥3 行）
+                    i += 1
+                while not fh and "(附註" in label and label.count("(") > label.count(")") \
+                        and i + 1 < len(parsed) and parsed[i] is not None and parsed[i][5] is None \
+                        and parsed[i][4] is None and parsed[i][2] and not _is_header(parsed[i][2], section_headers):
+                    label = label + parsed[i][2]  # 科目名後未閉合的 `(附註…`，續行仍是附註（2618 `營業成本(附註…、` 斷 3 行）
+                    note = note + parsed[i][3]
                     i += 1
                 nxt = parsed[i] if i < len(parsed) else None
                 if fh and code is not None:
@@ -1196,12 +1261,15 @@ def parse_statement_lines(
                         nxt = parsed[i]
                 if nxt is None or nxt[5] is None or nxt[4] is not None:
                     continue  # 尾列：下一列無金額（或自帶代碼＝另一筆）或不存在 → 丟棄
-                label = label + nxt[2]
-                note = note + nxt[3]
+                if frag_amt:
+                    note = note + nxt[2] + nxt[3]  # 殘片是附註，不併入科目名
+                else:
+                    label = label + nxt[2]
+                    note = note + nxt[3]
                 code = code or nxt[4]
                 cols = nxt[5]
                 i += 1
-            if fh and side and code is not None:
+            if fh and code is not None:
                 # 並排頁（僅 side）左半科目名換行後、續行落在金額之後（`12150 …金融資 <金額> ` ／下一列 `產(附註…`）：
                 # 下一筆無代碼無金額、且再下一筆不是「以它為前綴」的帶金額列 → 續行，併入科目名
                 nxt = parsed[i] if i < len(parsed) else None
@@ -1210,6 +1278,9 @@ def parse_statement_lines(
                     nxt is not None and nxt[4] is None and nxt[5] is None and nxt[2]
                     and not _is_header(nxt[2], section_headers)
                     and (nn is None or nn[4] is not None or nn[5] is None)
+                    # 非並排頁（2834 IS `49310 …已實 <金額>`／`現損益(附註…)`）：僅在「單獨對不到 key、併入後對得到 key」時併
+                    and (side or (statement == "is" and map_key(statement, _strip_note_parens(label, final=True), section, schema) is None
+                                  and map_key(statement, _strip_note_parens(label + nxt[2], final=True), section, schema) is not None))
                 ):
                     label = label + nxt[2]
                     i += 1
@@ -1235,12 +1306,18 @@ def parse_statement_lines(
         rows.extend(s_rows)
     if statement == "is" and not fh:
         _apply_conditional_aliases(rows)
+    if statement == "is" and fh and not any(r.key == "net_income" for r in rows):
+        for r in rows:  # 無「本期淨利」列（5876）→ 第一個繼續營業單位本期淨利即本期淨利
+            if r.key == "net_income_continuing":
+                r.key = "net_income"
+                break
     return rows, period[0], period[1]
 
 
 # ── 篩頁（Spec §2.2） ─────────────────────────────────────────────────────────
 
 
+_COL_DATES_RE = re.compile(r"^(?:\d{2,3}年\d{1,2}月\d{1,2}日){2,}$")
 _CONT_MARKS = ("(承前頁)", "(續前頁)", "(續)")
 
 
@@ -1291,6 +1368,7 @@ def statement_pages(doc: "PdfDoc", rng: "PageRange | None", title_kw: str) -> li
     if rng is None:
         return []
     out: list[int] = []
+    hdr0: set[str] = set()  # 首頁頁首的期間欄列（≥2 個日期）
     ccy0: set[str] = set()  # 首頁的幣別；同名報表有新台幣與美金兩份時，只收第一份
     for p in doc.pages:
         if not (rng.start <= p.number <= rng.end):
@@ -1302,9 +1380,12 @@ def statement_pages(doc: "PdfDoc", rng: "PageRange | None", title_kw: str) -> li
                 break
             if not out:
                 ccy0 = ccy
+                hdr0 = {x for x in map(_norm_label, p.lines[:8]) if _COL_DATES_RE.match(x)}
             out.append(p.number)
         elif out and _is_continuation(head, title_kw):
             out.append(p.number)
+        elif out and p.lines and _norm_label(p.lines[0]) in hdr0:
+            out.append(p.number)  # 無表名、無承前頁標記的續頁：首列＝首頁的期間欄列（2002 CF）
         elif out:
             break
     return out
@@ -1317,7 +1398,9 @@ _CHECK_TOLERANCE = 2  # 仟元
 
 # 費用項正負號慣例不一（3653 帶括號、2059 為正）：勾稽時一律視為減項（Spec §3）；row 原值不改號
 # 所得稅例外：label 含「利益」且原值為負＝稅利益，淨利勾稽改加（見 run_cross_checks.side）
-_EXPENSE_KEYS = frozenset({"cogs", "total_opex", "income_tax"})
+_EXPENSE_KEYS = frozenset({"cogs", "total_opex", "income_tax", "expense_total"})
+SINGLE_STEP_NA = frozenset({"is_gross_profit", "is_operating_income"})
+SINGLE_STEP_WARNING = "單步式損益表（收入合計／支出合計）：未列營業毛利、營業利益，is_gross_profit／is_operating_income 不適用"
 
 # 同 key 出現多列時取最後一列（先出現的是未扣除未實現損益／其他營業項目前的小計）
 _LAST_WINS_KEYS = frozenset({"gross_profit_net", "operating_income"})
@@ -1325,6 +1408,7 @@ _LAST_WINS_KEYS = frozenset({"gross_profit_net", "operating_income"})
 # 勾稽項目的候選 key（依序取第一個有列者）：毛利淨額（扣未實現銷貨損益）只作為營業利益的起點
 _KEY_CANDIDATES: dict[tuple[str, str], tuple[str, ...]] = {
     ("is_gross_profit", "revenue"): ("revenue_total", "revenue"),
+    ("is_gross_profit", "cogs"): ("cogs_total", "cogs"),
     ("is_gross_profit", "gross_profit"): ("gross_profit", "gross_profit_net"),
     ("is_operating_income", "gross_profit"): ("gross_profit_net", "gross_profit"),
     ("cf_ending_eq_bs_cash", "cash_ending"): ("cash_per_bs_in_cf", "cash_ending"),  # CF 內的現金調節列
@@ -1458,13 +1542,34 @@ def run_cross_checks(
     if other_op is not None and op_row is not None and rows.index(other_op) > rows.index(op_row):
         other_op = None
 
+    # 營業費用之後、營業利益之前獨立列示的預期信用減損損失（5871）＝營業項目，營業利益勾稽扣 |v|
+    ecl, opex_row = first.get("ecl_operating"), first.get("total_opex")
+    if ecl is not None and not (opex_row is not None and op_row is not None
+                                and rows.index(opex_row) < rows.index(ecl) < rows.index(op_row)):
+        ecl = None
+
+    # 單步式損益表（同表有收入合計與支出合計、無營業毛利與營業利益列）：稅前勾稽改用 收入合計−|支出合計|；毛利／營業利益不適用
+    single_step = (
+        "income_total" in first and "expense_total" in first
+        and not ({"gross_profit", "gross_profit_net", "operating_income"} & first.keys())
+    )
+    if single_step and warnings is not None:
+        warnings.append(SINGLE_STEP_WARNING)
     out: list[CrossCheck] = []
     for name, lhs_keys, rhs_keys in _CHECK_SPECS:
         for idx, period in enumerate(("current", "prior")):
+            if single_step and name in SINGLE_STEP_NA:
+                out.append(CrossCheck(name=name, period=period, lhs=None, rhs=None, passed=None))
+                continue
+            if single_step and name == "is_pretax":
+                lhs_keys = ("income_total", "expense_total")
             lhs, rhs = side(lhs_keys, idx, name), side(rhs_keys, idx, name)
             if name == "is_operating_income" and lhs is not None and other_op is not None:
                 v = other_op.current if idx == 0 else other_op.prior
                 lhs = None if v is None else lhs + v
+            if name == "is_operating_income" and lhs is not None and ecl is not None:
+                v = ecl.current if idx == 0 else ecl.prior
+                lhs = None if v is None else lhs - abs(v)
             if name == "cf_ending_eq_bs_cash" and idx == 1:
                 # 半年報 CF 前期欄的期末是去年同期末（114-06-30），BS prior 是上年度末：依 CF 前期欄的期末日取 BS 同日欄
                 cf_cols = (column_periods or {}).get("cf", [])

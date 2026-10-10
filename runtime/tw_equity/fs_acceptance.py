@@ -19,7 +19,7 @@ from pathlib import Path
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_heading_sections
 from runtime.tw_equity.inputs import load_inputs, uses_fh_schema
-from runtime.tw_equity.statements import extract_statements
+from runtime.tw_equity.statements import SINGLE_STEP_NA, SINGLE_STEP_WARNING, extract_statements
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _REPORT_DIR = _REPO_ROOT / "tw_report"
@@ -43,6 +43,10 @@ ACCEPTANCE_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset({
     ("2449", "is_net_income/prior"),
     ("2890", "is_net_income/current"),
 })
+
+
+# 已知限制（使用者 2026-10-10 裁示，Spec 2026-10-10-tw-equity-top100-conform §4）：不修，輸出標示，不計入符合數
+KNOWN_LIMITATIONS: frozenset[str] = frozenset({"6223", "1101", "3529"})
 
 
 class OcrCacheMiss(Exception):
@@ -110,17 +114,24 @@ def check_company(ticker: str, group: str | None, base_dir: Path) -> dict:
         return {**rec, "error": f"{type(e).__name__}: {e}"}
     if led is None:
         return {**rec, "error": "no_statements"}
-    return {**rec, **evaluate_checks(ticker, group, led.checks)}
+    return {**rec, **evaluate_checks(ticker, group, led.checks, led.parse_warnings)}
 
 
-def evaluate_checks(ticker: str, group: str | None, checks: list) -> dict:
-    """勾稽結果 → 驗收判定：項數須等於該 group 的期望數；扣除 ACCEPTANCE_EXCEPTIONS（ticker＋check 鍵）後無任何未通過。"""
+# 單步式損益表（parse_warnings 帶 SINGLE_STEP_WARNING）：這兩項勾稽算「不適用」，不算失敗（Spec 2026-10-10-tw-equity-top100-conform §3.1 I-12）
+SINGLE_STEP_NA_CHECKS = SINGLE_STEP_NA
+
+
+def evaluate_checks(ticker: str, group: str | None, checks: list, parse_warnings: list[str] | tuple = ()) -> dict:
+    """勾稽結果 → 驗收判定：項數須等於該 group 的期望數；扣除 ACCEPTANCE_EXCEPTIONS（ticker＋check 鍵）與單步式不適用項後無任何未通過。"""
     expected = EXPECTED_CHECKS["fh" if uses_fh_schema(group) else "industrial"]
-    bad = [f"{c.name}/{c.period}" for c in checks if c.passed is not True]
+    single_step = SINGLE_STEP_WARNING in parse_warnings
+    na = [f"{c.name}/{c.period}" for c in checks
+          if single_step and c.name in SINGLE_STEP_NA_CHECKS and c.passed is None]
+    bad = [f"{c.name}/{c.period}" for c in checks if c.passed is not True and f"{c.name}/{c.period}" not in na]
     excepted = [k for k in bad if (ticker, k) in ACCEPTANCE_EXCEPTIONS]
     rest = [k for k in bad if k not in excepted]
     return {"total": len(checks), "passed": sum(1 for c in checks if c.passed is True),
-            "excepted": excepted, "not_passed": rest,
+            "excepted": excepted, "not_applicable": na, "not_passed": rest,
             "conform": len(checks) == expected and not rest}
 
 
@@ -166,18 +177,20 @@ def main(argv: list[str] | None = None) -> int:
 def _main_all70(out: Path) -> int:
     recs = []
     for ticker, group in acceptance_tickers(_REPO_ROOT):
-        rec = check_company(ticker, group, _REPO_ROOT)
+        rec = {**check_company(ticker, group, _REPO_ROOT), "known_limitation": ticker in KNOWN_LIMITATIONS}
         recs.append(rec)
         if "error" in rec:
-            print(f"{ticker} [{group}]: ERROR {rec['error']}", flush=True)
+            print(f"{ticker} [{group}]: ERROR {rec['error']}" + (" known_limitation" if ticker in KNOWN_LIMITATIONS else ""), flush=True)
         else:
             print(f"{ticker} [{group}]: {'OK' if rec['conform'] else 'FAIL'} {rec['passed']}/{rec['total']}"
+                  + (" known_limitation" if ticker in KNOWN_LIMITATIONS else "")
                   + (f" excepted={','.join(rec['excepted'])}" if rec["excepted"] else "")
                   + (f" failed={','.join(rec['not_passed'])}" if rec["not_passed"] else ""), flush=True)
-    n_ok = sum(1 for r in recs if r.get("conform"))
+    n_known = sum(1 for r in recs if r["ticker"] in KNOWN_LIMITATIONS)
+    n_ok = sum(1 for r in recs if r.get("conform") and r["ticker"] not in KNOWN_LIMITATIONS)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(recs, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"SUMMARY conform={n_ok}/{len(recs)} exceptions={sum(len(r.get('excepted', [])) for r in recs)}")
+    print(f"SUMMARY conform={n_ok}/{len(recs)} known_limitations={n_known} exceptions={sum(len(r.get('excepted', [])) for r in recs)}")
     return 0
 
 
