@@ -443,12 +443,20 @@
       "share": 0.9382538931946237
      },
      {
-      "current": -19777.0,
-      "delta": -18138.0,
+      "current": -23435.0,
+      "delta": -17313.0,
+      "key": "amortized_cost_purchase",
+      "name": "取得按攤銷後成本衡量之金融資產",
+      "prior": -6122.0,
+      "share": 0.06938021463664852
+     },
+     {
+      "current": 4490.0,
+      "delta": -2225.0,
       "key": "other_investing_cf",
       "name": "其他投資活動項目",
-      "prior": -1639.0,
-      "share": 0.07268632432735696,
+      "prior": 6715.0,
+      "share": 0.00891647765069849,
       "synthetic": true
      },
      {
@@ -458,6 +466,14 @@
       "name": "購置無形資產",
       "prior": -4476.0,
       "share": -0.007020974761358992
+     },
+     {
+      "current": -832.0,
+      "delta": 1400.0,
+      "key": "refundable_deposits_increase",
+      "name": "存出保證金增加",
+      "prior": -2232.0,
+      "share": -0.005610367959990062
      },
      {
       "current": 1054.0,
@@ -476,8 +492,8 @@
     "target_prior": -254949.0,
     "top_drivers": [
      "capex",
-     "other_investing_cf",
-     "intangible_purchase"
+     "amortized_cost_purchase",
+     "other_investing_cf"
     ]
    },
    {
@@ -2056,6 +2072,47 @@
       "share": 1.0221118926296804
      },
      {
+      "current": -179820.0,
+      "delta": 2380092.0,
+      "key": "other_investing_cf",
+      "name": "其他投資活動項目",
+      "prior": -2559912.0,
+      "share": -0.2962706813526599,
+      "synthetic": true
+     },
+     {
+      "current": -1747192.0,
+      "delta": -2157422.0,
+      "key": "other_noncurrent_assets_increase",
+      "name": "其他非流動資產(增加)減少",
+      "prior": 410230.0,
+      "share": 0.2685530163981973
+     },
+     {
+      "current": -1005443.0,
+      "delta": -1005443.0,
+      "key": "fvoci_purchase",
+      "name": "取得透過其他綜合損益按公允價值衡量之金融資產",
+      "prior": 0.0,
+      "share": 0.1251562051682298
+     },
+     {
+      "current": 983231.0,
+      "delta": 983231.0,
+      "key": "held_for_sale_disposal_proceeds",
+      "name": "處分待出售非流動資產價款",
+      "prior": 0.0,
+      "share": -0.12239128499951142
+     },
+     {
+      "current": -762405.0,
+      "delta": -762405.0,
+      "key": "subsidiary_acquisition",
+      "name": "對子公司之收購(扣除所取得之現金)",
+      "prior": 0.0,
+      "share": 0.09490315870843424
+     },
+     {
       "current": -564395.0,
       "delta": 460376.0,
       "key": "intangible_purchase",
@@ -2064,13 +2121,12 @@
       "share": -0.05730699115765783
      },
      {
-      "current": -2506845.0,
-      "delta": -301292.0,
-      "key": "other_investing_cf",
-      "name": "其他投資活動項目",
-      "prior": -2205553.0,
-      "share": 0.03750442677262291,
-      "synthetic": true
+      "current": 185580.0,
+      "delta": 260549.0,
+      "key": "amortized_cost_proceeds",
+      "name": "按攤銷後成本衡量之金融資產減少(增加)",
+      "prior": -74969.0,
+      "share": -0.032432792411282496
      },
      {
       "current": 38154.0,
@@ -2087,6 +2143,22 @@
       "name": "處分透過其他綜合損益按公允價值衡量之金融資產",
       "prior": 0.0,
       "share": -0.00037331152467073836
+     },
+     {
+      "current": 20072.0,
+      "delta": 482.0,
+      "key": "ppe_government_grant",
+      "name": "取得政府補助收入-不動產、廠房及設備",
+      "prior": 19590.0,
+      "share": -5.999871786972187e-05
+     },
+     {
+      "current": -868.0,
+      "delta": -376.0,
+      "key": "equity_investment_purchase",
+      "name": "取得採用權益法之投資",
+      "prior": -492.0,
+      "share": 4.680397908509424e-05
      }
     ],
     "name": "投資現金流變動",
@@ -2097,8 +2169,8 @@
     "target_prior": -22248950.0,
     "top_drivers": [
      "capex",
-     "intangible_purchase",
-     "other_investing_cf"
+     "other_investing_cf",
+     "other_noncurrent_assets_increase"
     ]
    },
    {

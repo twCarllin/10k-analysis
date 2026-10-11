@@ -6,5 +6,7 @@
   "annual_report_path": "tw_report/2383_2025年報.pdf",
   "consolidated_fs_path": "tw_report/2383_2026Q2財報.pdf",
   "fs_period": "2026H1",
-  "parent_fs_path": null
+  "parent_fs_path": null,
+  "fy_consolidated_fs_path": "tw_report/2383_2025Q4合併財報.pdf",
+  "fy_fs_period": "FY2025"
 }

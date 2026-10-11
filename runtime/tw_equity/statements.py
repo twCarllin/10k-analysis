@@ -390,10 +390,41 @@ _CF_KEYS = _build({
     "bond_buyback_gain": ("買回公司債利益",),
     "change_net_defined_benefit": ("淨確定福利負債-非流動",),
     "fvtpl_purchase": ("取得透過損益按公允價值衡量之金融資產",),
-    "fvtpl_disposal_proceeds": ("處分透過損益按公允價值衡量之金融資產",),
-    "fvoci_disposal_proceeds": ("處分透過其他綜合損益按公允價值衡量之金融資產",),
-    "change_refundable_deposits": ("存出保證金減少(增加)",),
-    "other_noncurrent_assets_increase": ("其他非流動資產增加",),
+    "fvtpl_disposal_proceeds": ("處分透過損益按公允價值衡量之金融資產", "處分透過損益按公允價值衡量之金融資產價款"),
+    "fvoci_disposal_proceeds": ("處分透過其他綜合損益按公允價值衡量之金融資產", "處分透過其他綜合損益按公允價值衡量之金融資產價款"),
+    "fvoci_purchase": ("取得透過其他綜合損益按公允價值衡量之金融資產",),
+    "fvoci_capital_return": ("透過其他綜合損益按公允價值衡量之金融資產減資退回股款",),
+    # 2303 同表有「存出保證金增加」「存出保證金減少」兩列 → 分兩個 key，否則第二列被合成項吸收
+    "change_refundable_deposits": ("存出保證金減少(增加)", "存出保證金(增加)減少", "存出保證金減少", "存出保證金"),
+    "refundable_deposits_increase": ("存出保證金增加",),
+    "amortized_cost_purchase": (
+        "取得按攤銷後成本衡量之金融資產", "取得按攤銷後成本衡量之金融資產-非流動", "按攤銷後成本衡量之金融資產增加",
+        "取得按攤銷後成本衡量之金融資產-流動淨額",
+        "款取得按攤銷後成本衡量之金融資產",  # 2303：PDF 斷行殘字
+    ),
+    "amortized_cost_proceeds": (
+        "按攤銷後成本衡量之金融資產到期還本", "按攤銷後成本衡量之金融資產領回", "按攤銷後成本衡量之金融資產減少",
+        "按攤銷後成本衡量之金融資產減少(增加)", "處分按攤銷後成本衡量之金融資產-流動淨額",
+    ),
+    "equity_investment_purchase": ("取得採用權益法之投資",),
+    "equity_investment_disposal_proceeds": ("處分採用權益法之投資", "處分採用權益法之投資價款"),
+    "equity_investment_capital_return": (
+        "採用權益法之投資減資退回股款", "採用權益法之被投資公司減資退回股款", "採用權益法之投資退回股款",
+        "採用權益法之被投資公司減資退回股款(含清算股利)",
+    ),
+    "subsidiary_acquisition": (
+        "對子公司之收購(扣除所取得之現金)", "取得對子公司之收購(扣除所取得之現金)", "對子公司之收購", "取得子公司之淨現金流入",
+        "取得子公司之淨現金流入(流出)",
+    ),
+    "investment_property_purchase": ("取得投資性不動產",),
+    "rou_asset_purchase": ("取得使用權資產",),
+    "ppe_government_grant": (
+        "收取政府補助款-不動產、廠房及設備", "與資產取得相關之政府補助款", "取得政府補助收入-不動產、廠房及設備",
+    ),
+    "held_for_sale_disposal_proceeds": ("處分待出售非流動資產價款",),
+    "other_financial_assets_increase": ("其他金融資產增加",),
+    "other_financial_assets_decrease": ("其他金融資產減少",),
+    "other_noncurrent_assets_increase": ("其他非流動資產增加", "其他非流動資產(增加)減少"),
     "guarantee_deposits_received_increase": ("存入保證金增加",),
     "dividends_paid_to_nci": ("子公司發放予非控制權益之現金股利",),
     "employee_stock_option_exercised": ("員工執行認股權",),
@@ -424,9 +455,13 @@ _CF_KEYS = _build({
     "cfo": (
         "營業活動之淨現金流入", "營業活動之淨現金流入(流出)", "營業活動之淨現金流出",
         "營業活動之淨現金流入(出)", "營業活動之淨現金流(出)入", "營業活動之淨現金(流出)流入", "營運活動之淨現金(流出)流入",
+        "營運活動之淨現金流入",
     ),
-    "capex": ("取得不動產、廠房及設備", "購置不動產、廠房及設備", "取得不動產、廠房及設備:支付之成本"),
-    "ppe_disposal_proceeds": ("處分不動產、廠房及設備價款",),
+    "capex": (
+        "取得不動產、廠房及設備", "購置不動產、廠房及設備", "取得不動產、廠房及設備:支付之成本",
+        "取得不動產、廠房及設備與投資性不動產",  # 3037 全年財報：合併一列
+    ),
+    "ppe_disposal_proceeds": ("處分不動產、廠房及設備價款", "處分不動產、廠房及設備"),
     "intangible_purchase": ("購置無形資產", "取得無形資產"),
     "prepaid_equipment_increase": ("預付設備款增加",),
     "dividends_received": ("收取之股利",),
