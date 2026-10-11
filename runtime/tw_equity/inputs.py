@@ -41,6 +41,8 @@ class TwEquityInputs:
     parent_fs_path: Path | None
     prior: PriorYearInputs | None = None
     group: str | None = None  # 公司類別（"fh" 金控、"bank" 銀行；兩者同走 fh schema）；缺 → None（工業流程）
+    fy_consolidated_fs_path: Path | None = None  # 選填：全年合併財報 PDF（問答依問題用詞選用；批次與驗收不讀）
+    fy_fs_period: str | None = None  # 選填：全年財報期間標籤（如 "FY2025"）
 
     @property
     def roc_year(self) -> int:
@@ -127,6 +129,14 @@ def load_inputs(ticker: str, *, base_dir: Path | None = None) -> TwEquityInputs:
 
     consolidated_fs_path = _optional_path("consolidated_fs_path")
     parent_fs_path = _optional_path("parent_fs_path")
+    # 全年財報是選用功能（問答專用；批次與驗收不讀）：檔案不在時視為沒有全年財報，不拖垮主流程
+    fy_raw = data.get("fy_consolidated_fs_path")
+    if fy_raw is not None and not isinstance(fy_raw, str):
+        raise ValueError("fy_consolidated_fs_path 型別錯誤（應為字串路徑）")
+    fy_consolidated_fs_path = _resolve(fy_raw) if fy_raw is not None and _resolve(fy_raw).exists() else None
+    fy_fs_period = data.get("fy_fs_period")
+    if fy_fs_period is not None and not isinstance(fy_fs_period, str):
+        raise ValueError("fy_fs_period 型別錯誤（應為字串，例如 \"FY2025\"）")
 
     prior = _load_prior(data.get("prior"), fiscal_year, _resolve, _optional_path)
 
@@ -139,6 +149,8 @@ def load_inputs(ticker: str, *, base_dir: Path | None = None) -> TwEquityInputs:
         parent_fs_path=parent_fs_path,
         prior=prior,
         group=data.get("group"),
+        fy_consolidated_fs_path=fy_consolidated_fs_path,
+        fy_fs_period=fy_fs_period,
     )
 
 

@@ -20,7 +20,7 @@ from typing import Any
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_annual_report_sections, find_heading_sections
 from runtime.tw_equity.inputs import uses_fh_schema
-from runtime.tw_equity.metrics import TtmView, _build_bridge, _label_of, _value, compute_metrics
+from runtime.tw_equity.metrics import BRIDGE_SPECS, TtmView, _build_bridge, _label_of, _value, compute_metrics
 from runtime.tw_equity.statements import StatementLedger, StatementRow, extract_statements
 
 _YI = 100_000  # 仟元 → 億元
@@ -155,20 +155,23 @@ def _updown(v: float) -> str:
     return "增加" if v >= 0 else "減少"
 
 
-def _capex_text(x: dict[str, Any]) -> str | None:
-    """資本支出（兩期皆負）→「本期支出 X、去年同期支出 Y，支出增加（減少）Z 億，使 FCF 減少（增加）Z 億」；否則 None。"""
+def _capex_text(x: dict[str, Any], target: str = "FCF", keys: tuple[str, ...] = ("capex",)) -> str | None:
+    """資本支出（兩期皆負）→「本期支出 X、去年同期支出 Y，支出增加（減少）Z 億，使 FCF 減少（增加）Z 億」；否則 None。
+    bridge 答案傳 target＝bridge 名稱去掉「變動」、keys 加無形資產（cf-bridge Spec §2.2）；FCF 答案用預設值。"""
     cur, pri = x.get("current"), x.get("prior")
-    if x.get("key") != "capex" or cur is None or pri is None or cur > 0 or pri > 0:
+    if x.get("key") not in keys or cur is None or pri is None or cur > 0 or pri > 0:
         return None
     d = abs(cur) - abs(pri)
+    sp = " " if target.isascii() else ""  # 英文縮寫（FCF）前後留空白，中文目標不留
     if d == 0:
-        return f"本期支出 {_yi(abs(cur))}、去年同期支出 {_yi(abs(pri))}，支出不變，對 FCF 無影響"
+        return f"本期支出 {_yi(abs(cur))}、去年同期支出 {_yi(abs(pri))}，支出不變，對{sp}{target}{sp}無影響"
     up = d > 0
     return (f"本期支出 {_yi(abs(cur))}、去年同期支出 {_yi(abs(pri))}，支出{'增加' if up else '減少'} {_yi(abs(d))} 億，"
-            f"使 FCF {'減少' if up else '增加'} {_yi(abs(d))} 億")
+            f"使{sp}{target}{sp}{'減少' if up else '增加'} {_yi(abs(d))} 億")
 
 
-def render_fcf_answer(facts: dict[str, Any], *, company: str = "", source: str = "") -> str:
+def render_fcf_answer(facts: dict[str, Any], *, company: str = "", source: str = "",
+                      period_notes: list[str] | None = None) -> str:
     if not facts.get("answerable"):
         return f"{company} 無法回答 FCF 問題：{facts.get('reason')}"
     f, l1 = facts["fcf"], facts["level1"]
@@ -209,6 +212,8 @@ def render_fcf_answer(facts: dict[str, Any], *, company: str = "", source: str =
     lines += ["", "三、期間與限制",
               "  - 半年報的現金流量表只有 1–6 月累計數，沒有單季數；「本季」「今年」都以上半年累計回答。"
               if facts["basis"] == "H1" else f"  - 期間口徑：{facts['basis']}。",
+              *([f"  - 本期 {cur_p}，去年同期 {pri_p}。"] if period_notes else []),
+              *[f"  - {n}" for n in period_notes or []],
               f"  - 財報類型：{_ASSURANCE.get(facts['assurance'] or '', '未標示')}。",
               "  - FCF＝營業活動之淨現金流＋取得不動產、廠房及設備（負值）；未含無形資產、使用權資產與租賃本金。",
               f"  - CFO 歸因殘差 {_yi(facts['residual'])} 億元（未歸入任何列的差額）。",
@@ -235,7 +240,8 @@ def _bridge_topic(ledger: StatementLedger, b, ttm: TtmView | None = None) -> dic
     t = {"kind": "bridge", "name": b.name, "current": b.target_current, "prior": b.target_prior,
          "delta": b.target_delta, "residual": b.residual, "page": page(b.target),
          "components": [{"key": c.key, "label": c.name, "current": c.current, "prior": c.prior,
-                         "delta": c.delta, "share": c.share, "page": page(c.key),
+                         "delta": c.delta, "share": c.share,
+                         "page": None if ttm else (getattr(c, "page", None) or page(c.key)),
                          **({"synthetic": True} if c.synthetic else {})}
                         for c in b.components]}
     if ttm:
@@ -610,14 +616,19 @@ def _cost_text(c: dict[str, Any], target: str) -> str | None:
     return f"費用{'增加' if up else '減少'} {z} 億，使{target}{'減少' if up else '增加'} {z} 億"
 
 
+_CF_BRIDGE_NAMES = frozenset(s.name for s in BRIDGE_SPECS if s.target in ("fcf", "cfo", "cfi", "cff", "net_change_in_cash"))
+
+
 def _render_bridge(t: dict[str, Any]) -> list[str]:
     a, b = _labels(t)
     target = t["name"].removesuffix("變動")
+    effect = "對現金的影響" if t["name"] in _CF_BRIDGE_NAMES else "變動"  # 現金流量表項目是帶號的現金影響數
     lines = [f"■ {t['name']}：{a} {fmt_value(t['current'], '仟元')}，{b} {fmt_value(t['prior'], '仟元')}，"
              f"變動 {fmt_value(t['delta'], '仟元')}{_page(t['page'])}"]
     comps = [c for c in t["components"] if c["delta"] is not None][:5]
     for c in comps:
-        body = _cost_text(c, target) or f"變動 {fmt_value(c['delta'], '仟元')}"
+        body = (_cost_text(c, target) or _capex_text(c, target, ("capex", "intangible_purchase"))
+                or f"{effect} {fmt_value(c['delta'], '仟元')}")
         lines.append(f"  - {c['label']}：{body}，占 {_pct(c['share'])}%{_page(c['page'])}")
     if t["residual"] is not None and abs(t["residual"]) >= 500:  # 四捨五入到 0.01 億仍非 0
         lines.append(f"  未歸類項目 {_yi(abs(t['residual']))} 億（未歸入組成項的差額）")
@@ -643,11 +654,13 @@ def _fcf_sections(facts: dict[str, Any], company: str, source: str) -> list[str]
 
 
 def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: str = "", source: str = "") -> str:
+    notes = pack.get("period_notes") or []
     if not pack.get("answerable"):
         return f"{company} 無法回答：{pack.get('reason')}"
     known = [k for k in topics if k in pack["topics"]]
     if known == [FCF_TOPIC]:
-        return render_fcf_answer(pack["topics"][FCF_TOPIC]["facts"], company=company, source=source)
+        return render_fcf_answer(pack["topics"][FCF_TOPIC]["facts"], company=company, source=source,
+                                 period_notes=notes)
     lines = [f"【{company}】"]
     for k in known:
         t = pack["topics"][k]
@@ -661,6 +674,7 @@ def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: st
               f"去年同期 {_period_text(per.get('flow_prior'))}。",
               "  - 半年報只有 1–6 月累計數，沒有單季數；比率為上半年數或期末數，未年化。"
               if pack["basis"] == "H1" else f"  - 期間口徑：{pack['basis']}。",
+              *[f"  - {n}" for n in notes],
               f"  - 財報類型：{_ASSURANCE.get(pack['assurance'] or '', '未標示')}。",
               *(["  - 保險子公司適用 IFRS 17，去年同期為重編數，本期與去年同期的損益比較可能不一致。"]
                 if pack.get("ifrs17_break") else []),
@@ -673,6 +687,53 @@ def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: st
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 _FCF_Q_RE = re.compile(r"FCF|自由現金流", re.IGNORECASE)
+
+
+_QUARTER_RE = re.compile(r"第[一二三四]季|Q[1-4]|單季|季度", re.IGNORECASE)  # 單季用詞（答案加「沒有單季財報」說明）
+_HALF_RE = re.compile(r"半年|上半|下半|H1|H2|第[一二三四]季|Q[1-4]|季度|單季", re.IGNORECASE)  # 年度內子期間（半年、單季）→ 不選全年帳本
+
+
+def _fy_term_re(fy_year: int) -> re.Pattern[str]:
+    """年度用詞：完整的西元年、民國年＋「年」、全年、整年、年度（前面不是「半」「上」「下」「今」「本」）。"""
+    return re.compile(rf"(?<!\d){fy_year}(?!\d)|(?<!\d){fy_year - 1911}\s*年|全年|整年|(?<![半上下今本])年度")
+
+
+def select_period(question: str, has_fy: bool, period_arg: str = "auto", fy_year: int = 2025) -> tuple[str, bool]:
+    """問答選期間 → ("fy" | "h1", 是否要加「沒有全年財報」說明)。
+    period_arg＝fy／h1 直接指定（fy 但沒有全年財報 → h1＋說明）；auto：問題含年度用詞（且不含半年用詞）才選全年。
+    「去年」「今年」「半年度」「上半年度」不算年度用詞。"""
+    if period_arg == "h1":
+        return "h1", False
+    wants_fy = period_arg == "fy" or (bool(_fy_term_re(fy_year).search(question)) and not _HALF_RE.search(question))
+    if not wants_fy:
+        return "h1", False
+    return ("fy", False) if has_fy else ("h1", True)
+
+
+def _year_of(label: str | None, default: int | None) -> int | None:
+    m = re.search(r"(?<!\d)(\d{4})(?!\d)", label or "")
+    return int(m.group(1)) if m else default
+
+
+def _period_choice(raw: dict[str, Any], question: str, period_arg: str,
+                   base: Path | None = None) -> tuple[str, list[str]]:
+    """→ ("fy"|"h1", 期間說明句)。fy＝全年財報（不做 TTM）；說明句寫在答案的「期間與限制」。
+    全年財報欄位有值但檔案不在 → 視為沒有全年財報（與 inputs.load_inputs 一致）。"""
+    fy_year = _year_of(raw.get("fy_fs_period"), raw.get("fiscal_year")) or 2025
+    fy_rel = raw.get("fy_consolidated_fs_path")
+    has_fy = bool(fy_rel) and ((base or Path(".")) / fy_rel).exists()
+    period, missing = select_period(question, has_fy, period_arg, fy_year)
+    if missing:
+        h1_year = _year_of(raw.get("fs_period"), None)
+        return period, [f"沒有 {fy_year} 全年財報，以下為 {h1_year} 上半年" if h1_year
+                        else f"沒有 {fy_year} 全年財報，以下為上半年"]
+    if period == "fy":
+        return period, [f"本答案使用 {fy_year} 全年財報（{raw.get('fy_fs_period') or 'FY'}），"
+                        "全年數不做近四季（TTM）換算。"]
+    if _QUARTER_RE.search(question):  # 問單季（第一～四季、Q1～Q4、單季）：只有半年累計數，說明清楚
+        h1_year = _year_of(raw.get("fs_period"), None)
+        return period, [f"沒有單季財報，以下為 {h1_year} 上半年累計數" if h1_year else "沒有單季財報，以下為上半年累計數"]
+    return period, []
 
 
 class _OcrCacheMiss(Exception):
@@ -725,9 +786,12 @@ def load_fh_notes(fs_path: Path, ledger: StatementLedger | None) -> Any:
         return FhNotes(group_car=CarResult(value=None, reason="附註抽取失敗"), npl=None)
 
 
-def build_pack(base: Path, raw: dict[str, Any]) -> tuple[dict[str, Any], str]:
-    """--llm 路徑的事實包：財報帳本＋年報 FY 損益表（TTM）＋金控附註 → (pack, 出處)。"""
-    fs_rel, ar_rel, group = raw["consolidated_fs_path"], raw.get("annual_report_path"), raw.get("group")
+def build_pack(base: Path, raw: dict[str, Any], question: str = "", period_arg: str = "auto") -> tuple[dict[str, Any], str]:
+    """--llm 路徑的事實包：財報帳本＋年報 FY 損益表（TTM）＋金控附註 → (pack, 出處)。
+    期間依 select_period 選（全年財報或半年報）；全年帳本 basis 不是 H1，不讀年報做 TTM。"""
+    period, notes = _period_choice(raw, question, period_arg, base)
+    fs_rel = raw["fy_consolidated_fs_path"] if period == "fy" else raw["consolidated_fs_path"]
+    ar_rel, group = raw.get("annual_report_path"), raw.get("group")
     ledger = load_ledger(base / fs_rel, group=group)
     fy, err = None, None
     if ledger is not None and ledger.basis == "H1":  # 年度帳本不需 TTM，不讀年報
@@ -735,13 +799,15 @@ def build_pack(base: Path, raw: dict[str, Any]) -> tuple[dict[str, Any], str]:
             err = "annual_report_path 或 fiscal_year 未設定"
         else:
             fy, err = load_fy_income(base / ar_rel, int(raw["fiscal_year"]) - 1911, group)
-    notes = load_fh_notes(base / fs_rel, ledger) if uses_fh_schema(group) else None
-    pack = topic_pack(ledger, group, fy_income=fy, notes=notes, ttm_error=err)
+    fh_notes = load_fh_notes(base / fs_rel, ledger) if uses_fh_schema(group) else None
+    pack = topic_pack(ledger, group, fy_income=fy, notes=fh_notes, ttm_error=err)
+    if notes:
+        pack["period_notes"] = notes
     return pack, fs_rel + (f"；年報 {ar_rel}" if ar_rel and pack.get("ttm_status") == "ok" else "")
 
 
 def answer(ticker: str, question: str, *, base_dir: Path | None = None,
-           use_llm: bool = False, llm: Any = None) -> tuple[str, dict[str, Any] | None]:
+           use_llm: bool = False, llm: Any = None, period: str = "auto") -> tuple[str, dict[str, Any] | None]:
     """→ (答案文字, 事實包或 None)。use_llm=False：G1 FCF 模板；True：G2 主題事實包＋LLM（qa_llm）。"""
     base = Path(".") if base_dir is None else base_dir
     raw = json.loads((base / "tw_equity_inputs" / f"{ticker}.json").read_text(encoding="utf-8"))
@@ -750,7 +816,7 @@ def answer(ticker: str, question: str, *, base_dir: Path | None = None,
         fs_rel = raw.get("consolidated_fs_path")
         if not fs_rel:
             return f"{company} 無財報 PDF（consolidated_fs_path 未設定）。", None
-        pack, source = build_pack(base, raw)
+        pack, source = build_pack(base, raw, question, period)
         if not pack["answerable"]:
             return f"{company} 無法回答：{pack['reason']}", None
         from runtime.tw_equity.qa_llm import answer_llm  # qa_llm 引用本模組，函式內 import 避開循環
@@ -764,8 +830,11 @@ def answer(ticker: str, question: str, *, base_dir: Path | None = None,
     fs_rel = raw.get("consolidated_fs_path")
     if not fs_rel:
         return f"{company} 無財報 PDF（consolidated_fs_path 未設定）。", None
+    chosen, notes = _period_choice(raw, question, period, base)
+    if chosen == "fy":
+        fs_rel = raw["fy_consolidated_fs_path"]
     facts = fcf_facts(load_ledger(base / fs_rel))
-    return render_fcf_answer(facts, company=company, source=fs_rel), facts
+    return render_fcf_answer(facts, company=company, source=fs_rel, period_notes=notes), facts
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -774,8 +843,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--ask", required=True)
     ap.add_argument("--json", action="store_true", help="另輸出事實包 JSON")
     ap.add_argument("--llm", action="store_true", help="以 LLM（config.json provider）對應問題並寫答案；程式核對數字")
+    ap.add_argument("--period", choices=("auto", "h1", "fy"), default="auto",
+                    help="期間：auto 依問題用詞（年度用詞且有全年財報 → fy，否則 h1）；h1 半年報；fy 全年財報")
     args = ap.parse_args(argv)
-    text, facts = answer(args.ticker, args.ask, use_llm=args.llm)
+    text, facts = answer(args.ticker, args.ask, use_llm=args.llm, period=args.period)
     print(text)
     if facts is not None:
         if not args.llm:

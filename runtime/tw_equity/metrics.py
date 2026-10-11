@@ -6,12 +6,13 @@
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from runtime.tw_equity.fy_income import FyIncome, normalize_sign
 from runtime.tw_equity.fh_schema import FH_NON_INTEREST_COMPONENT_KEYS, FH_TTM_KEYS
-from runtime.tw_equity.statements import StatementLedger, _norm_label
+from runtime.tw_equity.statements import StatementLedger, StatementRow, _norm_label
 
 _Vals = dict[str, float]
 
@@ -67,6 +68,7 @@ class BridgeComponent:
     delta: float | None
     share: float | None
     synthetic: bool = False  # 合成組成項（小計扣掉已對到明細的餘額；bridge-residual Spec §2.1）
+    page: int | None = None  # 取值列的頁碼（現金流量 bridge 取區段內那一列時帶出；不進 to_dict，供問答引用出處）
 
     def to_dict(self) -> dict[str, Any]:
         d = {"key": self.key, "name": self.name, "current": self.current, "prior": self.prior,
@@ -544,6 +546,47 @@ def _synthetic_value(get: Callable[[str, str], float | None], key: str, which: s
     return (a - b) - sum(v for k in detail if (v := get(k, which)) is not None)
 
 
+_CF_SYNTHETIC = {"cfo": ("other_operating_cf", "其他營業活動項目"), "cfi": ("other_investing_cf", "其他投資活動項目"),
+                 "cff": ("other_financing_cf", "其他籌資活動項目")}
+_CF_PREV_TOTAL = {"cfi": "cfo", "cff": "cfi"}
+# 現金流量表區段內不當組成項的 key：各合計／小計與期初期末餘額
+_CF_NON_COMPONENT = frozenset({"cfo", "cfi", "cff", "fx_effect", "net_change_in_cash", "cash_beginning", "cash_ending",
+                               "cash_per_bs_in_cf", "cash_from_operations_before_tax"})
+
+
+def _cf_section_rows(ledger: StatementLedger, target: str) -> dict[str, StatementRow] | None:
+    """現金流量表 bridge（cfo／cfi／cff）的區段內組成項（cf-bridge Spec §2.1）：key → 區段內第一個該 key 的列。
+    區段＝帳本列序（解析器的閱讀順序；不能用 (page, line_idx) 排，雙欄版面會交錯，如 2449）中，
+    上一個區段合計列（cfi 看 cfo、cff 看 cfi；cfo 從表頭）之後、本合計列之前。
+    上一個合計列缺 → 退回「與本合計列同 section 標題」的列。無合計列 → None（呼叫端退回固定清單）；
+    有合計列但區段內沒有任何 key → 空 dict（組成項只剩合成項）。"""
+    rows = [r for r in ledger.rows if r.statement == "cf"]
+    end = next((i for i, r in enumerate(rows) if r.key == target), None)
+    if end is None:
+        return None
+    if target == "cfo":
+        section = rows[:end]
+    else:
+        prev = next((i for i, r in enumerate(rows[:end]) if r.key == _CF_PREV_TOTAL[target]), None)
+        if prev is not None:
+            section = rows[prev + 1:end]
+        elif rows[end].section is not None:  # 上一個合計列缺 → 退回同 section 標題的列
+            section = [r for r in rows[:end] if r.section == rows[end].section]
+        else:  # 標題也缺：無法判定區段，不收任何明細（只剩合成項），避免誤收別區段
+            section = []
+    out: dict[str, StatementRow] = {}
+    for r in section:
+        if r.key and r.key not in _CF_NON_COMPONENT and r.key not in out:
+            out[r.key] = r
+    return out
+
+
+def _row_value(ledger: StatementLedger, row: StatementRow, period: str) -> float | None:
+    """指定列（不是第一個同 key 列）的期間值；走 `value_at` 的同一套欄位對照。"""
+    tag = "flow_current" if period == "current" else "flow_prior"
+    return dataclasses.replace(ledger, rows=[row]).value_at(row.key, tag)  # type: ignore[arg-type]
+
+
 def compute_bridges(ledger: StatementLedger, pack: MetricsPack) -> list[BridgeResult]:
     """每個 BridgeSpec：target 與 components 的本期−上期變動；|delta| 降序（None 殿後）；殘差＝target_delta − Σ非 None delta。
     淨利／營業利益的組成項依帳本決定（`_net_income_components`／`_operating_income_components`）；
@@ -558,22 +601,45 @@ def compute_bridges(ledger: StatementLedger, pack: MetricsPack) -> list[BridgeRe
             components = _net_income_components(ledger)
         elif spec.target == "operating_income":
             components = _operating_income_components(ledger)
+        cf_rows: dict[str, StatementRow] | None = None
+        if spec.target in _CF_SYNTHETIC:
+            cf_rows = _cf_section_rows(ledger, spec.target)
+            if cf_rows is not None:  # 有合計列 → 組成項＝區段明細＋合成項；沒有合計列 → 退回固定清單（無合成項）
+                components = (*cf_rows, _CF_SYNTHETIC[spec.target][0])
         use_cogs_total = spec.target in ("net_income", "operating_income") and _has_row(ledger, "cogs_total")
 
         def src(key: str, use_cogs_total: bool = use_cogs_total) -> str:
             return "cogs_total" if key == "cogs" and use_cogs_total else key
 
+        cf_synth = {_CF_SYNTHETIC[spec.target][0]} if cf_rows is not None else set()
+
         def get(key: str, which: str, tag: str = tag, src=src) -> float | None:
             period = "current" if which == "cur" else "prior"
             if key in _SYNTHETIC_LABELS:
                 return _synthetic_value(get, key, which, fee_keys)
+            if cf_rows is not None and key in cf_synth:  # 合成項＝區段合計 − Σ區段明細（None 的明細不計；合計缺值 → None）
+                total = get(spec.target, which)
+                if total is None:
+                    return None
+                return total - sum(v for k in cf_rows if (v := get(k, which)) is not None)
+            if cf_rows is not None and key in cf_rows:
+                return _row_value(ledger, cf_rows[key], period)
             return _value(ledger, pack, src(key), period, tag)
 
         def label_of(k: str, src=src) -> str:
+            if k in cf_synth:
+                return _CF_SYNTHETIC[spec.target][1]
+            if cf_rows is not None and k in cf_rows:
+                return cf_rows[k].label
             return _SYNTHETIC_LABELS.get(k) or _label_of(ledger, src(k))
 
-        out.append(_build_bridge(spec.target, spec.name, components, get, label_of,
-                                 frozenset(_SYNTHETIC_LABELS) if is_ni else frozenset()))
+        synth = frozenset(_SYNTHETIC_LABELS) if is_ni else frozenset(cf_synth)
+        b = _build_bridge(spec.target, spec.name, components, get, label_of, synth)
+        if cf_rows:
+            for c in b.components:
+                if c.key in cf_rows:
+                    c.page = cf_rows[c.key].page
+        out.append(b)
     return out
 
 

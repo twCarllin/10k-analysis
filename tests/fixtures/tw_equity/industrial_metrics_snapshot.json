@@ -52,6 +52,15 @@
       "share": -3.573863655983188
      },
      {
+      "current": -176861.0,
+      "delta": -1857305.0,
+      "key": "other_operating_cf",
+      "name": "其他營業活動項目",
+      "prior": 1680444.0,
+      "share": -1.2826700847169092,
+      "synthetic": true
+     },
+     {
       "current": -2063715.0,
       "delta": -984016.0,
       "key": "income_tax_paid",
@@ -82,6 +91,14 @@
       "name": "利息收入",
       "prior": -337454.0,
       "share": -0.07023692695920371
+     },
+     {
+      "current": 434219.0,
+      "delta": 93618.0,
+      "key": "interest_received",
+      "name": "收取之利息",
+      "prior": 340601.0,
+      "share": 0.06465335956723726
      },
      {
       "current": 108895.0,
@@ -162,106 +179,10 @@
       "name": "其他流動資產",
       "prior": 4628.0,
       "share": 0.0006415750287120364
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "amortization",
-      "name": "amortization",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "change_receivables_related",
-      "name": "change_receivables_related",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "change_contract_liabilities",
-      "name": "change_contract_liabilities",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "dividend_income_adj",
-      "name": "dividend_income_adj",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "fvtpl_gain_adj",
-      "name": "fvtpl_gain_adj",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "unrealized_fx_gain",
-      "name": "unrealized_fx_gain",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "ppe_disposal_loss_adj",
-      "name": "ppe_disposal_loss_adj",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "equity_method_share_adj",
-      "name": "equity_method_share_adj",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "impairment_reversal_nonfinancial",
-      "name": "impairment_reversal_nonfinancial",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "lease_modification_loss",
-      "name": "lease_modification_loss",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "bond_buyback_gain",
-      "name": "bond_buyback_gain",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "change_net_defined_benefit",
-      "name": "change_net_defined_benefit",
-      "prior": null,
-      "share": null
      }
     ],
     "name": "營業現金流變動（間接法）",
-    "residual": -1763687.0,
+    "residual": 0.0,
     "target": "cfo",
     "target_current": 5773574.0,
     "target_delta": 1447999.0,
@@ -269,7 +190,7 @@
     "top_drivers": [
      "pretax_income_cf",
      "change_receivables",
-     "income_tax_paid"
+     "other_operating_cf"
     ]
    },
    {
@@ -522,12 +443,13 @@
       "share": 0.9382538931946237
      },
      {
-      "current": 434219.0,
-      "delta": 93618.0,
-      "key": "interest_received",
-      "name": "收取之利息",
-      "prior": 340601.0,
-      "share": -0.3751653054845354
+      "current": -19777.0,
+      "delta": -18138.0,
+      "key": "other_investing_cf",
+      "name": "其他投資活動項目",
+      "prior": -1639.0,
+      "share": 0.07268632432735696,
+      "synthetic": true
      },
      {
       "current": -2724.0,
@@ -544,73 +466,17 @@
       "name": "處分不動產、廠房及設備價款",
       "prior": 76.0,
       "share": -0.003919242760621629
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "prepaid_equipment_increase",
-      "name": "prepaid_equipment_increase",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "fvtpl_purchase",
-      "name": "fvtpl_purchase",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "fvtpl_disposal_proceeds",
-      "name": "fvtpl_disposal_proceeds",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "fvoci_disposal_proceeds",
-      "name": "fvoci_disposal_proceeds",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "other_noncurrent_assets_increase",
-      "name": "other_noncurrent_assets_increase",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "change_refundable_deposits",
-      "name": "change_refundable_deposits",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "dividends_received",
-      "name": "dividends_received",
-      "prior": null,
-      "share": null
      }
     ],
     "name": "投資現金流變動",
-    "residual": -111756.0,
+    "residual": 0.0,
     "target": "cfi",
     "target_current": -504487.0,
     "target_delta": -249538.0,
     "target_prior": -254949.0,
     "top_drivers": [
      "capex",
-     "interest_received",
+     "other_investing_cf",
      "intangible_purchase"
     ]
    },
@@ -633,76 +499,13 @@
       "share": 0.010857858975112104
      },
      {
-      "current": null,
-      "delta": null,
-      "key": "short_term_borrowings_increase",
-      "name": "short_term_borrowings_increase",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "short_term_borrowings_decrease",
-      "name": "short_term_borrowings_decrease",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "long_term_borrowings_proceeds",
-      "name": "long_term_borrowings_proceeds",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "bonds_issued",
-      "name": "bonds_issued",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "bonds_repaid",
-      "name": "bonds_repaid",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "dividends_paid",
-      "name": "dividends_paid",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "dividends_paid_to_nci",
-      "name": "dividends_paid_to_nci",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "employee_stock_option_exercised",
-      "name": "employee_stock_option_exercised",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "guarantee_deposits_received_increase",
-      "name": "guarantee_deposits_received_increase",
-      "prior": null,
-      "share": null
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_financing_cf",
+      "name": "其他籌資活動項目",
+      "prior": 0.0,
+      "share": -0.0,
+      "synthetic": true
      }
     ],
     "name": "籌資現金流變動",
@@ -713,7 +516,8 @@
     "target_prior": -78020.0,
     "top_drivers": [
      "long_term_borrowings_repayment",
-     "lease_principal_repayment"
+     "lease_principal_repayment",
+     "other_financing_cf"
     ]
    },
    {
@@ -1901,6 +1705,31 @@
       "share": -0.006846660247442089
      },
      {
+      "current": 1872384.0,
+      "delta": 101372.0,
+      "key": "interest_received",
+      "name": "收取之利息",
+      "prior": 1771012.0,
+      "share": 0.005196690895369048
+     },
+     {
+      "current": -612082.0,
+      "delta": -84335.0,
+      "key": "other_operating_cf",
+      "name": "其他營業活動項目",
+      "prior": -527747.0,
+      "share": -0.004323313406669975,
+      "synthetic": true
+     },
+     {
+      "current": 110565.0,
+      "delta": -67910.0,
+      "key": "dividends_received",
+      "name": "收取之股利",
+      "prior": 178475.0,
+      "share": -0.0034813092244851845
+     },
+     {
       "current": -1920977.0,
       "delta": -58526.0,
       "key": "interest_income_adj",
@@ -1941,6 +1770,14 @@
       "share": -0.0008509753074135482
      },
      {
+      "current": 5284.0,
+      "delta": -3258.0,
+      "key": "share_based_comp",
+      "name": "股份基礎給付酬勞成本",
+      "prior": 8542.0,
+      "share": -0.00016701671997309278
+     },
+     {
       "current": 2803.0,
       "delta": 2317.0,
       "key": "change_notes_payable",
@@ -1955,74 +1792,10 @@
       "name": "應收帳款-關係人",
       "prior": 4836.0,
       "share": 4.516320758020096e-05
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "fvtpl_gain_adj",
-      "name": "fvtpl_gain_adj",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "unrealized_fx_gain",
-      "name": "unrealized_fx_gain",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "ppe_disposal_loss_adj",
-      "name": "ppe_disposal_loss_adj",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "equity_method_share_adj",
-      "name": "equity_method_share_adj",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "impairment_reversal_nonfinancial",
-      "name": "impairment_reversal_nonfinancial",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "lease_modification_loss",
-      "name": "lease_modification_loss",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "bond_buyback_gain",
-      "name": "bond_buyback_gain",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "change_net_defined_benefit",
-      "name": "change_net_defined_benefit",
-      "prior": null,
-      "share": null
      }
     ],
     "name": "營業現金流變動（間接法）",
-    "residual": -54131.0,
+    "residual": 0.0,
     "target": "cfo",
     "target_current": 63100603.0,
     "target_delta": 19507029.0,
@@ -2291,20 +2064,13 @@
       "share": -0.05730699115765783
      },
      {
-      "current": 1872384.0,
-      "delta": 101372.0,
-      "key": "interest_received",
-      "name": "收取之利息",
-      "prior": 1771012.0,
-      "share": -0.012618651510144078
-     },
-     {
-      "current": 110565.0,
-      "delta": -67910.0,
-      "key": "dividends_received",
-      "name": "收取之股利",
-      "prior": 178475.0,
-      "share": 0.00845334632890625
+      "current": -2506845.0,
+      "delta": -301292.0,
+      "key": "other_investing_cf",
+      "name": "其他投資活動項目",
+      "prior": -2205553.0,
+      "share": 0.03750442677262291,
+      "synthetic": true
      },
      {
       "current": 38154.0,
@@ -2321,50 +2087,10 @@
       "name": "處分透過其他綜合損益按公允價值衡量之金融資產",
       "prior": 0.0,
       "share": -0.00037331152467073836
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "prepaid_equipment_increase",
-      "name": "prepaid_equipment_increase",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "fvtpl_purchase",
-      "name": "fvtpl_purchase",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "fvtpl_disposal_proceeds",
-      "name": "fvtpl_disposal_proceeds",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "other_noncurrent_assets_increase",
-      "name": "other_noncurrent_assets_increase",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "change_refundable_deposits",
-      "name": "change_refundable_deposits",
-      "prior": null,
-      "share": null
      }
     ],
     "name": "投資現金流變動",
-    "residual": -334754.0,
+    "residual": 0.0,
     "target": "cfi",
     "target_current": -30282455.0,
     "target_delta": -8033505.0,
@@ -2372,7 +2098,7 @@
     "top_drivers": [
      "capex",
      "intangible_purchase",
-     "interest_received"
+     "other_investing_cf"
     ]
    },
    {
@@ -2402,72 +2128,25 @@
       "share": 0.8625917239381372
      },
      {
+      "current": 1755729.0,
+      "delta": 4064866.0,
+      "key": "other_financing_cf",
+      "name": "其他籌資活動項目",
+      "prior": -2309137.0,
+      "share": -0.20515607264328972,
+      "synthetic": true
+     },
+     {
       "current": -434197.0,
       "delta": 141014.0,
       "key": "lease_principal_repayment",
       "name": "租賃本金償還",
       "prior": -575211.0,
       "share": -0.0071170558704077465
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "short_term_borrowings_increase",
-      "name": "short_term_borrowings_increase",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "short_term_borrowings_decrease",
-      "name": "short_term_borrowings_decrease",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "bonds_repaid",
-      "name": "bonds_repaid",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "dividends_paid",
-      "name": "dividends_paid",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "dividends_paid_to_nci",
-      "name": "dividends_paid_to_nci",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "employee_stock_option_exercised",
-      "name": "employee_stock_option_exercised",
-      "prior": null,
-      "share": null
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "guarantee_deposits_received_increase",
-      "name": "guarantee_deposits_received_increase",
-      "prior": null,
-      "share": null
      }
     ],
     "name": "籌資現金流變動",
-    "residual": 4064866.0,
+    "residual": 0.0,
     "target": "cff",
     "target_current": -2619624.0,
     "target_delta": -19813530.0,
@@ -3781,6 +3460,15 @@
       "name": "買回公司債利益",
       "prior": 0.0,
       "share": -4.248893827047715e-06
+     },
+     {
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_operating_cf",
+      "name": "其他營業活動項目",
+      "prior": 0.0,
+      "share": 0.0,
+      "synthetic": true
      }
     ],
     "name": "營業現金流變動（間接法）",
@@ -4123,6 +3811,15 @@
       "name": "處分不動產、廠房及設備價款",
       "prior": 14237.0,
       "share": 0.0005304933652834042
+     },
+     {
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_investing_cf",
+      "name": "其他投資活動項目",
+      "prior": 0.0,
+      "share": 0.0,
+      "synthetic": true
      }
     ],
     "name": "投資現金流變動",
@@ -4226,6 +3923,15 @@
       "name": "存入保證金增加",
       "prior": 528.0,
       "share": 1.4739997777661873e-05
+     },
+     {
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_financing_cf",
+      "name": "其他籌資活動項目",
+      "prior": 0.0,
+      "share": 0.0,
+      "synthetic": true
      }
     ],
     "name": "籌資現金流變動",

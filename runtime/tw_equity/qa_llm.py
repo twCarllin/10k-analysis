@@ -103,7 +103,8 @@ def llm_inputs(pack: dict[str, Any], question: str, company: str) -> dict[str, A
     facts = {"context": {"periods": pack["periods"], "basis": pack["basis"], "assurance": pack["assurance"],
                          "ifrs17_break": pack.get("ifrs17_break", False), "amount_unit": "億元",
                          "ttm_status": pack.get("ttm_status"), "ttm_reason": pack.get("ttm_reason"),
-                         "ttm_period": pack.get("ttm_period"), "fy_period": pack.get("fy_period")},
+                         "ttm_period": pack.get("ttm_period"), "fy_period": pack.get("fy_period"),
+                         **({"period_notes": pack["period_notes"]} if pack.get("period_notes") else {})},
              "topics": {k: _topic_view(t) for k, t in pack["topics"].items()}}
     return {"question": question, "company": company,
             "topics_catalog": json.dumps(catalog, ensure_ascii=False),

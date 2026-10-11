@@ -28,7 +28,7 @@ from tests.tw_equity.test_report_metrics import _ledger as _ind_ledger  # noqa: 
 
 _KL = {k: (None, None) for k in ["營業收入", "營業成本", "營業毛利", "營業費用", "營業利益", "本期淨利"]}
 # 改動前（本 item 前）工業附錄 E 的 sha256：由 test_report_metrics 的 _bundle(compute_metrics(_ledger())) 渲染
-_IND_APPENDIX_E_SHA = "d000d63aa8a496a94bf91d898393fc29e4d419767420a964d1bb75489f8e3a63"  # 2026-10-11：有效稅率公式字串、淨利 bridge 新組成項（spec 2026-10-11-tw-equity-sign-fix §2 B、§6 A3）；淨利 bridge 再加 ecl_operating、discontinued_ops 與兩個合成項（spec 2026-10-11-tw-equity-bridge-residual §2.1）
+_IND_APPENDIX_E_SHA = "28752b364e783490e20f071620e0a324c42d276e0ccbdd7a13a01057c3ac186d"  # 2026-10-11（cf-bridge Spec §2.1：cfo／cfi／cff 組成項依區段、加合成項；此帳本 cfo 區段無明細列 → cfo bridge 只剩合成項 other_operating_cf＝300/100/Δ200，殘差 0；舊 SHA d000d63a…）：有效稅率公式字串、淨利 bridge 新組成項（spec 2026-10-11-tw-equity-sign-fix §2 B、§6 A3）；淨利 bridge 再加 ecl_operating、discontinued_ops 與兩個合成項（spec 2026-10-11-tw-equity-bridge-residual §2.1）
 
 
 def _fh_bundle(b: SimpleNamespace, **override) -> TablesBundle:
