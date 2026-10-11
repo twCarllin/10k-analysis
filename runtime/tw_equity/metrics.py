@@ -66,10 +66,14 @@ class BridgeComponent:
     prior: float | None
     delta: float | None
     share: float | None
+    synthetic: bool = False  # 合成組成項（小計扣掉已對到明細的餘額；bridge-residual Spec §2.1）
 
     def to_dict(self) -> dict[str, Any]:
-        return {"key": self.key, "name": self.name, "current": self.current, "prior": self.prior,
-                "delta": self.delta, "share": self.share}
+        d = {"key": self.key, "name": self.name, "current": self.current, "prior": self.prior,
+             "delta": self.delta, "share": self.share}
+        if self.synthetic:
+            d["synthetic"] = True
+        return d
 
 
 @dataclass
@@ -272,8 +276,8 @@ BRIDGE_SPECS: list[BridgeSpec] = [
     BridgeSpec("net_income", "淨利變動", (
         "revenue", "cogs", "selling_expenses", "admin_expenses", "rd_expenses", "interest_income", "other_income",
         "other_gains_losses", "finance_costs", "equity_method_share", "income_tax",
-        "other_operating_net", "fx_gain_loss")),
-    BridgeSpec("operating_income", "營業利益變動", ("revenue", "cogs", "total_opex")),
+        "other_operating_net", "fx_gain_loss", "ecl_operating", "discontinued_ops")),  # 實際組成項見 _net_income_components
+    BridgeSpec("operating_income", "營業利益變動", ("revenue", "cogs", "total_opex")),  # 實際組成項見 _operating_income_components
     BridgeSpec("net_change_in_cash", "現金變動", ("cfo", "cfi", "cff", "fx_effect")),
     BridgeSpec("cfi", "投資現金流變動", (
         "capex", "ppe_disposal_proceeds", "intangible_purchase", "prepaid_equipment_increase", "fvtpl_purchase",
@@ -341,7 +345,22 @@ def _ledger_value(ledger: StatementLedger, key: str, period: str, bs_prior_tag: 
 
 # 工業公司損益費用類：各家印法不同（正數或括號負數），取值時統一成 −|v|（Spec 2026-10-11-tw-equity-sign-fix §2 A）。
 # cogs／total_opex／income_tax 走 fy_income.normalize_sign（含所得稅括號詞規則）；下列 key 另取 −|v|。
-_IS_EXPENSE_KEYS = ("selling_expenses", "admin_expenses", "rd_expenses", "finance_costs")
+_IS_EXPENSE_KEYS = ("selling_expenses", "admin_expenses", "rd_expenses", "finance_costs", "cogs_total", "expense_total")
+
+
+def _ecl_contribution(label: str, v: float) -> float:
+    """預期信用減損列對淨利的貢獻（bridge-residual Spec §2.1）：各家印法不同，依標題用字定號。
+    `利益(損失)`／`(損失)利益`＝本身帶貢獻符號 → 原值；標題同時含損失與利益（`損失(迴轉利益)`、`(迴轉利益)損失`）
+    ＝費用口徑（正＝損失、負＝迴轉）→ −v；只有利益（`迴轉利益`）→ +|v|；其餘（`損失`）→ −|v|。
+    限制：純「損失」列一律視為損失，不支援「以負數表示迴轉」的印法（85 家全量殘差已驗；若出現會以殘差呈現）。"""
+    lab = _norm_label(label)
+    if "利益(損失)" in lab or "(損失)利益" in lab:
+        return v
+    if "利益" in lab and "損失" in lab:
+        return -v
+    if "利益" in lab:
+        return abs(v)
+    return -abs(v)
 
 
 def _signed_value(ledger: StatementLedger, key: str, period: str) -> float | None:
@@ -354,6 +373,8 @@ def _signed_value(ledger: StatementLedger, key: str, period: str) -> float | Non
         return v
     if key in _IS_EXPENSE_KEYS:
         return -abs(v)
+    if key == "ecl_operating":
+        return _ecl_contribution(row.label, v)
     cogs_tag = "flow_current" if period == "current" else "flow_prior"
     return normalize_sign(key, row.label, v, cogs_raw=ledger.value_at("cogs", cogs_tag),
                           pretax_raw=ledger.value_at("pretax_income", cogs_tag),
@@ -424,7 +445,7 @@ def compute_metrics(ledger: StatementLedger | None, fy_income: FyIncome | None =
     return pack
 
 
-_SIGNED_BRIDGE_KEYS = ("cogs", "total_opex", "income_tax") + _IS_EXPENSE_KEYS
+_SIGNED_BRIDGE_KEYS = ("cogs", "total_opex", "income_tax", "ecl_operating") + _IS_EXPENSE_KEYS
 
 
 def _value(ledger: StatementLedger, pack: MetricsPack, key: str, period: str,
@@ -438,7 +459,8 @@ def _value(ledger: StatementLedger, pack: MetricsPack, key: str, period: str,
 
 def _build_bridge(target: str, name: str, components: tuple[str, ...],
                   get: Callable[[str, str], float | None],
-                  label_of: Callable[[str], str]) -> BridgeResult:
+                  label_of: Callable[[str], str],
+                  synthetic: frozenset[str] = frozenset()) -> BridgeResult:
     """target 與 components 的 get(key, "cur"／"pri") 變動；|delta| 降序（None 殿後）；殘差＝target_delta − Σ非 None delta。"""
     t_cur, t_pri = get(target, "cur"), get(target, "pri")
     t_delta = None if t_cur is None or t_pri is None else t_cur - t_pri
@@ -447,7 +469,7 @@ def _build_bridge(target: str, name: str, components: tuple[str, ...],
         cur, pri = get(key, "cur"), get(key, "pri")
         delta = None if cur is None or pri is None else cur - pri
         share = None if (delta is None or not t_delta) else delta / t_delta
-        comps.append(BridgeComponent(key, label_of(key), cur, pri, delta, share))
+        comps.append(BridgeComponent(key, label_of(key), cur, pri, delta, share, key in synthetic))
     known = [c for c in comps if c.delta is not None]
     unknown = [c for c in comps if c.delta is None]
     known.sort(key=lambda c: -abs(c.delta))  # type: ignore[arg-type]
@@ -456,17 +478,102 @@ def _build_bridge(target: str, name: str, components: tuple[str, ...],
     return BridgeResult(target, name, t_cur, t_pri, t_delta, ordered, residual, [c.key for c in known[:3]])
 
 
+OTHER_OPEX_KEY = "other_opex_residual"
+OTHER_NONOP_KEY = "other_nonoperating_residual"
+_SYNTHETIC_LABELS = {OTHER_OPEX_KEY: "其他營業費用", OTHER_NONOP_KEY: "其他營業外收支"}
+_NONOP_DETAIL_KEYS = ("interest_income", "other_income", "other_gains_losses", "finance_costs",
+                      "equity_method_share", "fx_gain_loss")
+_FEE_KEYS = ("selling_expenses", "admin_expenses", "rd_expenses")
+
+
+def _has_row(ledger: StatementLedger, key: str) -> bool:
+    return any(r.key == key for r in ledger.rows)
+
+
+def _row_index(ledger: StatementLedger, key: str) -> int | None:
+    return next((i for i, r in enumerate(ledger.rows) if r.key == key), None)
+
+
+def _is_single_step(ledger: StatementLedger) -> bool:
+    """單步式損益表（同 statements 勾稽的判定）：有收入合計與支出合計、無毛利與營業利益列。"""
+    return (_has_row(ledger, "income_total") and _has_row(ledger, "expense_total")
+            and not any(_has_row(ledger, k) for k in ("gross_profit", "gross_profit_net", "operating_income")))
+
+
+def _fee_keys(ledger: StatementLedger) -> tuple[str, ...]:
+    """三費任一有列 → 三費；全缺且有 total_opex → total_opex（只有一列「營業費用」的損益表，R5）；否則三費。"""
+    if not any(_has_row(ledger, k) for k in _FEE_KEYS) and _has_row(ledger, "total_opex"):
+        return ("total_opex",)
+    return _FEE_KEYS
+
+
+def _net_income_components(ledger: StatementLedger) -> tuple[str, ...]:
+    """淨利 bridge 組成項（bridge-residual Spec §2.1）。單步式 → 收入／支出合計；其餘 → 明細＋兩個合成項。"""
+    if _is_single_step(ledger):
+        return ("income_total", "expense_total", "income_tax", "discontinued_ops")
+    return (("revenue", "cogs") + _fee_keys(ledger) + ("ecl_operating", "other_operating_net", OTHER_OPEX_KEY,
+            "interest_income", "other_income", "other_gains_losses", "finance_costs", "equity_method_share",
+            "fx_gain_loss", OTHER_NONOP_KEY, "income_tax", "discontinued_ops"))
+
+
+def _operating_income_components(ledger: StatementLedger) -> tuple[str, ...]:
+    """營業利益 bridge 組成項：revenue、cogs、total_opex；ecl 與其他收益及費損淨額只在落在營業費用小計之後、
+    營業利益之前時才加（落在小計之內已含於 total_opex，避免重複計）。
+    注意：這裡比 statements 勾稽嚴——勾稽只排除「營業利益之後」的列；本函式另要求「在營業費用小計之後」。
+    其他收益及費損淨額列在小計之前的版面（85 家中無此例）會被略過、歸入殘差。
+    邊角：三費全缺而退回 total_opex、且 ecl 列在 total_opex 之前時，ecl 與合成項「其他營業費用」會互相抵銷（殘差不受影響）。"""
+    op_i, opex_i = _row_index(ledger, "operating_income"), _row_index(ledger, "total_opex")
+    extra = []
+    for key in ("other_operating_net", "ecl_operating"):
+        i = _row_index(ledger, key)
+        if i is not None and op_i is not None and i < op_i and (opex_i is None or i > opex_i):
+            extra.append(key)
+    return ("revenue", "cogs", "total_opex", *extra)
+
+
+def _synthetic_value(get: Callable[[str, str], float | None], key: str, which: str,
+                     fee_keys: tuple[str, ...]) -> float | None:
+    """合成項＝小計差 − Σ已對到明細（None 的明細不計）；小計缺值 → None。"""
+    if key == OTHER_OPEX_KEY:
+        hi, lo, detail = "operating_income", "gross_profit", fee_keys + ("ecl_operating", "other_operating_net")
+    else:
+        hi, lo, detail = "pretax_income", "operating_income", _NONOP_DETAIL_KEYS
+    a, b = get(hi, which), get(lo, which)
+    if a is None or b is None:
+        return None
+    return (a - b) - sum(v for k in detail if (v := get(k, which)) is not None)
+
+
 def compute_bridges(ledger: StatementLedger, pack: MetricsPack) -> list[BridgeResult]:
-    """每個 BridgeSpec：target 與 components 的本期−上期變動；|delta| 降序（None 殿後）；殘差＝target_delta − Σ非 None delta。"""
+    """每個 BridgeSpec：target 與 components 的本期−上期變動；|delta| 降序（None 殿後）；殘差＝target_delta − Σ非 None delta。
+    淨利／營業利益的組成項依帳本決定（`_net_income_components`／`_operating_income_components`）；
+    淨利、營業利益的 cogs 有 cogs_total 列時取它（R6；1519、5871 的營業利益 bridge 同需）。"""
     out: list[BridgeResult] = []
+    fee_keys = _fee_keys(ledger)
     for spec in BRIDGE_SPECS:
         tag = "bs_prior_fy_end" if spec.target == "total_assets" else "bs_prior_same"
+        components = spec.components
+        is_ni = spec.target == "net_income"
+        if is_ni:
+            components = _net_income_components(ledger)
+        elif spec.target == "operating_income":
+            components = _operating_income_components(ledger)
+        use_cogs_total = spec.target in ("net_income", "operating_income") and _has_row(ledger, "cogs_total")
 
-        def get(key: str, which: str, tag: str = tag) -> float | None:
-            return _value(ledger, pack, key, "current" if which == "cur" else "prior", tag)
+        def src(key: str, use_cogs_total: bool = use_cogs_total) -> str:
+            return "cogs_total" if key == "cogs" and use_cogs_total else key
 
-        out.append(_build_bridge(spec.target, spec.name, spec.components, get,
-                                 lambda k: _label_of(ledger, k)))
+        def get(key: str, which: str, tag: str = tag, src=src) -> float | None:
+            period = "current" if which == "cur" else "prior"
+            if key in _SYNTHETIC_LABELS:
+                return _synthetic_value(get, key, which, fee_keys)
+            return _value(ledger, pack, src(key), period, tag)
+
+        def label_of(k: str, src=src) -> str:
+            return _SYNTHETIC_LABELS.get(k) or _label_of(ledger, src(k))
+
+        out.append(_build_bridge(spec.target, spec.name, components, get, label_of,
+                                 frozenset(_SYNTHETIC_LABELS) if is_ni else frozenset()))
     return out
 
 

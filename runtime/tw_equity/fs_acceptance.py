@@ -19,6 +19,7 @@ from pathlib import Path
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_heading_sections
 from runtime.tw_equity.inputs import load_inputs, uses_fh_schema
+from runtime.tw_equity.metrics import compute_bridges, compute_metrics
 from runtime.tw_equity.statements import SINGLE_STEP_NA, SINGLE_STEP_WARNING, extract_statements
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -114,7 +115,30 @@ def check_company(ticker: str, group: str | None, base_dir: Path) -> dict:
         return {**rec, "error": f"{type(e).__name__}: {e}"}
     if led is None:
         return {**rec, "error": "no_statements"}
-    return {**rec, **evaluate_checks(ticker, group, led.checks, led.parse_warnings)}
+    return {**rec, **evaluate_checks(ticker, group, led.checks, led.parse_warnings),
+            "bridge_residual": _safe_bridge_stats(led, group)}
+
+
+def _safe_bridge_stats(led, group) -> dict | None:
+    """金控／銀行 → None；工業統計失敗（任何例外）→ None，不影響 conform 也不中斷全量（Spec §2.4「只統計」）。"""
+    if uses_fh_schema(group):
+        return None
+    try:
+        return bridge_residual_stats(led)
+    except Exception:
+        return None
+
+
+def bridge_residual_stats(led) -> dict:
+    """淨利與營業利益 bridge 的目標變動與殘差（Spec 2026-10-11-tw-equity-bridge-residual §2.4）；只統計，不影響 conform。"""
+    bridges = {b.target: b for b in compute_bridges(led, compute_metrics(led))}
+    out = {}
+    for key in ("net_income", "operating_income"):
+        b = bridges.get(key)
+        d, r = (b.target_delta, b.residual) if b else (None, None)
+        out[key] = {"delta": d, "residual": r,
+                    "gt5pct": bool(d and r is not None and abs(r) > 0.05 * abs(d) and abs(r) > 1000)}
+    return out
 
 
 # 單步式損益表（parse_warnings 帶 SINGLE_STEP_WARNING）：這兩項勾稽算「不適用」，不算失敗（Spec 2026-10-10-tw-equity-top100-conform §3.1 I-12）
@@ -190,7 +214,10 @@ def _main_all70(out: Path) -> int:
     n_ok = sum(1 for r in recs if r.get("conform") and r["ticker"] not in KNOWN_LIMITATIONS)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(recs, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"SUMMARY conform={n_ok}/{len(recs)} known_limitations={n_known} exceptions={sum(len(r.get('excepted', [])) for r in recs)}")
+    gt5 = [sum(1 for r in recs if (r.get("bridge_residual") or {}).get(k, {}).get("gt5pct"))
+           for k in ("net_income", "operating_income")]
+    print(f"SUMMARY conform={n_ok}/{len(recs)} known_limitations={n_known} "
+          f"exceptions={sum(len(r.get('excepted', [])) for r in recs)} bridge_residual_gt5pct={gt5[0]}/{gt5[1]}")
     return 0
 
 

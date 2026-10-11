@@ -339,12 +339,46 @@
       "share": 0.013654534359876992
      },
      {
+      "current": -11842.0,
+      "delta": 53445.0,
+      "key": "ecl_operating",
+      "name": "預期信用減損損失",
+      "prior": -65287.0,
+      "share": 0.007175467674145559
+     },
+     {
       "current": -14704.0,
       "delta": 2194.0,
       "key": "finance_costs",
       "name": "財務成本",
       "prior": -16898.0,
       "share": 0.00029456405794883256
+     },
+     {
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_opex_residual",
+      "name": "其他營業費用",
+      "prior": 0.0,
+      "share": 0.0,
+      "synthetic": true
+     },
+     {
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_nonoperating_residual",
+      "name": "其他營業外收支",
+      "prior": 0.0,
+      "share": 0.0,
+      "synthetic": true
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "other_operating_net",
+      "name": "other_operating_net",
+      "prior": null,
+      "share": null
      },
      {
       "current": null,
@@ -365,22 +399,22 @@
      {
       "current": null,
       "delta": null,
-      "key": "other_operating_net",
-      "name": "other_operating_net",
+      "key": "fx_gain_loss",
+      "name": "fx_gain_loss",
       "prior": null,
       "share": null
      },
      {
       "current": null,
       "delta": null,
-      "key": "fx_gain_loss",
-      "name": "fx_gain_loss",
+      "key": "discontinued_ops",
+      "name": "discontinued_ops",
       "prior": null,
       "share": null
      }
     ],
     "name": "淨利變動",
-    "residual": 53445.0,
+    "residual": 0.0,
     "target": "net_income",
     "target_current": 10573871.0,
     "target_delta": 7448295.0,
@@ -2058,6 +2092,14 @@
       "share": -0.12878106441956735
      },
      {
+      "current": -1061235.0,
+      "delta": -733092.0,
+      "key": "ecl_operating",
+      "name": "預期信用減損損失",
+      "prior": -328143.0,
+      "share": -0.03102831611287438
+     },
+     {
       "current": 3063375.0,
       "delta": 522506.0,
       "key": "other_income",
@@ -2090,6 +2132,15 @@
       "share": -0.0009874485261240872
      },
      {
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_nonoperating_residual",
+      "name": "其他營業外收支",
+      "prior": 0.0,
+      "share": 0.0,
+      "synthetic": true
+     },
+     {
       "current": null,
       "delta": null,
       "key": "other_operating_net",
@@ -2100,14 +2151,31 @@
      {
       "current": null,
       "delta": null,
+      "key": "other_opex_residual",
+      "name": "其他營業費用",
+      "prior": null,
+      "share": null,
+      "synthetic": true
+     },
+     {
+      "current": null,
+      "delta": null,
       "key": "fx_gain_loss",
       "name": "fx_gain_loss",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "discontinued_ops",
+      "name": "discontinued_ops",
       "prior": null,
       "share": null
      }
     ],
     "name": "淨利變動",
-    "residual": -733092.0,
+    "residual": 0.0,
     "target": "net_income",
     "target_current": 51003600.0,
     "target_delta": 23626548.0,
@@ -3818,6 +3886,32 @@
       "share": 2.7965681360081892e-05
      },
      {
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_opex_residual",
+      "name": "其他營業費用",
+      "prior": 0.0,
+      "share": 0.0,
+      "synthetic": true
+     },
+     {
+      "current": 0.0,
+      "delta": 0.0,
+      "key": "other_nonoperating_residual",
+      "name": "其他營業外收支",
+      "prior": 0.0,
+      "share": 0.0,
+      "synthetic": true
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "ecl_operating",
+      "name": "ecl_operating",
+      "prior": null,
+      "share": null
+     },
+     {
       "current": null,
       "delta": null,
       "key": "other_operating_net",
@@ -3830,6 +3924,14 @@
       "delta": null,
       "key": "fx_gain_loss",
       "name": "fx_gain_loss",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "discontinued_ops",
+      "name": "discontinued_ops",
       "prior": null,
       "share": null
      }

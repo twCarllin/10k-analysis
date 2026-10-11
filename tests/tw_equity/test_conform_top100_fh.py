@@ -156,7 +156,7 @@ def test_main_all70_marks_known_limitations_and_summary_separates_counts(tmp_pat
     by_t = {ln.split(" ")[0]: ln for ln in lines if ln.startswith(("1111", "1101", "6223", "3529"))}
     assert "known_limitation" not in by_t["1111"]
     assert all("known_limitation" in by_t[t] for t in ("1101", "6223", "3529"))
-    assert lines[-1] == "SUMMARY conform=1/4 known_limitations=3 exceptions=0"
+    assert lines[-1] == "SUMMARY conform=1/4 known_limitations=3 exceptions=0 bridge_residual_gt5pct=0/0"  # 2026-10-11 bridge-residual Spec §2.4
     recs = json.loads(out.read_text(encoding="utf-8"))
     assert len(recs) == 4
     assert {r["ticker"]: r["known_limitation"] for r in recs} == {"1111": False, "1101": True, "6223": True, "3529": True}
@@ -167,4 +167,4 @@ def test_known_limitation_never_counted_as_conform(tmp_path, monkeypatch, capsys
     monkeypatch.setattr(fs_acceptance, "acceptance_tickers", lambda base: [("1101", None), ("1111", None)])
     monkeypatch.setattr(fs_acceptance, "check_company", lambda t, g, base: _rec(t, g, True))
     fs_acceptance.main(["--all70", "--out", str(tmp_path / "r.json")])
-    assert capsys.readouterr().out.strip().splitlines()[-1] == "SUMMARY conform=1/2 known_limitations=1 exceptions=0"
+    assert capsys.readouterr().out.strip().splitlines()[-1] == "SUMMARY conform=1/2 known_limitations=1 exceptions=0 bridge_residual_gt5pct=0/0"  # 2026-10-11 bridge-residual Spec §2.4

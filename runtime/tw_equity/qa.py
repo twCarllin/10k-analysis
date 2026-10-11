@@ -235,7 +235,8 @@ def _bridge_topic(ledger: StatementLedger, b, ttm: TtmView | None = None) -> dic
     t = {"kind": "bridge", "name": b.name, "current": b.target_current, "prior": b.target_prior,
          "delta": b.target_delta, "residual": b.residual, "page": page(b.target),
          "components": [{"key": c.key, "label": c.name, "current": c.current, "prior": c.prior,
-                         "delta": c.delta, "share": c.share, "page": page(c.key)}
+                         "delta": c.delta, "share": c.share, "page": page(c.key),
+                         **({"synthetic": True} if c.synthetic else {})}
                         for c in b.components]}
     if ttm:
         t.update(compare="ttm_vs_fy", period_ttm=ttm.period_ttm, period_fy=ttm.period_fy)
@@ -589,7 +590,8 @@ def _render_ttm_values(t: dict[str, Any]) -> list[str]:
     return lines
 
 
-_COST_KEYS = ("cogs", "selling_expenses", "admin_expenses", "rd_expenses", "total_opex", "finance_costs", "income_tax")
+_COST_KEYS = ("cogs", "selling_expenses", "admin_expenses", "rd_expenses", "total_opex", "other_opex_residual",
+              "finance_costs", "income_tax")
 
 
 def _cost_text(c: dict[str, Any], target: str) -> str | None:
