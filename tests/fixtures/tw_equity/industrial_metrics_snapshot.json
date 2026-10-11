@@ -100,6 +100,14 @@
       "share": -0.03690955587676511
      },
      {
+      "current": 205116.0,
+      "delta": 31547.0,
+      "key": "depreciation",
+      "name": "折舊",
+      "prior": 173569.0,
+      "share": 0.021786617255951143
+     },
+     {
       "current": 54466.0,
       "delta": 17238.0,
       "key": "change_payables",
@@ -154,14 +162,6 @@
       "name": "其他流動資產",
       "prior": 4628.0,
       "share": 0.0006415750287120364
-     },
-     {
-      "current": null,
-      "delta": null,
-      "key": "depreciation",
-      "name": "depreciation",
-      "prior": null,
-      "share": null
      },
      {
       "current": null,
@@ -261,7 +261,7 @@
      }
     ],
     "name": "營業現金流變動（間接法）",
-    "residual": -1732140.0,
+    "residual": -1763687.0,
     "target": "cfo",
     "target_current": 5773574.0,
     "target_delta": 1447999.0,
@@ -291,44 +291,44 @@
       "share": 0.3327866310343508
      },
      {
-      "current": 2896383.0,
-      "delta": 1989025.0,
+      "current": -2896383.0,
+      "delta": -1989025.0,
       "key": "income_tax",
       "name": "所得稅費用",
-      "prior": 907358.0,
-      "share": 0.26704433699256
+      "prior": -907358.0,
+      "share": -0.26704433699256
      },
      {
-      "current": 2575266.0,
-      "delta": 676772.0,
+      "current": -2575266.0,
+      "delta": -676772.0,
       "key": "cogs",
       "name": "營業成本",
-      "prior": 1898494.0,
-      "share": 0.09086267394081464
+      "prior": -1898494.0,
+      "share": -0.09086267394081464
      },
      {
-      "current": 500643.0,
-      "delta": 355186.0,
+      "current": -500643.0,
+      "delta": -355186.0,
       "key": "selling_expenses",
       "name": "推銷費用",
-      "prior": 145457.0,
-      "share": 0.04768688673045308
+      "prior": -145457.0,
+      "share": -0.04768688673045308
      },
      {
-      "current": 349238.0,
-      "delta": 142550.0,
+      "current": -349238.0,
+      "delta": -142550.0,
       "key": "rd_expenses",
       "name": "研究發展費用",
-      "prior": 206688.0,
-      "share": 0.01913860823181681
+      "prior": -206688.0,
+      "share": -0.01913860823181681
      },
      {
-      "current": 298632.0,
-      "delta": 121040.0,
+      "current": -298632.0,
+      "delta": -121040.0,
       "key": "admin_expenses",
       "name": "管理費用",
-      "prior": 177592.0,
-      "share": 0.016250698985472514
+      "prior": -177592.0,
+      "share": -0.016250698985472514
      },
      {
       "current": 439157.0,
@@ -361,10 +361,26 @@
       "name": "equity_method_share",
       "prior": null,
       "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "other_operating_net",
+      "name": "other_operating_net",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fx_gain_loss",
+      "name": "fx_gain_loss",
+      "prior": null,
+      "share": null
      }
     ],
     "name": "淨利變動",
-    "residual": -6515701.0,
+    "residual": 53445.0,
     "target": "net_income",
     "target_current": 10573871.0,
     "target_delta": 7448295.0,
@@ -386,24 +402,24 @@
       "share": 1.1812037819140944
      },
      {
-      "current": 2575266.0,
-      "delta": 676772.0,
+      "current": -2575266.0,
+      "delta": -676772.0,
       "key": "cogs",
       "name": "營業成本",
-      "prior": 1898494.0,
-      "share": 0.09873065751678038
+      "prior": -1898494.0,
+      "share": -0.09873065751678038
      },
      {
-      "current": 1160355.0,
-      "delta": 565331.0,
+      "current": -1160355.0,
+      "delta": -565331.0,
       "key": "total_opex",
       "name": "營業費用合計",
-      "prior": 595024.0,
-      "share": 0.08247312439731397
+      "prior": -595024.0,
+      "share": -0.08247312439731397
      }
     ],
     "name": "營業利益變動",
-    "residual": -2484206.0,
+    "residual": 0.0,
     "target": "operating_income",
     "target_current": 12544145.0,
     "target_delta": 6854730.0,
@@ -828,8 +844,8 @@
     "prior": 0.2781356215758329
    },
    "capex_to_depreciation": {
-    "current": null,
-    "prior": null
+    "current": 2.3549601201271475,
+    "prior": 1.4340694478852791
    },
    "capex_to_revenue": {
     "current": 2.967118814852744,
@@ -1069,7 +1085,7 @@
     "formula": "operating_income + depreciation + amortization",
     "inputs": {
      "amortization": null,
-     "depreciation": null,
+     "depreciation": 205116.0,
      "operating_income": 12544145.0
     },
     "key": "ebitda",
@@ -1082,7 +1098,7 @@
     "formula": "operating_income + depreciation + amortization",
     "inputs": {
      "amortization": null,
-     "depreciation": null,
+     "depreciation": 173569.0,
      "operating_income": 5689415.0
     },
     "key": "ebitda",
@@ -1143,25 +1159,25 @@
     "formula": "abs(capex) / depreciation",
     "inputs": {
      "capex": -483040.0,
-     "depreciation": null
+     "depreciation": 205116.0
     },
     "key": "capex_to_depreciation",
     "name": "資本支出／折舊",
     "period": "current",
     "unit": "x",
-    "value": null
+    "value": 2.3549601201271475
    },
    {
     "formula": "abs(capex) / depreciation",
     "inputs": {
      "capex": -248910.0,
-     "depreciation": null
+     "depreciation": 173569.0
     },
     "key": "capex_to_depreciation",
     "name": "資本支出／折舊",
     "period": "prior",
     "unit": "x",
-    "value": null
+    "value": 1.4340694478852791
    },
    {
     "formula": "abs(capex) / revenue * 100",
@@ -1592,9 +1608,9 @@
     "value": 7.271524769908296
    },
    {
-    "formula": "abs(income_tax) / pretax_income * 100",
+    "formula": "-income_tax / pretax_income * 100",
     "inputs": {
-     "income_tax": 2896383.0,
+     "income_tax": -2896383.0,
      "pretax_income": 13470254.0
     },
     "key": "effective_tax_rate",
@@ -1604,9 +1620,9 @@
     "value": 21.5020667019345
    },
    {
-    "formula": "abs(income_tax) / pretax_income * 100",
+    "formula": "-income_tax / pretax_income * 100",
     "inputs": {
-     "income_tax": 907358.0,
+     "income_tax": -907358.0,
      "pretax_income": 4032934.0
     },
     "key": "effective_tax_rate",
@@ -2072,6 +2088,22 @@
       "name": "採用權益法認列之關聯企業及合資損益之份額",
       "prior": 13490.0,
       "share": -0.0009874485261240872
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "other_operating_net",
+      "name": "other_operating_net",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fx_gain_loss",
+      "name": "fx_gain_loss",
+      "prior": null,
+      "share": null
      }
     ],
     "name": "淨利變動",
@@ -3304,7 +3336,7 @@
     "value": 20.22292759254684
    },
    {
-    "formula": "abs(income_tax) / pretax_income * 100",
+    "formula": "-income_tax / pretax_income * 100",
     "inputs": {
      "income_tax": -15088837.0,
      "pretax_income": 66092437.0
@@ -3316,7 +3348,7 @@
     "value": 22.829899584425974
    },
    {
-    "formula": "abs(income_tax) / pretax_income * 100",
+    "formula": "-income_tax / pretax_income * 100",
     "inputs": {
      "income_tax": -7857035.0,
      "pretax_income": 35234087.0
@@ -3784,6 +3816,22 @@
       "name": "採用權益法認列之關聯企業及合資損益之份額",
       "prior": 1614.0,
       "share": 2.7965681360081892e-05
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "other_operating_net",
+      "name": "other_operating_net",
+      "prior": null,
+      "share": null
+     },
+     {
+      "current": null,
+      "delta": null,
+      "key": "fx_gain_loss",
+      "name": "fx_gain_loss",
+      "prior": null,
+      "share": null
      }
     ],
     "name": "淨利變動",
@@ -5016,7 +5064,7 @@
     "value": 10.974131379565206
    },
    {
-    "formula": "abs(income_tax) / pretax_income * 100",
+    "formula": "-income_tax / pretax_income * 100",
     "inputs": {
      "income_tax": -1296613.0,
      "pretax_income": 6606955.0
@@ -5028,7 +5076,7 @@
     "value": 19.624970958633742
    },
    {
-    "formula": "abs(income_tax) / pretax_income * 100",
+    "formula": "-income_tax / pretax_income * 100",
     "inputs": {
      "income_tax": -830267.0,
      "pretax_income": 4245429.0

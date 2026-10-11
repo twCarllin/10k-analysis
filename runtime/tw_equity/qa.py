@@ -155,6 +155,19 @@ def _updown(v: float) -> str:
     return "增加" if v >= 0 else "減少"
 
 
+def _capex_text(x: dict[str, Any]) -> str | None:
+    """資本支出（兩期皆負）→「本期支出 X、去年同期支出 Y，支出增加（減少）Z 億，使 FCF 減少（增加）Z 億」；否則 None。"""
+    cur, pri = x.get("current"), x.get("prior")
+    if x.get("key") != "capex" or cur is None or pri is None or cur > 0 or pri > 0:
+        return None
+    d = abs(cur) - abs(pri)
+    if d == 0:
+        return f"本期支出 {_yi(abs(cur))}、去年同期支出 {_yi(abs(pri))}，支出不變，對 FCF 無影響"
+    up = d > 0
+    return (f"本期支出 {_yi(abs(cur))}、去年同期支出 {_yi(abs(pri))}，支出{'增加' if up else '減少'} {_yi(abs(d))} 億，"
+            f"使 FCF {'減少' if up else '增加'} {_yi(abs(d))} 億")
+
+
 def render_fcf_answer(facts: dict[str, Any], *, company: str = "", source: str = "") -> str:
     if not facts.get("answerable"):
         return f"{company} 無法回答 FCF 問題：{facts.get('reason')}"
@@ -169,14 +182,18 @@ def render_fcf_answer(facts: dict[str, Any], *, company: str = "", source: str =
     cur_p, pri_p = _period_text(facts["period_current"]), _period_text(facts["period_prior"])
     lines = [f"【{company}】自由現金流（FCF）", "",
              f"結論：本期（{cur_p}）FCF 為 {_yi(f['current'])} 億元，較去年同期（{pri_p}）"
-             f"{_updown(f['delta'])} {_yi(abs(f['delta']))} 億元。影響最大的是{top1['label']}"
-             f"（變動 {_yi(top1['delta'])} 億元，占 FCF 變動 {_pct(top1['share'])}%）"
+             f"{_updown(f['delta'])} {_yi(abs(f['delta']))} 億元。影響最大的是"
+             + (f"資本支出（{_capex_text(top1)}，占 FCF 變動 {_pct(top1['share'])}%）" if _capex_text(top1) else
+                f"{top1['label']}（變動 {_yi(top1['delta'])} 億元，占 FCF 變動 {_pct(top1['share'])}%）")
              + f"。CFO 變動中影響最大的分組是{lead_g}（{_yi(gd[lead_g])} 億元）"
              + (f"，其中最大的是「{lead['label']}」（變動 {_yi(lead['delta'])} 億元，p.{lead['page']}）" if lead and len(in_g) > 1 else "")
              + (f"；方向相反、最大的抵銷項是「{offset['label']}」（變動 {_yi(offset['delta'])} 億元，"
                 f"p.{offset['page']}）" if offset else "") + "。",
              "", "一、變動歸因（本期 − 去年同期，億元）"]
     for i, x in enumerate(l1, 1):
+        if _capex_text(x):
+            lines.append(f"  {i}. 資本支出：{_capex_text(x)}（p.{x['page']}）")
+            continue
         lines.append(f"  {i}. {x['label']}：本期 {_yi(x['current'])}，去年同期 {_yi(x['prior'])}，"
                      f"變動 {_yi(x['delta'])}，占 FCF 變動 {_pct(x['share'])}%（p.{x['page']}）")
     lines.append(f"  CFO 變動 {_yi(facts['cfo_delta'])} 億元的前 5 項：")
@@ -275,7 +292,7 @@ GROSS_KEYS = ("revenue", "cogs", "gross_profit")
 def _gross_topics(ledger: StatementLedger, mp) -> dict[str, dict[str, Any]]:
     """G3a：毛利金額 bridge（營收＋成本）與毛利率拆解（營收效果＋成本效果，百分點）；三者兩期皆有值才加。"""
     def get(key: str, which: str) -> float | None:
-        return _value(ledger, mp, key, "current" if which == "cur" else "prior")
+        return _value(ledger, mp, key, "current" if which == "cur" else "prior")  # cogs 已正規化成 −|v|
 
     v = {k: (get(k, "cur"), get(k, "pri")) for k in GROSS_KEYS}
     if any(x is None for pair in v.values() for x in pair):
@@ -572,14 +589,36 @@ def _render_ttm_values(t: dict[str, Any]) -> list[str]:
     return lines
 
 
+_COST_KEYS = ("cogs", "selling_expenses", "admin_expenses", "rd_expenses", "total_opex", "finance_costs", "income_tax")
+
+
+def _cost_text(c: dict[str, Any], target: str) -> str | None:
+    """費用類組成項（Task 1 正規化成負數）→「費用增加（減少）Z 億，使〈目標〉減少（增加）Z 億」；
+    所得稅為利益（任一期為正值）→「所得稅利益增加（減少）Z 億，使〈目標〉增加（減少）Z 億」；其他 → None。"""
+    cur, pri, d = c.get("current"), c.get("prior"), c.get("delta")
+    if c["key"] not in _COST_KEYS or cur is None or pri is None or d is None:
+        return None
+    z = _yi(abs(d))
+    if c["key"] == "income_tax" and (cur > 0 or pri > 0):
+        w = "增加" if d >= 0 else "減少"
+        return f"所得稅利益{w} {z} 億，使{target}{w} {z} 億"
+    if cur > 0 or pri > 0 or abs(cur) == abs(pri):  # 兩期同額 → 退回「變動 0.00 億元」，不寫「費用減少 0.00 億」
+        return None
+    up = abs(cur) > abs(pri)  # 費用金額變大
+    return f"費用{'增加' if up else '減少'} {z} 億，使{target}{'減少' if up else '增加'} {z} 億"
+
+
 def _render_bridge(t: dict[str, Any]) -> list[str]:
     a, b = _labels(t)
+    target = t["name"].removesuffix("變動")
     lines = [f"■ {t['name']}：{a} {fmt_value(t['current'], '仟元')}，{b} {fmt_value(t['prior'], '仟元')}，"
              f"變動 {fmt_value(t['delta'], '仟元')}{_page(t['page'])}"]
     comps = [c for c in t["components"] if c["delta"] is not None][:5]
-    lines += [f"  - {c['label']}：變動 {fmt_value(c['delta'], '仟元')}，占 {_pct(c['share'])}%{_page(c['page'])}"
-              for c in comps]
-    lines.append(f"  殘差 {fmt_value(t['residual'], '仟元')}（未歸入組成項的差額）")
+    for c in comps:
+        body = _cost_text(c, target) or f"變動 {fmt_value(c['delta'], '仟元')}"
+        lines.append(f"  - {c['label']}：{body}，占 {_pct(c['share'])}%{_page(c['page'])}")
+    if t["residual"] is not None and abs(t["residual"]) >= 500:  # 四捨五入到 0.01 億仍非 0
+        lines.append(f"  未歸類項目 {_yi(abs(t['residual']))} 億（未歸入組成項的差額）")
     return lines
 
 

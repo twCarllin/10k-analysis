@@ -88,12 +88,15 @@ def test_multi_candidate_picks_larger_page_on_tie(ar_doc):
 
 
 def test_normalized_income_tax_uses_same_page_cogs_sign():
-    # cogs 原值為正（表內費用以正數表示）且稅為負（稅利益）→ 正值；與勾稽共用同一入口
+    # 無括號詞的所得稅依帳上「淨利−稅前」定號（spec 2026-10-11-tw-equity-sign-fix §6 A2）：
+    # current 淨利 > 稅前 → 稅利益（正值）；prior 淨利 < 稅前 → 稅費用（負值）
     from runtime.tw_equity.fy_income import FyIncome
 
     rows = [
         {"label": "營業成本", "key": "cogs", "current": 600, "prior": 500},
+        {"label": "稅前淨利", "key": "pretax_income", "current": 100, "prior": 200},
         {"label": "所得稅費用", "key": "income_tax", "current": -40, "prior": 50},
+        {"label": "本期淨利", "key": "net_income", "current": 140, "prior": 150},
     ]
     fy = FyIncome(114, 1, "仟元", 1.0, "consolidated", rows)
     assert fy.normalized("income_tax", "current") == 40

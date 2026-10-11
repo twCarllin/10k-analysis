@@ -233,8 +233,8 @@ METRIC_SPECS: list[MetricSpec] = [
                lambda v: _pct(abs(v["rd_expenses"]), v["revenue"])),
     MetricSpec("opex_ratio", "營業費用率", "abs(total_opex) / revenue * 100", ("total_opex", "revenue"), "%",
                lambda v: _pct(abs(v["total_opex"]), v["revenue"])),
-    MetricSpec("effective_tax_rate", "有效稅率", "abs(income_tax) / pretax_income * 100",
-               ("income_tax", "pretax_income"), "%", lambda v: _pct(abs(v["income_tax"]), v["pretax_income"])),
+    MetricSpec("effective_tax_rate", "有效稅率", "-income_tax / pretax_income * 100",
+               ("income_tax", "pretax_income"), "%", lambda v: _pct(-v["income_tax"], v["pretax_income"])),
     MetricSpec("dividend_payout", "現金股利支付率", "abs(dividends_paid) / net_income_parent * 100",
                ("dividends_paid", "net_income_parent"), "%",
                lambda v: _pct(abs(v["dividends_paid"]), v["net_income_parent"])),
@@ -271,7 +271,8 @@ BRIDGE_SPECS: list[BridgeSpec] = [
         "change_net_defined_benefit")),
     BridgeSpec("net_income", "淨利變動", (
         "revenue", "cogs", "selling_expenses", "admin_expenses", "rd_expenses", "interest_income", "other_income",
-        "other_gains_losses", "finance_costs", "equity_method_share", "income_tax")),
+        "other_gains_losses", "finance_costs", "equity_method_share", "income_tax",
+        "other_operating_net", "fx_gain_loss")),
     BridgeSpec("operating_income", "營業利益變動", ("revenue", "cogs", "total_opex")),
     BridgeSpec("net_change_in_cash", "現金變動", ("cfo", "cfi", "cff", "fx_effect")),
     BridgeSpec("cfi", "投資現金流變動", (
@@ -298,8 +299,10 @@ _PERIODS = ("current", "prior")
 FH_METRIC_SPECS: list[MetricSpec] = [
     MetricSpec("equity_to_assets", "權益／總資產", "total_equity / total_assets * 100",
                ("total_equity", "total_assets"), "%", lambda v: _pct(v["total_equity"], v["total_assets"])),
-    MetricSpec("credit_cost", "信用成本率（提存／放款淨額）", "abs(provision) / loans_net * 100",
-               ("provision", "loans_net"), "%", lambda v: _pct(abs(v["provision"]), v["loans_net"])),
+    # 依帳本印出符號（spec 2026-10-11-tw-equity-sign-fix §2 C）：提存印負 → 正成本率；迴轉印正 → 負值。
+    # 2026-10-11 全量 15 家金控／銀行提存皆印負（僅 2880 前期迴轉為正）；若有提存印正者，本式會得負值。
+    MetricSpec("credit_cost", "信用成本率（提存／放款淨額）", "-provision / loans_net * 100",
+               ("provision", "loans_net"), "%", lambda v: _pct(-v["provision"], v["loans_net"])),
     MetricSpec("cost_income_ratio", "成本收入比", "abs(total_opex) / net_revenue * 100",
                ("total_opex", "net_revenue"), "%", lambda v: _pct(abs(v["total_opex"]), v["net_revenue"])),
     MetricSpec("roa", "ROA（期末總資產，H1 未年化）", "net_income / total_assets * 100",
@@ -334,6 +337,27 @@ def _ledger_value(ledger: StatementLedger, key: str, period: str, bs_prior_tag: 
                 tag = "flow_current" if period == "current" else "flow_prior"
             return ledger.value_at(key, tag)
     return None
+
+
+# 工業公司損益費用類：各家印法不同（正數或括號負數），取值時統一成 −|v|（Spec 2026-10-11-tw-equity-sign-fix §2 A）。
+# cogs／total_opex／income_tax 走 fy_income.normalize_sign（含所得稅括號詞規則）；下列 key 另取 −|v|。
+_IS_EXPENSE_KEYS = ("selling_expenses", "admin_expenses", "rd_expenses", "finance_costs")
+
+
+def _signed_value(ledger: StatementLedger, key: str, period: str) -> float | None:
+    """帳本值；IS 費用類（cogs、營業費用、財務成本、所得稅）正規化成費用為負；其餘原值。"""
+    v = _ledger_value(ledger, key, period)
+    if v is None:
+        return None
+    row = next((r for r in ledger.rows if r.key == key), None)
+    if row is None or row.statement != "is":
+        return v
+    if key in _IS_EXPENSE_KEYS:
+        return -abs(v)
+    cogs_tag = "flow_current" if period == "current" else "flow_prior"
+    return normalize_sign(key, row.label, v, cogs_raw=ledger.value_at("cogs", cogs_tag),
+                          pretax_raw=ledger.value_at("pretax_income", cogs_tag),
+                          net_income_raw=ledger.value_at("net_income", cogs_tag))
 
 
 def _days_value(ledger: StatementLedger, period: str) -> float | None:
@@ -376,7 +400,9 @@ def compute_metrics(ledger: StatementLedger | None, fy_income: FyIncome | None =
             done = computed[period]
             inputs: dict[str, float | None] = {
                 k: (_days_value(ledger, period) if k == "days"
-                    else done[k] if k in done else _ledger_value(ledger, k, period))
+                    else done[k] if k in done
+                    else _signed_value(ledger, k, period) if k == "income_tax"
+                    else _ledger_value(ledger, k, period))
                 for k in spec.inputs
             }
             value = _spec_value(spec, inputs)
@@ -398,10 +424,15 @@ def compute_metrics(ledger: StatementLedger | None, fy_income: FyIncome | None =
     return pack
 
 
+_SIGNED_BRIDGE_KEYS = ("cogs", "total_opex", "income_tax") + _IS_EXPENSE_KEYS
+
+
 def _value(ledger: StatementLedger, pack: MetricsPack, key: str, period: str,
            bs_prior_tag: str = "bs_prior_same") -> float | None:
     if key in _METRIC_NAMES:
         return pack.get(key, period)
+    if key in _SIGNED_BRIDGE_KEYS:
+        return _signed_value(ledger, key, period)
     return _ledger_value(ledger, key, period, bs_prior_tag)
 
 
@@ -560,7 +591,9 @@ def _h1_normalized(ledger: StatementLedger, key: str, tag: str, cogs_tag: str,
     if row is None:
         return None
     return normalize_sign(key, row.label, ledger.value_at(src, tag),
-                          cogs_raw=ledger.value_at("cogs", cogs_tag))
+                          cogs_raw=ledger.value_at("cogs", cogs_tag),
+                          pretax_raw=ledger.value_at("pretax_income", cogs_tag),
+                          net_income_raw=ledger.value_at("net_income", cogs_tag))
 
 
 def _ttm_unavailable_reason(ledger: StatementLedger, fy: FyIncome | None) -> str | None:

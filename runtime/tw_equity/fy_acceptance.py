@@ -56,8 +56,11 @@ def anchor_compare(fy: FyIncome | None, ledger) -> dict:
             lrow = next((r for r in ledger.rows if r.key == key and r.statement == "is"), None)
             if lrow is not None:
                 crow = next((r for r in ledger.rows if r.key == "cogs" and r.statement == "is"), None)
+                prow = next((r for r in ledger.rows if r.key == "pretax_income" and r.statement == "is"), None)
+                nrow = next((r for r in ledger.rows if r.key == "net_income" and r.statement == "is"), None)
                 led_v = normalize_sign(
-                    key, lrow.label, lrow.current, None if crow is None else crow.current
+                    key, lrow.label, lrow.current, None if crow is None else crow.current,
+                    None if prow is None else prow.current, None if nrow is None else nrow.current,
                 )
         items[key] = {"fy": fy_v, "ledger": led_v, "equal": fy_v is not None and fy_v == led_v}
     return {"all_equal": all(i["equal"] for i in items.values()), "items": items}

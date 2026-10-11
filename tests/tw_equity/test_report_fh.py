@@ -28,7 +28,7 @@ from tests.tw_equity.test_report_metrics import _ledger as _ind_ledger  # noqa: 
 
 _KL = {k: (None, None) for k in ["營業收入", "營業成本", "營業毛利", "營業費用", "營業利益", "本期淨利"]}
 # 改動前（本 item 前）工業附錄 E 的 sha256：由 test_report_metrics 的 _bundle(compute_metrics(_ledger())) 渲染
-_IND_APPENDIX_E_SHA = "07e9be6c2331f37af371edd3af0b90cbd06bbdfe5ffe82517622957fae4e4396"
+_IND_APPENDIX_E_SHA = "10e6a8f9b41440d31f07b4ee80e942250ec49d43159d2c8131b7e0cade406011"  # 2026-10-11：有效稅率公式字串、淨利 bridge 新組成項（spec 2026-10-11-tw-equity-sign-fix §2 B、§6 A3）
 
 
 def _fh_bundle(b: SimpleNamespace, **override) -> TablesBundle:

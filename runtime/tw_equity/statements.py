@@ -325,9 +325,16 @@ _IS_KEYS = _build({
     ),
     "interest_income": ("利息收入",),
     "other_income": ("其他收入",),
-    "other_gains_losses": ("其他利益及損失",),
+    "other_gains_losses": ("其他利益及損失", "其他利益及損失淨額"),
+    "fx_gain_loss": (  # 營業外之外幣兌換損益（sign-fix Spec §6 A3；原無 key，只進淨利 bridge 組成項）
+        "外幣兌換淨益(損)", "外幣兌換淨利益(損失)", "外幣兌換利益(損失)", "外幣兌換損益", "外幣兌換淨(損)益",
+        "外幣兌換(損失)利益", "外幣兌換淨(損失)利益", "外幣兌換損益-淨額",
+    ),
     "finance_costs": ("財務成本", "利息費用", "財務(成本)"),
-    "equity_method_share": ("採用權益法認列之關聯企業及合資損益之份額",),
+    "equity_method_share": (
+        "採用權益法認列之關聯企業及合資損益之份額", "採用權益法認列之關聯企業損益份額",
+        "採用權益法認列之關聯企業及合資損益份額", "採用權益法認列之關聯企業損益",
+    ),
     "nonoperating_total": ("營業外收入及支出合計", "營業外收入及支出淨額", "營業外收入及(支出)合計"),
     "pretax_income": (
         "稅前淨利", "稅前淨利(損)", "稅前淨利(淨損)", "繼續營業單位稅前淨利", "繼續營業部門稅前淨利",
@@ -498,6 +505,15 @@ _FH_KEYS: dict[str, dict[str, str]] = {
 }
 
 
+# 折舊列別名（Spec 2026-10-11-tw-equity-sign-fix §2 E）：只在現金流量表、且不在投資／籌資區段才對；
+# 先剝除調整區段名前綴；精確比對（「攤銷」「按攤銷後成本衡量…」都不在集合內）。
+_CF_DEP_PREFIX_RE = re.compile(r"^不影響現金流量之收益費損項目:?")
+_CF_DEP_ALIASES = frozenset(_norm_label(a) for a in (
+    "折舊", "折舊費用", "折舊費用(含使用權資產)", "折舊費用(含投資性不動產及使用權資產)",
+    "不動產、廠房及設備折舊費用", "折舊及攤銷費用", "折舊及攤銷", "折舊及折耗費用",
+))
+
+
 def map_key(
     statement: str, label: str, section: str | None, schema: str = "industrial"
 ) -> str | None:
@@ -525,7 +541,11 @@ def map_key(
         return None
     if schema == "fh":
         return _FH_KEYS.get(statement, {}).get(nl)
-    return CANONICAL_KEYS.get(statement, {}).get(nl)
+    key = CANONICAL_KEYS.get(statement, {}).get(nl)
+    if key is None and statement == "cf" and not any(w in (section or "") for w in ("投資活動", "籌資活動")) \
+            and _CF_DEP_PREFIX_RE.sub("", nl) in _CF_DEP_ALIASES:
+        return "depreciation"
+    return key
 
 
 # ── 表頭偵測與期間欄（Spec 2026-10-09-tw-equity-fs-generalize §2.1） ────────────

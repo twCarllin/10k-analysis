@@ -71,12 +71,14 @@ def scale_for_unit(unit: str) -> float | None:
 
 
 def normalize_sign(
-    key: str | None, label: str, value: float | None, cogs_raw: float | None = None
+    key: str | None, label: str, value: float | None, cogs_raw: float | None = None,
+    pretax_raw: float | None = None, net_income_raw: float | None = None,
 ) -> float | None:
     """Spec §2.4／§2.7 符號正規化：費用為負、收入為正。
 
-    cogs／total_opex 取 -abs；income_tax 依括號詞（(費用)→原值、(利益)→-x）；無括號詞時，
-    同頁 cogs 原值為正（`cogs_raw > 0`，表內費用以正數表示）→ -x（負值＝稅利益），否則 -abs；
+    cogs／total_opex 取 -abs；income_tax 依括號詞（(費用)→原值、(利益)→-x）；無括號詞時（sign-fix Spec §6 A2），
+    用帳上關係：net_income_raw − pretax_raw ＝ 所得稅貢獻；兩者皆有值且 |差額| 與 |value| 相差 ≤ 1 仟元 → 取差額的符號
+    （|value| 帶差額符號），否則 -abs（cogs_raw 保留於簽名以相容呼叫端，不再參與判斷）；
     unrealized_sales_profit：標籤以 `減` 起頭 → -x（該列是自毛利扣除的項目），否則原值；其餘原值。
     """
     if value is None:
@@ -89,8 +91,10 @@ def normalize_sign(
             return value
         if "(利益)" in lab:
             return -value
-        if cogs_raw is not None and cogs_raw > 0:
-            return -value
+        if pretax_raw is not None and net_income_raw is not None:
+            diff = net_income_raw - pretax_raw
+            if abs(abs(diff) - abs(value)) <= _TOLERANCE and diff != 0:
+                return abs(value) if diff > 0 else -abs(value)
         return -abs(value)
     if key == "unrealized_sales_profit":
         return -value if _norm_label(label).startswith("減") else value
@@ -232,7 +236,9 @@ def _norm_val(rows: list[dict], key: str, period: str) -> tuple[bool, float | No
         return (False, None)
     cogs = _first_row(rows, "cogs")
     cogs_raw = None if cogs is None else cogs.get(period)
-    return (True, normalize_sign(key, row["label"], row.get(period), cogs_raw))
+    pt, ni = _first_row(rows, "pretax_income"), _first_row(rows, "net_income")
+    return (True, normalize_sign(key, row["label"], row.get(period), cogs_raw,
+                                 None if pt is None else pt.get(period), None if ni is None else ni.get(period)))
 
 
 def _approx(a: float, b: float) -> bool:

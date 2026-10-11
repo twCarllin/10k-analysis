@@ -3,7 +3,7 @@
 契約表：
   M1: total_equity=100,total_assets=1000 → equity_to_assets current==10.0；pack 指標 key 集合恰為 10 項（無工業 key、無 None 佔位）
   M2: roe＝net_income÷total_equity（期末，不平均）；roa＝net_income÷total_assets
-  M3: credit_cost＝|provision|÷loans_net，provision 印負或正結果相同
+  M3: credit_cost＝−provision÷loans_net（sign-fix Spec §2 C）：provision 印負（提存）為正、印正（迴轉）為負
   M4: [邊界] net_revenue 為 0 或缺列 → cost_income_ratio／nii_share／fee_share 為 None，其他指標不受影響
   M5: [組合] group=="fh" × fy_income=None → 指標照算、ttm 為 None 或 unavailable、不拋例外
   M6: group=None／非 fh → 輸出與 industrial_metrics_snapshot.json 逐值相同
@@ -69,10 +69,10 @@ def test_roe_roa_use_period_end_values():  # M2
     assert _cur(pack, "roa") == pytest.approx(40 / 1000 * 100)
 
 
-@pytest.mark.parametrize("provision", [-5, 5])
-def test_credit_cost_abs_provision(provision):  # M3
+@pytest.mark.parametrize("provision,expected", [(-5, 1.0), (5, -1.0)])
+def test_credit_cost_sign_provision(provision, expected):  # M3；依據 Spec sign-fix §2 C：−provision／loans_net，提存為正、迴轉為負
     pack = compute_metrics(_ledger({"provision": provision}), None, group="fh")
-    assert _cur(pack, "credit_cost") == pytest.approx(5 / 500 * 100)
+    assert _cur(pack, "credit_cost") == pytest.approx(expected)
 
 
 @pytest.mark.parametrize("case", ["zero", "missing"])

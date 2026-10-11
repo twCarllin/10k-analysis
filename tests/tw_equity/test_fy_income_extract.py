@@ -198,12 +198,15 @@ def test_income_tax_negative_with_positive_cogs_is_benefit():  # §2.7.4（8046 
     assert _check(fy, "net_prior")["passed"] is True     # 100 + 40（稅利益）
 
 
-def test_income_tax_negative_cogs_keeps_minus_abs():  # §2.7.4 邊界
+def test_income_tax_negative_cogs_keeps_minus_abs():  # §2.7.4 邊界；2026-10-11 改依帳上「淨利−稅前」定號（spec 2026-10-11-tw-equity-sign-fix §6 A2）
     from runtime.tw_equity.fy_income import normalize_sign
 
     assert normalize_sign("income_tax", "所得稅費用", 50, cogs_raw=-600) == -50
     assert normalize_sign("income_tax", "所得稅費用", 50) == -50
-    assert normalize_sign("income_tax", "所得稅費用", -40661, cogs_raw=31925633) == 40661
+    # 稅利益：淨利 > 稅前 → 正值（舊規則靠 cogs 原值為正推斷，已改為帳上關係）
+    assert normalize_sign("income_tax", "所得稅費用", -40661, pretax_raw=100000, net_income_raw=140661) == 40661
+    # 無淨利／稅前可對照 → 退回 −|v|（不再以 cogs 原值為正推斷稅利益）
+    assert normalize_sign("income_tax", "所得稅費用", -40661, cogs_raw=31925633) == -40661
 
 
 def test_unit_from_previous_page():  # §2.7.5（2368 型）
