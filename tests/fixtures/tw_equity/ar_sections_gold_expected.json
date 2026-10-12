@@ -1,0 +1,3396 @@
+{
+ "3653": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    94
+   ],
+   "basis_label": null,
+   "statement_basis_from_text": "unstated",
+   "unit_text": "單位：新台幣仟元",
+   "actual": {
+    "page": 94,
+    "opening_cash": 2267253,
+    "cfo": 4773519,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": 2063139,
+    "outflow": null,
+    "fx": 30156,
+    "closing_cash": 9134067,
+    "remedy_invest": "–",
+    "remedy_finance": "–",
+    "column_headers": [
+     "期初現金餘額",
+     "全年來自營業活動淨現金流量",
+     "全年因投資及籌資活動淨現金流量",
+     "全年因匯率變動對現金及約當現金之影響",
+     "現金剩餘數額",
+     "現金不足額之補救措施／投資計畫",
+     "現金不足額之補救措施／理財計畫"
+    ]
+   },
+   "actual_explanations": {
+    "operating": "營業活動產生淨現金流入4,773,519仟元，主係獲利增加產生之營業活動淨現金流入。",
+    "investing": "投資活動產生淨現金流出1,013,580仟元，主係購置不動產、廠房及機器設備。",
+    "financing": "籌資活動產生淨現金流入3,076,719仟元，主係發行可轉換公司債5,197,445仟元及發放113年度股東現金股利2,072,369仟元。"
+   },
+   "forecast": {
+    "applicable": true,
+    "page": 94,
+    "opening_cash": 9134067,
+    "cfo": 7160278,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": -4687141,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": 11821787,
+    "remedy_invest": "–",
+    "remedy_finance": "–",
+    "column_headers": [
+     "期初現金餘額(1)",
+     "預計全年來自營業活動淨現金流量(2)",
+     "預計全年因投資及籌資活動淨現金流量(3)",
+     "預計現金剩餘數額(1)+(2)-(3)",
+     "預計現金不足額之補救措施／投資計畫",
+     "預計現金不足額之補救措施／理財計畫"
+    ]
+   },
+   "forecast_explanations": {
+    "operating": "營業活動：主係獲利穩定產生之營業活動淨現金流入。",
+    "investing": "投資活動：投資活動產生淨現金流出，主係興建廠房及購置營運所需生產設備之資本支出。",
+    "financing": "籌資活動：籌資活動產生淨現金流出，主係發放股東現金股利。"
+   },
+   "notes": "表A平：2,267,253+4,773,519+2,063,139+30,156=9,134,067。表B不平：表頭寫(1)+(2)-(3)，(3)原文為(4,687,141)；9,134,067+7,160,278+(-4,687,141)=11,607,204，與原文11,821,787差214,583（照(1)+(2)-(3)代負值則為20,981,486，也不符）。表A與表B之間另有「(二)現金流動性不足之改善計畫：不適用」。說明文字表A在表格框內。p94文字層的「金」「量」「流」多為CJK相容字（U+F90A、U+F97E、U+F9CA），本檔一律存標準字；比對時建議先做NFKC正規化。"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    91
+   ],
+   "rows": [
+    {
+     "page": 91,
+     "entity": null,
+     "nature": "桃園航空城土地標售契約",
+     "parties": [
+      "健策精密工業股份有限公司",
+      "桃園市政府"
+     ],
+     "period": "111.9~預告登記塗銷",
+     "content": "土地買賣",
+     "restrictions": "無"
+    },
+    {
+     "page": 91,
+     "entity": null,
+     "nature": "土地/房屋預定買賣契約書",
+     "parties": [
+      "健策精密工業股份有限公司",
+      "研本投資股份有限公司",
+      "安鳳實業有限公司",
+      "明珍投資有限公司"
+     ],
+     "period": "112.11.22",
+     "content": "土地/房屋買賣",
+     "restrictions": "無"
+    },
+    {
+     "page": 91,
+     "entity": null,
+     "nature": "工程採購契約",
+     "parties": [
+      "健策精密工業股份有限公司",
+      "富泰營造股份有限公司"
+     ],
+     "period": "112.9.25",
+     "content": "廠房興建工程",
+     "restrictions": "無"
+    }
+   ],
+   "none_entities": [],
+   "notes": "節標題「九、重要契約：」。欄序：契約性質｜當事人｜契約起迄日期｜主要內容｜限制條款（表頭寫「起迄」）。當事人儲存格多行，每行一家公司。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    99
+   ],
+   "chapter_heading": "陸、特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "see_mops",
+     "page": 99,
+     "text": "本公司關係企業相關資料已於公開資訊觀測站公告申報，請參閱公開資訊觀測站。查閱路徑如下：公開資訊觀測站＞單一公司＞電子文件下載＞關係企業三書表專區(https://mopsov.twse.com.tw/mops/web/t57sb01_q10)"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 99,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 99,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 99,
+     "text": "無。"
+    }
+   },
+   "notes": "4項依序：一關係企業、二私募、三其他補充、四第三十六條。"
+  }
+ },
+ "2330": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    66
+   ],
+   "basis_label": "台積公司及子公司財務報表",
+   "statement_basis_from_text": "unstated",
+   "unit_text": "單位：新台幣仟元",
+   "actual": {
+    "page": 66,
+    "opening_cash": 2127627043,
+    "cfo": 2274975625,
+    "cfi": -1144393407,
+    "cff": -440344692,
+    "cfi_cff": null,
+    "outflow": null,
+    "fx": -50008167,
+    "closing_cash": 2767856402,
+    "remedy_invest": "無",
+    "remedy_finance": "無",
+    "column_headers": [
+     "年初現金餘額(民國113年12月31日)",
+     "全年來自營業活動淨現金流量(民國114年)",
+     "全年因投資活動淨現金流量(民國114年)",
+     "全年因籌資活動淨現金流量(民國114年)",
+     "全年因匯率變動對現金及約當現金之影響（民國114年）",
+     "現金剩餘數額(民國114年12月31日)",
+     "流動性不足之改善計劃／投資計劃",
+     "流動性不足之改善計劃／融資計劃"
+    ]
+   },
+   "actual_explanations": {
+    "operating": "營業活動之現金流入約22,750億：主要係包含稅後淨利及折舊、攤銷費用。",
+    "investing": "投資活動之現金流出約11,444億：主要係用於資本支出。",
+    "financing": "籌資活動之現金流出約4,403億：主要係因發放現金股利。"
+   },
+   "forecast": {
+    "applicable": false,
+    "page": 66,
+    "opening_cash": null,
+    "cfo": null,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": null,
+    "remedy_invest": null,
+    "remedy_finance": null,
+    "column_headers": []
+   },
+   "forecast_explanations": {
+    "operating": null,
+    "investing": null,
+    "financing": null
+   },
+   "notes": "表A平（差0）。頁面為左右對開兩頁（印刷頁128、129），左半是6.1.3現金流量分析，右半是6.2風險管理，文字層同一行左右混排。節內有兩組表：「台積公司及子公司財務報表」（取此組，實質為合併）與「台積公司財務報表」（個體：1,035,061,499｜2,154,331,121｜(1,011,471,597)｜(1,102,032,648)｜(8,852,943)｜1,067,035,432｜無｜無）。兩組標題都沒有「合併」「個體」字樣，故statement_basis_from_text填unstated。表B原文「●未來一年現金流動性分析：不適用。」另有「●流動性不足之改善計劃及流動性分析：無現金流動性不足之情形。」pdfplumber表格把期初現金欄讀成空白，文字列有完整數字。"
+  },
+  "contracts": {
+   "status": "none",
+   "pages": [
+    62
+   ],
+   "rows": [],
+   "none_entities": [],
+   "notes": "節標題「5.7 重要契約」，在p62右欄（對開頁，印刷頁121）。原文：「除一般商業交易行為外，本公司目前並無簽訂重要契約。另本公司於財務報告亦揭露「重大或有負債及未認列之合約承諾」，請至公開資訊觀測站參閱本公司合併財務報告。」沒有表格。頁面三欄排版，文字層左中右欄混排。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    88,
+    89,
+    90,
+    91
+   ],
+   "chapter_heading": "關係企業暨其他特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "disclosed",
+     "page": 89,
+     "text": "有關本公司關係企業合併營業報告書，請參閱本報告「8.1.1 關係企業組織圖」至「8.1.6 各關係企業營運狀況」。"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 91,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 91,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 91,
+     "text": "無。"
+    }
+   },
+   "notes": "章名只出現在p88章扉頁圖片（CHAPTER 8「關係企業暨其他特別記載事項」），文字層沒有章名列。p89起「8.1 關係企業相關資料」（8.1.1組織圖～8.1.6各關係企業營運狀況，8.1.7關係企業合併財務報表及關係報告書請參閱公開資訊觀測站），p91「8.2 其他特別記載事項」：8.2.1私募、8.2.2第三十六條、8.2.3其他必要補充（順序：私募→第36條→其他補充）。"
+  }
+ },
+ "2317": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    145,
+    146
+   ],
+   "basis_label": null,
+   "statement_basis_from_text": "unstated",
+   "unit_text": "單位：新台幣仟元",
+   "actual": {
+    "page": null,
+    "opening_cash": null,
+    "cfo": null,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": null,
+    "remedy_invest": null,
+    "remedy_finance": null,
+    "column_headers": []
+   },
+   "actual_explanations": {
+    "operating": null,
+    "investing": null,
+    "financing": null
+   },
+   "forecast": {
+    "applicable": true,
+    "page": 146,
+    "opening_cash": 185143500,
+    "cfo": 3351555740,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": 3417538969,
+    "fx": null,
+    "closing_cash": 119160271,
+    "remedy_invest": "-",
+    "remedy_finance": "-",
+    "column_headers": [
+     "期初現金餘額(1)",
+     "預計全年度來自營業活動現金流入(2)",
+     "預計全年現金流出(3)",
+     "預計現金剩餘(不足)數額(1)+(2)-(3)",
+     "預計現金不足額之補求措施／投資計劃",
+     "預計現金不足額之補求措施／理財計劃"
+    ]
+   },
+   "forecast_explanations": {
+    "operating": "營業活動：本公司預計營業收入及獲利將持續成長。",
+    "investing": "投資活動：配合業務需求擴充生產設備。",
+    "financing": "理財活動：本期將發放現金股利、舉借短期借款及發行無擔保公司債。"
+   },
+   "notes": "本節沒有表A（本年度現金流量變動表）。p145「三、現金流量分析」下為「(一)最近二年度流動分析」（現金流量比率8.37%/7.63%、現金流量允當比率45.52%/64.57%、現金再投資比率4.84%/3.27%及增減比例變動分析），p146為「(二)未來一年現金流動性分析」表B。actual 全部填 null。表B平：185,143,500+3,351,555,740-3,417,538,969=119,160,271。表B說明標題原文「本年度(115年度)現金流量變動情形分析：」，第3段用「理財活動」。表頭原文「補求措施」（原文錯字，照錄）。期初現金185,143,500仟元遠小於合併規模，推測為個體數字（文字未寫明）。"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    142,
+    143
+   ],
+   "rows": [
+    {
+     "page": 142,
+     "entity": null,
+     "nature": "買賣契約",
+     "parties": [
+      "Apple Computer, Inc."
+     ],
+     "period": "1999/12/07 至合約一方依合約規定終止合約為止。",
+     "content": "產品之買賣",
+     "restrictions": "保留變動交期及訂單權利"
+    },
+    {
+     "page": 142,
+     "entity": null,
+     "nature": "買賣契約",
+     "parties": [
+      "Cisco Systems Inc."
+     ],
+     "period": "2019/1/1 起1年，如期滿前雙方無終止之意思表示, 契約以1年期持續延長。",
+     "content": "產品之買賣",
+     "restrictions": "保留變動交期及訂單權利"
+    },
+    {
+     "page": 142,
+     "entity": null,
+     "nature": "買賣契約",
+     "parties": [
+      "Dell Products L.P."
+     ],
+     "period": "1999/12/01至2000/11/30，如期滿前雙方無終止之意思表示, 契約以1年期持續延長。",
+     "content": "產品之買賣",
+     "restrictions": "保留變動交期及訂單權利"
+    },
+    {
+     "page": 142,
+     "entity": null,
+     "nature": "買賣契約",
+     "parties": [
+      "Hewlett-Packard Company"
+     ],
+     "period": "2003/05/07 - 2008/05/06，如期滿前雙方無終止之意思表示，契約以2年期持續延長。",
+     "content": "產品之買賣",
+     "restrictions": "保留變動交期及訂單權利"
+    },
+    {
+     "page": 143,
+     "entity": null,
+     "nature": "買賣契約",
+     "parties": [
+      "International Business Machines Corporation"
+     ],
+     "period": "2008/07/07 至合約一方依合約規定終止合約為止。",
+     "content": "產品之買賣",
+     "restrictions": "保留變動交期及訂單權利"
+    },
+    {
+     "page": 143,
+     "entity": null,
+     "nature": "買賣契約",
+     "parties": [
+      "Lenovo (Singapore) Pte. Ltd."
+     ],
+     "period": "2003/11/04 起至一方按合約規定終止合約",
+     "content": "產品之買賣",
+     "restrictions": "保留變動交期及訂單權利"
+    },
+    {
+     "page": 143,
+     "entity": null,
+     "nature": "買賣契約",
+     "parties": [
+      "Microsoft Corporation"
+     ],
+     "period": "2009/10/27 起5年有效，契約得因Microsoft提前120天通知延續1年；2017年修訂為契約持續有效至一方依約終止為止。",
+     "content": "產品之買賣",
+     "restrictions": "保留變動交期及訂單權利"
+    },
+    {
+     "page": 143,
+     "entity": null,
+     "nature": "專利授權契約",
+     "parties": [
+      "MPEG LA"
+     ],
+     "period": "2009/12/28至專利期限屆滿日止。",
+     "content": "技術授權",
+     "restrictions": "非專屬授權、不可轉讓授權"
+    },
+    {
+     "page": 143,
+     "entity": null,
+     "nature": "專利授權契約",
+     "parties": [
+      "Qualcomm Incorporated"
+     ],
+     "period": "2005/10/18 起有效至一方或雙方依照合約規定終止合約為止。",
+     "content": "技術授權",
+     "restrictions": "非專屬授權、不可轉讓授權"
+    },
+    {
+     "page": 143,
+     "entity": null,
+     "nature": "買賣契約",
+     "parties": [
+      "Sony Corporation"
+     ],
+     "period": "2010/01/26起有效1年，每年得自動延長1年。",
+     "content": "產品之買賣",
+     "restrictions": "保留變動交期及訂單權利"
+    },
+    {
+     "page": 143,
+     "entity": null,
+     "nature": "技術授權契約",
+     "parties": [
+      "India Chip Private Limited *被授權法人為集團與另一印度法人以持股比例40:60成立之合資公司"
+     ],
+     "period": "2025/07/07 起有效至一方或雙方依照合約規定終止合約為止。",
+     "content": "技術授權",
+     "restrictions": "非專屬授權、不可轉讓授權"
+    }
+   ],
+   "none_entities": [],
+   "notes": "節標題「七、重要契約」（營運概況章）。欄序：契約性質｜他方當事人｜契約起迄日期｜主要內容｜限制條款。每列只有1個他方當事人（本公司未列）。表格跨p142（4列）與p143（7列，重複表頭）。英文名稱跨行處以1個空格接起（例：International Business Machines Corporation）；中英混排處的空白比對時建議去除。最後一列當事人儲存格含註記「*被授權法人為集團與另一印度法人以持股比例40:60成立之合資公司」，照存在同一個當事人字串。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    153
+   ],
+   "chapter_heading": "陸、特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "see_mops",
+     "page": 153,
+     "text": "(一) 關係企業合併營業報告書請參閱公開資訊觀測站>單一公司>電子文件下載>關係企業三書表專區https://mopsov.twse.com.tw/mops/web/t57sb01_q10(二) 關係企業合併財務報表請參閱公開資訊觀測站>單一公司>電子文件下載>關係企業三書表專區https://mopsov.twse.com.tw/mops/web/t57sb01_q10(三) 關係企業報告書：不"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 153,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 153,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 153,
+     "text": "最近年度及截至年報刊印日止，依證券交易法第三十六條第三項第二款所定對股東權益或證券價格有重大影響之事項：無。"
+    }
+   },
+   "notes": "第4項另立一章「柒、對股東權益或證券價格有重大影響之事項」，同在p153，章下只有一段文字，故text存整段。關係企業項：(一)(二)請參閱觀測站，(三)關係企業報告書不適用，判為see_mops。"
+  }
+ },
+ "1216": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    142
+   ],
+   "basis_label": null,
+   "statement_basis_from_text": "parent",
+   "unit_text": "單位：新台幣仟元",
+   "actual": {
+    "page": 142,
+    "opening_cash": 97737,
+    "cfo": 18064740,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": 18087649,
+    "fx": null,
+    "closing_cash": 74828,
+    "remedy_invest": "無",
+    "remedy_finance": "無",
+    "column_headers": [
+     "期初現金及約當現金餘額(1)",
+     "全年來自營業活動淨現金流量(2)",
+     "全年現金流出量(3)",
+     "現金剩餘（不足）數額(1)+(2)-(3)",
+     "現金不足額之補救措施／投資計劃",
+     "現金不足額之補救措施／理財計劃"
+    ]
+   },
+   "actual_explanations": {
+    "operating": "營業活動：114年營業活動之淨現金流入較113年減少，主要係本期支付之利息及所得稅增加所致。",
+    "investing": "投資活動：114年投資活動之淨現金流出較113年減少，主要係本期取得採用權益法之投資所產生的淨現金流出減少所致。",
+    "financing": "籌資活動：114年籌資活動之淨現金流出較113年增加，主要係本期償還長期借款增加所致。"
+   },
+   "forecast": {
+    "applicable": true,
+    "page": 142,
+    "opening_cash": null,
+    "cfo": null,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": null,
+    "remedy_invest": null,
+    "remedy_finance": null,
+    "column_headers": []
+   },
+   "forecast_explanations": {
+    "operating": "營業活動：本業獲利與來自轉投資公司之現金股利穩定流入。",
+    "investing": "投資活動：配合經營策略進行企業投資與資本支出。",
+    "financing": "籌資活動：本期仍發放現金股利及償還到期公司債，將舉借銀行借款與發行無擔保公司債。"
+   },
+   "notes": "節標題「三、現金流量之檢討與分析-個體報表」，全節只有個體數字，沒有合併組（章目錄p137只列一個「三、現金流量之檢討與分析」）。表A為「全年現金流出量」寫法，平：97,737+18,064,740-18,087,649=74,828。表B「(三)未來一年現金流動性分析」只有文字說明，沒有數字表格（不是寫「不適用」），故applicable=true、數字欄全null；說明前導句原文為「114年現金流量情形分析：」。另有「(二)流動性不足之改善計畫：本年度無現金不足額情形。」"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    134
+   ],
+   "rows": [
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "代工合約",
+     "parties": [
+      "宏全國際(股)公司"
+     ],
+     "period": "民國113.01.01~民國122.12.31",
+     "content": "PET飲品委託代工",
+     "restrictions": "1. 如水、電、油、工資價格調漲或調降時，或其他影響成本因素發生時，雙方同意依實際增減調整代工費用。2. PET廠：統一保證PET廠年生產量600萬箱以上，並正式量產開始後合作10年，宏全專為統一代工統一產品。統一訂單未達承諾量年平均生產量時，宏全可經統一同意代工其他廠商產品，生產排程以優先供應統一訂單無缺為原則，其代工數量可合併計算在統一年度統計數量內。"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "代工合約",
+     "parties": [
+      "三福產業（股）公司"
+     ],
+     "period": "民國115.01.01~民國116.12.31",
+     "content": "布丁代工",
+     "restrictions": "1. 商標使用範圍僅限於代工包裝。2. 營業祕密資訊負保密責任。"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "代工合約",
+     "parties": [
+      "愛之味（股）公司"
+     ],
+     "period": "民國115.01.01~民國116.12.31",
+     "content": "統一常溫牛乳代工",
+     "restrictions": "1. 商標使用範圍僅限於代工包裝。2. 營業秘密資訊負保密責任。"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "代工合約",
+     "parties": [
+      "大統益公司"
+     ],
+     "period": "民國115.01.01~民國116.12.31",
+     "content": "油品代工合約書",
+     "restrictions": "1. 商標使用範圍僅限於代工包裝。2. 營業秘密資訊負保密責任。"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "合作契約",
+     "parties": [
+      "日清公司"
+     ],
+     "period": "民國115.01.01~民國115.12.31",
+     "content": "技術合作契約",
+     "restrictions": "授權"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "元大商業銀行"
+     ],
+     "period": "民國113.11.13~民國116.11.12",
+     "content": "信用借款額度新台幣50億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "臺灣銀行"
+     ],
+     "period": "民國113.12.20~民國116.12.20",
+     "content": "信用借款額度新台幣50億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "大陸商中國銀行"
+     ],
+     "period": "民國113.11.27~民國116.11.26",
+     "content": "信用借款額度新台幣20億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "大陸商交通銀行"
+     ],
+     "period": "民國113.08.14~民國116.08.14",
+     "content": "信用借款額度新台幣45億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "臺灣土地銀行"
+     ],
+     "period": "民國114.05.15~民國117.05.15",
+     "content": "信用借款額度新台幣30億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "香港上海匯豐銀行"
+     ],
+     "period": "民國114.10.12~民國116.10.12",
+     "content": "信用借款額度美金45佰萬元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "彰化商業銀行"
+     ],
+     "period": "民國114.06.27~民國117.06.27",
+     "content": "信用借款額度新台幣20億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "合作金庫商業銀行"
+     ],
+     "period": "民國114.09.26~民國117.09.26",
+     "content": "信用借款額度新台幣30億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "大慶票券金融公司"
+     ],
+     "period": "民國114.05.14~民國117.05.14",
+     "content": "應付商業本票額度新台幣23億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "中華票券金融公司"
+     ],
+     "period": "民國113.05.14~民國116.05.13",
+     "content": "應付商業本票額度新台幣30億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "中華票券金融公司"
+     ],
+     "period": "民國114.09.15~民國117.09.14",
+     "content": "應付商業本票額度新台幣15億元整",
+     "restrictions": "無"
+    },
+    {
+     "page": 134,
+     "entity": null,
+     "nature": "長期借款",
+     "parties": [
+      "兆豐票券金融公司"
+     ],
+     "period": "民國114.09.03~民國117.09.01",
+     "content": "應付商業本票額度新台幣20億元整",
+     "restrictions": "無"
+    }
+   ],
+   "none_entities": [],
+   "notes": "節標題「八、重要契約」（p105為目錄頁的同名列，不是正文）。表頭右上「114年12月31日」。17列，全在p134。每列1個當事人。pdfplumber表格第1列限制條款有斷字錯誤（「1.如 水」「2.P ET廠」），以頁面圖像為準。三福產業列寫「營業祕密」（祕），愛之味、大統益列寫「營業秘密」（秘），照原文。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    150,
+    151,
+    152
+   ],
+   "chapter_heading": "特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "see_mops",
+     "page": 152,
+     "text": "請索引公開資訊觀測站網站連結:1. 索引路徑(新版MOPS) 公開資訊觀測站>單一公司>電子文件下載>關係企業三書表專區2. 網址 https://mopsov.twse.com.tw/mops/web/t57sb01_q10"
+    },
+    "private_placement": {
+     "status": "see_mops",
+     "page": 152,
+     "text": "請索引公開資訊觀測站網站連結:1. 索引路徑(新版MOPS) 公開資訊觀測站>主題專區>投資專區>私募專區>私募專區2. 網址 https://mops.twse.com.tw/mops/#/web/t116sb01"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 152,
+     "text": "最近年度及截至年報刊印日止，有無發生證交法第36條第三項第二款所定對股東權益或證券價格有重大影響之事項：無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 152,
+     "text": "最近年度及截至年報刊印日止，有無發生證交法第36條第三項第二款所定對股東權益或證券價格有重大影響之事項：無。"
+    }
+   },
+   "notes": "p150為章扉頁，「陸」與「特別記載事項」分兩行（另有英文SPECIAL DISCLOSURES），沒有「陸、特別記載事項」連寫的章名列。p151為章內目錄（只列一、二、三，3項）。p152正文只有3個子項標題；第三十六條事項沒有獨立子項，寫在「三、其他必要補充說明事項」底下（寫「證交法第36條」阿拉伯數字）。判定：other_supplement=disclosed（內文就是第36條聲明）、material_events_36=none（同一段原文）。此判定有疑義：other_supplement也可視為none。私募項只給觀測站連結，判see_mops。 主 flow 裁示（2026-10-12）：other_supplement 內文只有第 36 條陳述且以「無」結尾 → none。"
+  }
+ },
+ "2454": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    107
+   ],
+   "basis_label": "3.1 合併財務報表",
+   "statement_basis_from_text": "consolidated",
+   "unit_text": "單位：新台幣仟元",
+   "actual": {
+    "page": 107,
+    "opening_cash": 203695892,
+    "cfo": 162792872,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": -125428719,
+    "outflow": null,
+    "fx": -5769963,
+    "closing_cash": 235290082,
+    "remedy_invest": "-",
+    "remedy_finance": "-",
+    "column_headers": [
+     "期初現金餘額",
+     "全年來自營業活動淨現金流量",
+     "全年因投資及籌資活動淨現金流量",
+     "匯率影響數",
+     "現金剩餘數額",
+     "現金不足額之補救措施／投資計劃",
+     "現金不足額之補救措施／理財計劃"
+    ]
+   },
+   "actual_explanations": {
+    "operating": "營業活動：淨現金流入新台幣162,792,872仟元，主係營業獲利。",
+    "investing": "投資活動：淨現金流出新台幣37,753,968仟元，主係取得債券等金融資產、無形資產及不動產、廠房及設備。",
+    "financing": "籌資活動：淨現金流出新台幣87,674,751仟元，主係發放現金股利。"
+   },
+   "forecast": {
+    "applicable": false,
+    "page": 107,
+    "opening_cash": null,
+    "cfo": null,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": null,
+    "remedy_invest": null,
+    "remedy_finance": null,
+    "column_headers": []
+   },
+   "forecast_explanations": {
+    "operating": null,
+    "investing": null,
+    "financing": null
+   },
+   "notes": "節「3. 現金流量分析」分兩組：3.1 合併財務報表（取此組）、3.2 個體財務報表（$89,141,863｜$118,962,570｜$(87,006,399)｜$121,098,034｜-｜-，無匯率欄）。金額前有$符號。表A平：203,695,892+162,792,872-125,428,719-5,769,963=235,290,082；說明文字投資-37,753,968＋籌資-87,674,751＝-125,428,719，與合併欄一致。表B：「3.1.3 未來一年現金流動性分析：不適用。」另有「3.1.2 預計現金不足額之補救措施及流動性分析：預計無現金不足額之情形。」說明文字前導「-」符號已去除。"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    75
+   ],
+   "rows": [
+    {
+     "page": 75,
+     "entity": null,
+     "nature": "專利授權",
+     "parties": [
+      "Rambus Inc."
+     ],
+     "period": "106.01.01起",
+     "content": "Rambus與本公司延續專利授權合約，回溯至106年初",
+     "restrictions": "無"
+    },
+    {
+     "page": 75,
+     "entity": null,
+     "nature": "不動產開發經營",
+     "parties": [
+      "交通部鐵道局"
+     ],
+     "period": "111.06.14起",
+     "content": "子公司旭源投資股份有限公司與交通部鐵道局就新竹縣竹北市世興段2地號土地，簽署高速鐵路新竹車站特定區車站專用區（二）設定地上權契約及開發經營契約，以於該地建築及經營辦公大樓",
+     "restrictions": "無"
+    },
+    {
+     "page": 75,
+     "entity": null,
+     "nature": "土建工程",
+     "parties": [
+      "麗明營造股份有限公司"
+     ],
+     "period": "112.11.10起",
+     "content": "子公司旭源投資(股)公司為高速鐵路新竹車站特定區專(二)地上權案簽訂土建工程契約",
+     "restrictions": "無"
+    },
+    {
+     "page": 75,
+     "entity": null,
+     "nature": "土建工程",
+     "parties": [
+      "根基營造股份有限公司"
+     ],
+     "period": "112.12.20起",
+     "content": "本公司銅鑼資料中心簽訂土建工程契約",
+     "restrictions": "無"
+    },
+    {
+     "page": 75,
+     "entity": null,
+     "nature": "土建工程",
+     "parties": [
+      "麗明營造股份有限公司"
+     ],
+     "period": "113.07.24起",
+     "content": "本公司興建辦公大樓案建築土建工程採購",
+     "restrictions": "無"
+    }
+   ],
+   "none_entities": [],
+   "notes": "節標題「4. 重要契約」（營運概況章，章名不是「伍、營運概況」型式）。表頭右上「115年2月28日」。欄名用「契約期間」（不是起訖日期）。表下註：「註:其他相關合約承諾請參閱本公司114年度合併財務報告暨會計師查核報告。」"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    115
+   ],
+   "chapter_heading": "柒、特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "see_mops",
+     "page": 115,
+     "text": "請參考公開資訊觀測站/關係企業三書表專區。"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 115,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 115,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 115,
+     "text": "無。"
+    }
+   },
+   "notes": "章名在p115中段（前半頁是「7. 其他重要事項」）。子項順序：1關係企業、2私募、3第三十六條、4其他補充。關係企業寫「請參考」（不是「請參閱」）。"
+  }
+ },
+ "2603": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    134
+   ],
+   "basis_label": null,
+   "statement_basis_from_text": "unstated",
+   "unit_text": "單位：新台幣仟元",
+   "actual": {
+    "page": 134,
+    "opening_cash": 253369890,
+    "cfo": 101202073,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": -180205706,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": 174366257,
+    "remedy_invest": "－",
+    "remedy_finance": "－",
+    "column_headers": [
+     "期初現金餘額(1)",
+     "全年來自營業活動淨現金流量(2)",
+     "全年來自投資及融資淨現金流入(出)量(3)",
+     "現金剩餘(不足)數額(1)+(2)+(3)",
+     "預計現金不足額之補救措施／投資計劃",
+     "預計現金不足額之補救措施／理財計畫"
+    ]
+   },
+   "actual_explanations": {
+    "operating": "營業活動：全年來自營業活動淨現金流入。",
+    "investing": "投資活動：淨現金流出主因為取得金融資產與購置船舶、貨櫃、機具設備之價款。",
+    "financing": "融資活動：淨現金流出主因為配發現金股利。"
+   },
+   "forecast": {
+    "applicable": true,
+    "page": 134,
+    "opening_cash": 174366257,
+    "cfo": 56383950,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": -56080086,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": 174670121,
+    "remedy_invest": "－",
+    "remedy_finance": "－",
+    "column_headers": [
+     "期初現金餘額(1)",
+     "預計全年來自營業活動淨現金流量(2)",
+     "預計全年來自投資及融資淨現金流入(出)量(3)",
+     "預計現金剩餘(不足)數額(1)+(2)+(3)",
+     "預計現金不足額之補救措施／投資計劃",
+     "預計現金不足額之補救措施／理財計劃"
+    ]
+   },
+   "forecast_explanations": {
+    "operating": "全年來自營業活動淨現金流量：預估由營業活動產生之現金流量。",
+    "investing": null,
+    "financing": "全年來自投資及融資淨現金流量：償還銀行借款、購置固定資產與配發現金股利。"
+   },
+   "notes": "「5-3 現金流量分析」，5-3-1表A、5-3-2未來一年(115年度)表B，皆在p134。表A平：253,369,890+101,202,073+(-180,205,706)=174,366,257（表頭公式(1)+(2)+(3)，括號為負數）。表B平：174,366,257+56,383,950+(-56,080,086)=174,670,121。無匯率欄。表A表頭「理財計畫」（畫），表B表頭「理財計劃」（劃），照原文。表A說明第3段用「融資活動」。表B說明前導句原文也寫「本年度現金流量變動情形分析：」，內容是3點：1.期初現金餘額：114年12月31日之現金及約當現金。2.全年來自營業活動淨現金流量（填operating）3.全年來自投資及融資淨現金流量（投資與籌資合併一段，填financing，investing填null）。補救措施原文為「－」（圖像顯示為長橫線）。另有「現金不足額之補救措施及流動性分析：無」。表內未寫合併或個體。"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131
+   ],
+   "rows": [
+    {
+     "page": 123,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "YANG MING MARINE TRANSPORT CORP."
+     ],
+     "period": "起：98.09.04迄：無期間限制，惟終止合約應於60天前通知。",
+     "content": "與陽明艙位互換(泛亞洲地區航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 123,
+     "entity": null,
+     "nature": "艙位租用合約",
+     "parties": [
+      "FUJIAN FOREIGN TRADE CENTRE SHIPPING CO."
+     ],
+     "period": "起：97.03.01迄：98.02.28合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "向福建外貿中心船務公司(美達船務)包艙(福州-高雄航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 123,
+     "entity": null,
+     "nature": "艙位租用合約",
+     "parties": [
+      "SMART POINT SHIPPING LTD."
+     ],
+     "period": "起：100.06.12迄：101.06.11合約期滿可自動續約，惟終止合約應於60天前通知。",
+     "content": "向美峰船務買艙(福州-台北-高雄航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 123,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "SMART POINT SHIPPING LTD."
+     ],
+     "period": "起：99.11.29迄：100.05.30合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與美峰艙位互換(台灣-廈門航線(EMC)，台灣-福州-廈門航線(SMART POINT))",
+     "restrictions": "無"
+    },
+    {
+     "page": 123,
+     "entity": null,
+     "nature": "艙位租用合約",
+     "parties": [
+      "CHINA UNITED LINES LTD."
+     ],
+     "period": "起：99.09.27迄：100.09.26合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "向中聯航運公司包艙(華中-台灣兩岸子船航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 124,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "WAN HAI LINES LTD."
+     ],
+     "period": "起：91.09.01迄：92.08.31合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與萬海聯營(日本-台灣-香港航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 124,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "WAN HAI LINES LTD."
+     ],
+     "period": "起：97.09.12迄：98.09.11合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與萬海聯營(日本-台灣-海防快捷航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 124,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "WAN HAI LINES LTD."
+     ],
+     "period": "起：113.08.09迄：114.02.09合約期滿可自動續約，惟終止合約應於60天前通知。",
+     "content": "與萬海聯營(香港/華南-台灣-菲律賓航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 124,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "SAMUDERA SHIPPING LINE LTD."
+     ],
+     "period": "起：114.07.11迄：115.07.11合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與SSL聯營(星馬/印尼/仰光航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 124,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "OOCL (ASIA PACIFIC) LTD.",
+      "YANGMING (UK) LTD."
+     ],
+     "period": "起：95.04.30迄：96.04.29合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與左列2家公司聯營(台灣-香港-越南航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 124,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "WAN HAI LINES LTD.",
+      "HAPAG-LLOYD CONTAINER LINE"
+     ],
+     "period": "起：95.04.30迄：113.04.29合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與左列2家公司聯營(台灣-大陸-星馬-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 125,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "WAN HAI LINES LTD.",
+      "YANG MING MARINE TRANSPORT CORP."
+     ],
+     "period": "起：114.10.31迄：115.10.31合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與萬海/陽明聯營(華北/華中-印尼-新加坡/馬來西亞航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 125,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "WAN HAI LINES LTD."
+     ],
+     "period": "起：113.01.08迄：無期間限制，惟終止合約應於45天前通知。",
+     "content": "與萬海艙位互換(日本-台灣-印尼(EMC)及華北-華中-華南-越南航線(WHL))",
+     "restrictions": "無"
+    },
+    {
+     "page": 125,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "NEW GOLDEN SEA SHIPPING PTE LTD.",
+      "UNIFEEDER FZCO, DUBAI"
+     ],
+     "period": "起：109.02.21迄：110.02.20合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與左列2家公司聯營(東南亞-波斯灣-印巴航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 125,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "CNC LINE"
+     ],
+     "period": "起：106.04.04迄：106.10.04合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與正利艙位互換(華南-台灣航線(EMC)及華中-台灣航線(CNC))",
+     "restrictions": "無"
+    },
+    {
+     "page": 125,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "CNC LINE"
+     ],
+     "period": "起：113.03.06迄：113.06.06合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與正利艙位互換(華中-香港-柬埔寨-泰國航線(EMC)及華北-印尼航線(CNC))",
+     "restrictions": "無"
+    },
+    {
+     "page": 125,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "CNC LINE"
+     ],
+     "period": "起：113.06.01迄：113.09.01合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與正利艙位互換(日本-印尼航線(EMC)及日本-新加坡-馬來西亞航線(CNC))",
+     "restrictions": "無"
+    },
+    {
+     "page": 125,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "CNC LINE"
+     ],
+     "period": "起：113.11.12迄：114.02.12合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與正利艙位互換(台灣-越南航線(EMC)及印尼-菲律賓航線(CNC))",
+     "restrictions": "無"
+    },
+    {
+     "page": 126,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "CNC LINE"
+     ],
+     "period": "起：114.05.10迄：114.08.10合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與正利艙位互換(台灣-日本航線(EMC)及菲律賓-新加坡航線(CNC)",
+     "restrictions": "無"
+    },
+    {
+     "page": 126,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "UNIFEEDER FZCO, DUBAI",
+      "ONE NETWORK EXPRESS PTE LTD.",
+      "T.S.LINES"
+     ],
+     "period": "起：108.08.09迄：110.03.31合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與左列三家公司聯營(華北-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 126,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "YANG MING LINES",
+      "SINOTRANS CONTAINER LINES CO LTD.",
+      "TS LINES",
+      "HAPAG LLOYD"
+     ],
+     "period": "起：102.06.07迄：109.06.07合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與左列4家公司聯營(中國、台灣-澳洲航線)(Hapag Lloyd於109年10月16日加入)",
+     "restrictions": "無"
+    },
+    {
+     "page": 126,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "X-PRESS"
+     ],
+     "period": "起：113.06.23迄：113.12.23合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與X-PRESS艙位互換(華北-香港; 香港-高雄-菲律賓航線(EMC)，(雅加達-巴生港航線(EMC)及高雄-宿霧航線(X-PRESS)，大連-釜山航線(X-PRESS))",
+     "restrictions": "無"
+    },
+    {
+     "page": 126,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "SINOKOR MERCHANT MARINE CO., LTD."
+     ],
+     "period": "起：108.09.18迄：109.03.18合約期滿可自動續約，惟終止合約應於60天前通知。",
+     "content": "與SINOKOR艙位互換(韓國-台灣-馬來西亞-新加坡-菲律賓-台灣-韓國航線(EMC)及韓國-華中-印尼-越南-華中-韓國航線(SINOKOR))",
+     "restrictions": "無"
+    },
+    {
+     "page": 126,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "T.S. LINE CO., LTD."
+     ],
+     "period": "起：109.02.28迄：109.08.27合約期滿可自動續約，惟終止合約應於60天前通知。",
+     "content": "與T.S. LINE艙位互換(台灣-廈門航線(EMC)及台灣-上海航線(TSL))",
+     "restrictions": "無"
+    },
+    {
+     "page": 127,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "COSCO SHIPPING LINES SHANGHAI PANASIA SHIPPING CO., LTD."
+     ],
+     "period": "起：103.09.19迄：104.03.19合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與COSCO艙位互換(各自之中國-日本航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 127,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "NEW GOLDEN SEA SHIPPING PTE. LTD."
+     ],
+     "period": "起：106.11.25迄：107.05.25合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與NGS艙位互換(台灣-印尼航線(EMC)及中國-香港-泰國航線(NGS))",
+     "restrictions": "無"
+    },
+    {
+     "page": 127,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "NEW GOLDEN SEA SHIPPING PTE. LTD."
+     ],
+     "period": "起：107.04.18迄：108.10.18合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與NGS艙位互換(印尼-中國航線(EMC)及中國-越南航線(NGS))",
+     "restrictions": "無"
+    },
+    {
+     "page": 127,
+     "entity": null,
+     "nature": "艙位租用合約",
+     "parties": [
+      "INTERASIA LINES LTD."
+     ],
+     "period": "起：108.08.23迄：109.02.22合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "出租艙位予IAL(台灣-菲律賓航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 127,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "HYUNDAI MERCHANT MARINE CO., LTD.",
+      "HAPAG LLOYD CONTAINER LINE",
+      "ONE NETWORK EXPRESS PTE LTD."
+     ],
+     "period": "起：109.04.01迄：110.03.31合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與左列3家公司聯營(東北亞-澳洲航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 127,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "GOLD STAR LINE LTD.",
+      "KMTC LINE CO LTD",
+      "EMIRATES SHIPPING LINES"
+     ],
+     "period": "起：110.06.22迄：111.06.21合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與左列3家公司聯營(東北亞-西北印航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 128,
+     "entity": null,
+     "nature": "聯營暨艙位互換合約",
+     "parties": [
+      "CMA CGM",
+      "COSCO SHIPPING LINES",
+      "OOCL"
+     ],
+     "period": "起：106.04.01迄：121.03.31合約期滿前將討論是否續約，惟欲於效期內終止合約，應於12個月前通知。",
+     "content": "與OCEAN聯盟成員聯營暨艙位互換(遠東-歐洲、遠東-地中海、遠東-美西、遠東-美東、歐洲-美東、遠東-中東、遠東-紅海航線、泛大西洋航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 128,
+     "entity": null,
+     "nature": "艙位租用合約",
+     "parties": [
+      "ONE"
+     ],
+     "period": "起：106.04.01迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "向ONE租用艙位(日本–美西航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 128,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "CMA CGM",
+      "COSCO SHIPPING LINES",
+      "YANG MING LINE"
+     ],
+     "period": "起：106.01.20迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列3家公司聯營(遠東–南美東航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 128,
+     "entity": null,
+     "nature": "聯營暨艙位互換合約",
+     "parties": [
+      "PACIFIC INTERNATIONAL LINES",
+      "COSCO SHIPPING LINES",
+      "CMA CGM"
+     ],
+     "period": "起：108.03.28迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列3家公司聯營暨艙位互換(各自之遠東–南美東航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 128,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "COSCO SHIPPING LINES",
+      "OOCL",
+      "ONE",
+      "PACIFIC INTERNATIONAL LINES",
+      "GOLD STAR LINE LTD."
+     ],
+     "period": "起：103.09.29迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與COS/OOCL/ONE/PIL/GSL聯營(遠東-南非航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 128,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "OOCL",
+      "X-PRESS FEEDERS"
+     ],
+     "period": "起：107.07.05迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列2家公司聯營(遠東-東非航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 128,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "COSCO SHIPPING LINES",
+      "YANG MING LINE"
+     ],
+     "period": "起：104.12.26迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列2家公司聯營(遠東-南美西航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 129,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "COSCO SHIPPING LINES",
+      "PACIFIC INTERNATIONAL LINES",
+      "WAN HAI LINES"
+     ],
+     "period": "起：104.12.25迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列3家公司聯營(遠東-南美西航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 129,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "COSCO SHIPPING LINES",
+      "CMA CGM"
+     ],
+     "period": "起：107.04.15迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列2家公司艙位互換(各自之遠東-南美西航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 129,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "ONE NETWORK EXPRESS PTE LTD",
+      "HAPAG LLOYD CONTAINER LINE",
+      "HYUNDAI MERCHANT MARINE CO., LTD.",
+      "YANG MING LINE"
+     ],
+     "period": "起：110.04.05迄：111.04.044個月前共同討論是否延續。惟終止合約應於90天前通知。",
+     "content": "與左列4家公司聯營(遠東-美東/墨西哥灣AUG航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 129,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "UNIFEEDER FZCO, DUBAI"
+     ],
+     "period": "起：112.08.18迄：113.02.18合約期滿可自動續約，惟終止合約應於45天前通知。",
+     "content": "與左列公司艙位互換(各自之遠東-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 129,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "BENGAL TIGER LINE PTE LTD"
+     ],
+     "period": "起：112.09.20迄：112.12.20合約期滿可自動續約，惟終止合約應於90天前通知",
+     "content": "與左列公司艙位互換(各自之遠東-印度/東南亞印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 129,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "RCL FEEDER PTE LTD",
+      "PACIFIC INTERNATIONAL LINES",
+      "CU LINE PTE LTD"
+     ],
+     "period": "起：112.07.17迄：113.07.17合約期滿可自動續約，惟終止合約應於90天前通知。",
+     "content": "與左列3家公司聯營(遠東-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 130,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "X-PRESS FEEDERS",
+      "ONE NETWORK EXPRESS PTE LTD",
+      "KOREA MARINE TRANSPOR CO. LTD",
+      "T.S. LINES LTD."
+     ],
+     "period": "起：112.04.17迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列4家公司聯營(遠東-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 130,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "EMIRATES SHIPPING LINE",
+      "GLOBAL FEEDER SHIPPING",
+      "INTERASIA SHIPPING LINE",
+      "KOREA MARINE TRANSPORT CO.,LTD",
+      "REGIONAL CONTAINER LINES",
+      "T.S. LINES LTD"
+     ],
+     "period": "起：114.07.01迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列6家公司聯營(遠東-東非航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 130,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "PACIFIC INTERNATIONAL LINE",
+      "INTERASIA SHIPPING LINE",
+      "REGIONAL CONTAINER LINES",
+      "SHANGHAI JINJING SHIPPING"
+     ],
+     "period": "起：113.5.29迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列4家公司聯營(遠東-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 130,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "WAN HAI LINE",
+      "BENGAL TIGER LINE",
+      "REGIONAL CONTAINER LINES"
+     ],
+     "period": "起：114.4.01迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列3家公司聯營(遠東-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 131,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "INTERASIA SHIPPING LINE"
+     ],
+     "period": "起：114.4.01迄：無期間限制，惟終止合約應於60天前通知。",
+     "content": "與IAL艙位互換(遠東-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 131,
+     "entity": null,
+     "nature": "艙位租用合約",
+     "parties": [
+      "BENGAL TIGER LINE"
+     ],
+     "period": "起：114.4.01迄：無期間限制，惟終止合約應於60天前通知。",
+     "content": "賣艙與BTL(遠東-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 131,
+     "entity": null,
+     "nature": "艙位租用合約",
+     "parties": [
+      "GLOBAL FEEDER LINE"
+     ],
+     "period": "起：114.12.01迄：115.04.30",
+     "content": "與GFS買艙(遠東-紅海航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 131,
+     "entity": null,
+     "nature": "聯營合約",
+     "parties": [
+      "EMIRATES SHIPPING LINE"
+     ],
+     "period": "起：114.07.06迄：無期間限制，惟終止合約應於90天前通知。",
+     "content": "與左列公司聯營(遠東-印度航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 131,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "MAERSK"
+     ],
+     "period": "起：113.11.01迄：114.03.31合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與MSK艙位互換(中國華北-馬尼拉航線/中國華中-馬尼拉航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 131,
+     "entity": null,
+     "nature": "艙位租用合約",
+     "parties": [
+      "XPRESS"
+     ],
+     "period": "起：114.03.17迄：114.09.17合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "向Xpress艙位互換(遠東-印度航線/中國華北中-中東航線)",
+     "restrictions": "無"
+    },
+    {
+     "page": 131,
+     "entity": null,
+     "nature": "艙位互換合約",
+     "parties": [
+      "HYUNDAI MERCHANT MARINE CO., LTD."
+     ],
+     "period": "起：107.11.21迄：108.05.21合約期滿可自動續約，惟終止合約應於30天前通知。",
+     "content": "與HMM艙位互換(東南亞-波斯灣-印巴航線/韓國-中東航線)",
+     "restrictions": "無"
+    }
+   ],
+   "none_entities": [],
+   "notes": "節標題「4-7 重要契約」，表格跨9頁（p123–p131，每頁重複表頭），共54列，限制條款全為「無」。當事人儲存格中有「1. 2. 3.」編號者，每個編號一個當事人，編號已去除；英文名稱跨行以1個空格接起。原文誤植照錄：p130「KOREA MARINE TRANSPOR CO. LTD」、p126第1列主要內容右括號不成對「…(CNC)」。期間欄「起：」「迄：」原文照存，換行直接接起（例：「迄：111.04.044個月前共同討論是否延續。」中的「4個月前」緊接日期）。主要內容與期間欄中，原文為排版而有的空白（例「( 華南 - 台灣航線 (EMC)」）已去除；比對時建議去除空白。p123為第一次出現的正文（目錄頁另有同名列）。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    146
+   ],
+   "chapter_heading": "06 特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "see_mops",
+     "page": 146,
+     "text": "本公司之關係企業相關資訊已揭露於公開資訊觀測站(公開資訊觀測站→基本資料→電子書→關係企業三書表專區)網址：https://mopsov.twse.com.tw/mops/web/t57sb01_q10"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 146,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 146,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 146,
+     "text": "無。"
+    }
+   },
+   "notes": "章名列原文為「06」與「特別記載事項」分兩行（頁首章號樣式「06 | 特別記載事項」），不是「陸、」型式。子項編號6-1關係企業、6-2私募、6-3其他補充、6-4第三十六條（寫「發生本法第三十六條…所訂」）。頁面下半為圖片。"
+  }
+ },
+ "2881": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    245
+   ],
+   "basis_label": null,
+   "statement_basis_from_text": "unstated",
+   "unit_text": "單位：新臺幣千元",
+   "actual": {
+    "page": null,
+    "opening_cash": null,
+    "cfo": null,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": null,
+    "remedy_invest": null,
+    "remedy_finance": null,
+    "column_headers": []
+   },
+   "actual_explanations": {
+    "operating": null,
+    "investing": null,
+    "financing": null
+   },
+   "forecast": {
+    "applicable": true,
+    "page": 245,
+    "opening_cash": 134222,
+    "cfo": 41361416,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": -41261325,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": 234314,
+    "remedy_invest": "無",
+    "remedy_finance": "無",
+    "column_headers": [
+     "期初現金餘額",
+     "預計全年來自營業活動淨現金流量",
+     "預計全年來自投資及籌資活動淨現金流量",
+     "現金剩餘(不足)數額",
+     "現金不足額之補救措施／投資計劃",
+     "現金不足額之補救措施／理財計劃"
+    ]
+   },
+   "forecast_explanations": {
+    "operating": "營業活動：主要係預計本年度子公司上繳之現金股利收入，扣除公司債息及營業費用等之淨額。",
+    "investing": "投資活動：主要係預計本年度取得之長期資產。",
+    "financing": "籌資活動：主要係預計現增、融資金額變動及發放現金股利之淨額。"
+   },
+   "notes": "本節「5.3 現金流量」沒有表A（本年度現金流量變動表）：(1)最近二年度流動性分析只有比率表（a.合併現金流量分析、b.個體現金流量分析），(2)未來一年現金流動性分析才有數字表（表B，表頭右上「2026年2月28日」）。actual全null。表B單位「新臺幣千元」（千＝仟，不換算）。表B：134,222+41,361,416+(-41,261,325)=234,313，原文234,314，差1（四捨五入）。表B數字為金控母公司（個體）數字，表內未寫合併或個體；同節的比率表分別標「合併」「個體」，故statement_basis_from_text填unstated。表下註：「註：預估現金流量將依實際情形而略有變動。」另有「b. 預計現金不足額之補救措施及流動性分析：無。」說明前導句「a. 本年度現金流量情形分析：」。前一頁p244為個體綜合損益表，不屬本節。"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239
+   ],
+   "rows": [
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "Merlin Attractions Operations Limited"
+     ],
+     "period": "2015/08/25-2042/07/04(註1)",
+     "content": "不動產租賃契約書(英國倫敦Madame Tussauds)",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "Europäische Zentral bank(歐洲央行)"
+     ],
+     "period": "2019/06/01-2025/12/31(註2)",
+     "content": "不動產租賃契約書(德國法蘭克福Eurotower)",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產工程顧問合約",
+     "parties": [
+      "Arup Deutschland GmbH"
+     ],
+     "period": "2022/10/06-2025/12/31",
+     "content": "德國法蘭克福Eurotower預防性修繕規劃與執行",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產工程顧問合約",
+     "parties": [
+      "CIT Blaton SA"
+     ],
+     "period": "2025/01/24-2026/06/30(註3)",
+     "content": "比利時布魯塞爾Ellipse Building改裝工程施工廠商合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產工程顧問合約",
+     "parties": [
+      "Ikon Group Limited"
+     ],
+     "period": "2025/02/21-2026/06/30(註3)",
+     "content": "英國倫敦Bow Bells House大樓必要性修繕廠商合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "潘冀聯合建築師事務所"
+     ],
+     "period": "2021/02/19-2028/03/31(註3)",
+     "content": "富邦人壽南港區玉成段新建工程設計監造服務委任契約書",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "地樺營造事業股份有限公司"
+     ],
+     "period": "2023/01/07-2027/08/31(註3)",
+     "content": "富邦人壽南港區玉成段新建工程案雜項執照工程合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "地樺營造事業股份有限公司",
+      "翔聯企業股份有限公司"
+     ],
+     "period": "2024/09/12-2030/03/31(註3)",
+     "content": "富邦人壽南港區玉成段新建工程案總包工程合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "陳品亘建築師事務所"
+     ],
+     "period": "2023/03/24-2030/12/31(註3)",
+     "content": "富邦人壽承德大樓南基地新建工程設計監造服務委任契約書",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "地樺營造事業股份有限公司",
+      "大林聯合建築師事務所"
+     ],
+     "period": "2023/02/16-2028/12/20(註3)",
+     "content": "富邦人壽承德大樓北基地新建工程統包工程合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "利晉工程股份有限公司"
+     ],
+     "period": "2019/03/15-2025/12/01",
+     "content": "富邦人壽A25新建工程總包工程合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 227,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "地樺營造事業股份有限公司"
+     ],
+     "period": "2020/03/25-2026/10/17(註3)",
+     "content": "富邦人壽北投區新民段新建工程之總包工程合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "大矩聯合建築師事務所"
+     ],
+     "period": "2023/09/22-2027/09/30(註3)",
+     "content": "富邦人壽新竹湖口開發案設計監造服務委任契約書",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "李祖原聯合建築師事務所"
+     ],
+     "period": "2019/04/11-2027/07/23(註3)",
+     "content": "富邦人壽高雄捷運凹子底站旁商業區開發案設計監造服務委任契約書",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "株式会社三菱地所設計"
+     ],
+     "period": "2019/09/17-2027/07/23(註3)",
+     "content": "富邦人壽高雄捷運凹子底站旁商業區開發案設計委任契約書",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "豐譽聯合工程股份有限公司"
+     ],
+     "period": "2021/01/29-2028/04/09(註3)",
+     "content": "富邦人壽高雄捷運凹子底站旁商業區開發案雜項執照工程合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "豐譽聯合工程股份有限公司"
+     ],
+     "period": "2021/11/09-2028/04/09(註3)",
+     "content": "富邦人壽高雄捷運凹子底站旁商業區開發案基樁及逆打鋼柱工程合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "韓商三星物產營造股份有限公司台灣分公司",
+      "宏昇營造股份有限公司"
+     ],
+     "period": "2023/06/19-2029/07/23(註3)",
+     "content": "富邦人壽高雄捷運凹子底站旁商業區開發案總包工程合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "三大聯合建築師事務所"
+     ],
+     "period": "2023/09/04-2035/03/31(註3)",
+     "content": "富邦人壽松山區敦化段開發案設計監造服務委任契約書",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產興建工程",
+     "parties": [
+      "中國建築經理股份有限公司"
+     ],
+     "period": "2024/04/08-2037/03/31(註3)",
+     "content": "富邦人壽松山區敦化段開發案都市更新案代理實施者委任契約書",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "寒舍國際酒店(股)公司"
+     ],
+     "period": "2013/06/14-2033/11/06",
+     "content": "不動產租賃契約書(A10)",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "微風置地(股)公司"
+     ],
+     "period": "2013/10/16-2029/04/15",
+     "content": "不動產租賃契約書(A10)",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "微風置地(股)公司"
+     ],
+     "period": "2013/09/01-2028/08/31",
+     "content": "不動產租賃契約書(環亞大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "盛弘醫藥股份有限公司",
+      "敏盛綜合醫院"
+     ],
+     "period": "2007/05/16-2032/05/15",
+     "content": "不動產租賃契約書(敏盛醫院)",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "大魯閣實業(股)公司"
+     ],
+     "period": "2020/05/01-2025/12/31",
+     "content": "不動產租賃契約書(台中新時代商場)",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "遠雄流通事業(股)公司"
+     ],
+     "period": "2026/01/01-2035/06/30",
+     "content": "不動產租賃契約書(台中新時代商場",
+     "restrictions": "無"
+    },
+    {
+     "page": 228,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "新光三越百貨(股)公司"
+     ],
+     "period": "2023/08/01-2033/07/31",
+     "content": "不動產租賃契約書(A11)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "富邦媒體科技(股)公司"
+     ],
+     "period": "2023/08/01-2028/07/31",
+     "content": "不動產租賃契約書(momo大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "台灣優衣庫有限公司"
+     ],
+     "period": "2012/09/03-2025/10/31",
+     "content": "不動產租賃契約書(萬國大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "台灣優衣庫有限公司"
+     ],
+     "period": "2025/11/01-2035/10/31",
+     "content": "不動產租賃契約書(萬國大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "時代國際行旅股份有限公司"
+     ],
+     "period": "2020/06/12-2040/06/11",
+     "content": "不動產租賃契約書(富邦林森商旅大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "渣打國際商業銀行股份有限公司"
+     ],
+     "period": "2021/04/01-2031/07/31",
+     "content": "不動產租賃契約書(渣打銀行大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "富邦產物保險股份有限公司"
+     ],
+     "period": "2021/09/01-2026/09/30",
+     "content": "不動產租賃契約書(渣打銀行大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "新光三越百貨(股)公司"
+     ],
+     "period": "2015/12/23-2027/12/31",
+     "content": "不動產租賃契約書(新光三越A8百貨大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "美商仙妮蕾德有限公司"
+     ],
+     "period": "2020/08/12-2027/08/11",
+     "content": "不動產租賃契約書(敦北大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "漢神購物中心股份有限公司"
+     ],
+     "period": "自裝修免租期屆滿之翌日(含，即起租日)起算至屆滿20個計租年度之期間",
+     "content": "不動產租賃契約書(高雄捷運凹子底站旁開發案)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "台灣亞德諾半導體股份有限公司"
+     ],
+     "period": "2023/08/01-2029/01/31",
+     "content": "不動產租賃契約書(富邦人壽大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "凱絡媒體服務股份有限公司"
+     ],
+     "period": "2025/02/01-2042/01/31",
+     "content": "房屋租賃契約書(富邦人壽大樓)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產租賃",
+     "parties": [
+      "富邦媒體科技(股)公司"
+     ],
+     "period": "自取得開發案建築物使用執照後點交完成之日(起租日)，起算至屆滿20年之期間為本契約租賃期間",
+     "content": "新竹湖口物流園區",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "不動產買賣",
+     "parties": [
+      "星聚點壹號文創股份有限公司",
+      "凱揚投資股份有限公司"
+     ],
+     "period": "2025/08/19-2025/10/03(點交日)",
+     "content": "不動產買賣契約書(星聚點KTV台北旗艦館)",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "再保險合約",
+     "parties": [
+      "瑞士再保險公司"
+     ],
+     "period": "2006/01/01-迄今",
+     "content": "個人壽險之再保業務",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "再保險合約",
+     "parties": [
+      "中央再保險公司"
+     ],
+     "period": "2010/01/01-迄今",
+     "content": "個人壽險及巨災之再保業務",
+     "restrictions": "無"
+    },
+    {
+     "page": 229,
+     "entity": "富邦人壽",
+     "nature": "再保險合約",
+     "parties": [
+      "慕尼黑再保險公司"
+     ],
+     "period": "2010/01/01-迄今",
+     "content": "個人壽險及失能扶助型商品之再保業務",
+     "restrictions": "無"
+    },
+    {
+     "page": 230,
+     "entity": "富邦人壽",
+     "nature": "再保險合約",
+     "parties": [
+      "科隆再保險公司"
+     ],
+     "period": "2006/10/01-迄今",
+     "content": "個人壽險及健康險之再保業務",
+     "restrictions": "無"
+    },
+    {
+     "page": 230,
+     "entity": "富邦人壽",
+     "nature": "再保險合約",
+     "parties": [
+      "漢諾威再保險公司"
+     ],
+     "period": "2014/10/24迄今",
+     "content": "重大傷病卡商品及失能扶助型商品之再保業務",
+     "restrictions": "無"
+    },
+    {
+     "page": 230,
+     "entity": "富邦人壽",
+     "nature": "再保險合約",
+     "parties": [
+      "美國再保險公司"
+     ],
+     "period": "2009/03/30迄今",
+     "content": "個人壽險及健康險之再保業務",
+     "restrictions": "無"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "代理臺北市市庫契約",
+     "parties": [
+      "臺北市政府"
+     ],
+     "period": "2023/11/10-2030/11/09",
+     "content": "臺北市政府委託本行代理臺北市市庫業務",
+     "restrictions": "無"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "租賃契約",
+     "parties": [
+      "富邦建築經理股份有限公司"
+     ],
+     "period": "租期:2024/05/01-2027/04/30",
+     "content": "「富邦二號不動產投資信託基金」之管理機構為富邦建築經理股份有限公司，此交易係為辦公場所使用。標的物：台北市內湖區瑞湖街62號1樓部分、2樓部分、7樓、8樓、9樓",
+     "restrictions": "無"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "租賃契約",
+     "parties": [
+      "忠興開發股份有限公司"
+     ],
+     "period": "租期:2025/01/01-2027/12/31",
+     "content": "此交易係為辦公場所使用標的物：台北市大安區仁愛路4段169號6~12樓、13樓部分、14~23樓",
+     "restrictions": "無"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "租賃契約",
+     "parties": [
+      "富邦人壽保險股份有限公司"
+     ],
+     "period": "租期:2023/07/01-2033/06/30",
+     "content": "此交易係為行舍使用標的物：臺北市信義區松高路77號地下一層之1",
+     "restrictions": "無"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "私募股份認購合約",
+     "parties": [
+      "連線商業銀行股份有限公司"
+     ],
+     "period": "2025/06/09",
+     "content": "參與連線商業銀行股份有限公司現金增資17.55億元",
+     "restrictions": "無"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "委外契約",
+     "parties": [
+      "台灣保全股份有限公司"
+     ],
+     "period": "2023/05/08-2025/05/07",
+     "content": "現金、有價證券、紀念幣、儲值票(卡)、黃金條塊等運送服務",
+     "restrictions": "須符合「金融機構作業委託他人處理內部作業制度及程序辦法」之規範"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "委外契約",
+     "parties": [
+      "立保保全股份有限公司"
+     ],
+     "period": "2023/05/08-2025/05/07",
+     "content": "現金、有價證券、紀念幣、儲值票(卡)、黃金條塊等運送服務",
+     "restrictions": "須符合「金融機構作業委託他人處理內部作業制度及程序辦法」之規範"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "委外契約",
+     "parties": [
+      "三竹資訊股份有限公司"
+     ],
+     "period": "2023/07/01-2026/06/30",
+     "content": "手機簡訊發送「信用卡退卡、就學貸款相關業務、保險到期、保費催繳、借款撥貸完成、催收等」訊息",
+     "restrictions": "須符合「金融機構作業委託他人處理內部作業制度及程序辦法」之規範"
+    },
+    {
+     "page": 231,
+     "entity": "台北富邦銀行",
+     "nature": "委外契約",
+     "parties": [
+      "立保保全股份有限公司",
+      "安豐企業股份有限公司"
+     ],
+     "period": "2025/10/01-2028/09/30",
+     "content": "自動櫃員機（含兌幣機）裝補鈔作業",
+     "restrictions": "須符合「金融機構作業委託他人處理內部作業制度及程序辦法」之規範"
+    },
+    {
+     "page": 232,
+     "entity": "台北富邦銀行",
+     "nature": "委外契約",
+     "parties": [
+      "台灣保全股份有限公司",
+      "台保服務科技股份有限公司"
+     ],
+     "period": "2025/10/01-2028/09/30",
+     "content": "自動櫃員機裝補鈔作業",
+     "restrictions": "須符合「金融機構作業委託他人處理內部作業制度及程序辦法」之規範"
+    },
+    {
+     "page": 232,
+     "entity": "台北富邦銀行",
+     "nature": "委外契約",
+     "parties": [
+      "中華快遞股份有限公司"
+     ],
+     "period": "2024/03/01-2026/02/28",
+     "content": "票據及公文收送服務",
+     "restrictions": "須符合「金融機構作業委託他人處理內部作業制度及程序辦法」之規範"
+    },
+    {
+     "page": 232,
+     "entity": "台北富邦銀行",
+     "nature": "委外契約",
+     "parties": [
+      "精誠資訊股份有限公司"
+     ],
+     "period": "2026/01/01-2028/12/31",
+     "content": "對帳單及通知信函印製、封裝、郵務處理作業",
+     "restrictions": "須符合「金融機構作業委託他人處理內部作業制度及程序辦法」之規範"
+    },
+    {
+     "page": 232,
+     "entity": "台北富邦銀行",
+     "nature": "資訊採購合約",
+     "parties": [
+      "印度商塔塔顧問服務有限公司"
+     ],
+     "period": "2015/07/17起生效",
+     "content": "銀行核心系統軟體授權合約",
+     "restrictions": "無"
+    },
+    {
+     "page": 232,
+     "entity": "台北富邦銀行",
+     "nature": "資訊採購合約",
+     "parties": [
+      "印度商塔塔顧問服務有限公司"
+     ],
+     "period": "2022/04/15-2027/04/14",
+     "content": "銀行核心系統軟體維護合約(存款、放款及外匯業務功能)",
+     "restrictions": "無"
+    },
+    {
+     "page": 232,
+     "entity": "台北富邦銀行",
+     "nature": "資訊採購合約",
+     "parties": [
+      "印度商塔塔顧問服務有限公司"
+     ],
+     "period": "2024/10/30-2027/10/29",
+     "content": "銀行核心系統軟體維護合約(線上執行及開發編譯軟體)",
+     "restrictions": "無"
+    },
+    {
+     "page": 233,
+     "entity": "富邦證券",
+     "nature": "富邦證券取得台北富邦商業銀行股份有限公司使用權資產",
+     "parties": [
+      "台北富邦商業銀行股份有限公司"
+     ],
+     "period": "租期:2024/05/01-2026/07/31",
+     "content": "此交易係為辦公室使用標的物: 台北市大安區仁愛路4段169號2樓",
+     "restrictions": "無"
+    },
+    {
+     "page": 233,
+     "entity": "富邦證券",
+     "nature": "富邦證券取得忠興開發股份有限公司使用權資產",
+     "parties": [
+      "忠興開發股份有限公司"
+     ],
+     "period": "租期:2023/08/01-2026/07/31",
+     "content": "此交易係為辦公室使用標的物: 台北市大安區仁愛路4段169號3及5樓",
+     "restrictions": "無"
+    },
+    {
+     "page": 233,
+     "entity": "富邦證券",
+     "nature": "富邦證券取得忠興開發股份有限公司使用權資產",
+     "parties": [
+      "忠興開發股份有限公司"
+     ],
+     "period": "租期:2023/11/16-2026/11/30",
+     "content": "此交易係為辦公室使用標的物: 台北市大安區仁愛路4段169號6及15樓部分",
+     "restrictions": "無"
+    },
+    {
+     "page": 234,
+     "entity": "富邦產險",
+     "nature": "再保合約",
+     "parties": [
+      "中央再保險公司(CENTRAL REINSURANCE CORPORATION)",
+      "瑞士再保險公司(SWISS Re Asia Pte. Ltd.)",
+      "慕尼黑再保險公司(MUNICH REINSURANCE COMPANY)",
+      "漢諾威再保險公司(HANNOVER REINSURANCE COMPANY)"
+     ],
+     "period": "2025/01/01-2025/12/31",
+     "content": "各險之比例型合約及非比例型再保合約",
+     "restrictions": "依合約約定"
+    },
+    {
+     "page": 234,
+     "entity": "富邦產險",
+     "nature": "設計、顧問及工程契約",
+     "parties": [
+      "薛昭信建築師事務所"
+     ],
+     "period": "2019/10/25-2026/08/31(暫定)",
+     "content": "辦理「臺北市大安區懷生段二小段493、494、495、495-1、515-1地號」危老重建案",
+     "restrictions": "無"
+    },
+    {
+     "page": 234,
+     "entity": "富邦產險",
+     "nature": "設計、顧問及工程契約",
+     "parties": [
+      "Rogers Stirk Harbour + Partners LLP"
+     ],
+     "period": "2019/10/01-2026/08/31(暫定)",
+     "content": "辦理「臺北市大安區懷生段二小段493、494、495、495-1、515-1地號」危老重建案",
+     "restrictions": "無"
+    },
+    {
+     "page": 234,
+     "entity": "富邦產險",
+     "nature": "設計、顧問及工程契約",
+     "parties": [
+      "喻台生建築師事務所"
+     ],
+     "period": "2019/11/26-2026/08/31(暫定)",
+     "content": "辦理「臺北市大安區懷生段二小段493、494、495、495-1、515-1地號」危老重建案",
+     "restrictions": "無"
+    },
+    {
+     "page": 234,
+     "entity": "富邦產險",
+     "nature": "設計、顧問及工程契約",
+     "parties": [
+      "達欣工程股份有限公司"
+     ],
+     "period": "2021/04/23-2026/08/31(暫定)",
+     "content": "辦理「臺北市大安區懷生段二小段493、494、495、495-1、515-1地號」危老重建案",
+     "restrictions": "無"
+    },
+    {
+     "page": 234,
+     "entity": "富邦產險",
+     "nature": "設計、顧問及工程契約",
+     "parties": [
+      "富邦建設股份有限公司"
+     ],
+     "period": "2023/01/11-2028/01/10",
+     "content": "辦理「臺北市大安區懷生段二小段493、494、495、495-1、515-1地號」危老重建案",
+     "restrictions": "無"
+    },
+    {
+     "page": 234,
+     "entity": "富邦產險",
+     "nature": "不動產租賃契約",
+     "parties": [
+      "富邦人壽保險股份有限公司"
+     ],
+     "period": "2021/09/01-2026/09/30",
+     "content": "富邦產險總公司遷址至臺北市中山區遼寧街179號7~14樓之辦公使用租賃契約",
+     "restrictions": "無"
+    },
+    {
+     "page": 234,
+     "entity": "富邦產險",
+     "nature": "不動產都更契約",
+     "parties": [
+      "台塑建設事業股份有限公司"
+     ],
+     "period": "2023/05/26-2029/12/31(暫定)",
+     "content": "「擬訂臺北市松山區民生段150地號等6筆土地都市更新事業計畫及權利變換計畫」委託興建及都市更新實施契約書",
+     "restrictions": "無"
+    },
+    {
+     "page": 235,
+     "entity": "富邦資產管理",
+     "nature": "增資協議",
+     "parties": [
+      "中信資產管理有限公司",
+      "北京國潤新通投資發展有限責任公司",
+      "捷旺國際有限公司",
+      "富邦資產管理股份有限公司"
+     ],
+     "period": "2014/11/21-迄今(至各方以書面形式一致同意終止。)",
+     "content": "參與信源富通融資租賃有限公司(原名：中信富通融資租賃有限公司)2.7億人民幣或等值美元現金增資，富邦資產管理股份有限公司持股比率25%，委派董事2名監事1名",
+     "restrictions": "1.富邦在本協議簽署之日起180個工作日內取得台灣金管會與投審會等相關主管機關投資許可，始生效力。2.本協議非經全體當事人同意不得轉讓予其他第三人。"
+    },
+    {
+     "page": 235,
+     "entity": "富邦資產管理",
+     "nature": "委託契約",
+     "parties": [
+      "台北富邦商業銀行股份有限公司"
+     ],
+     "period": "2019/06/14-迄今",
+     "content": "富邦資產管理股份有限公司受託擔任台北市萬華區萬華段一小段322地號等3筆土地都市更新事業之實施者",
+     "restrictions": "佣金回扣之禁止。"
+    },
+    {
+     "page": 235,
+     "entity": "富邦資產管理",
+     "nature": "委託契約增補協議書",
+     "parties": [
+      "台北富邦商業銀行股份有限公司"
+     ],
+     "period": "2022/12/21-迄今",
+     "content": "有關富邦資產管理股份有限公司受託擔任台北市萬華區萬華段一小段322地號等3筆土地都市更新事業之實施者乙案，雙方合意變更：依台北市政府發布實施之權利變換計畫核定計算共同負擔比例",
+     "restrictions": "無"
+    },
+    {
+     "page": 235,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：德誠國際開發股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2021/08/27-2025/07/05",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億零捌佰萬元整之範圍內，協助德誠國際開發股份有限公司支應開發所需資金",
+     "restrictions": "1.本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。2.甲方同意自乙方依本協議書墊付款項之日起六個月內，非經乙方同意，甲方不得提前返還墊付款項並終止本協議書，否則甲方仍須按本協議書第三條約定，計算支付不足六個月之服務報酬予乙方。"
+    },
+    {
+     "page": 236,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書-增補契約",
+     "parties": [
+      "甲方：德誠國際開發股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2024/01/26-2026/09/30惟不得逾本案取得使用執照後六個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億伍仟肆佰伍拾萬元整之範圍內，協助德誠國際開發股份有限公司支應開發所需資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 236,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：若水環境整合股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2021/08/27-2025/07/05",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億零捌佰萬元整之範圍內，協助若水環境整合股份有限公司支應開發所需資金",
+     "restrictions": "1.本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。2.甲方同意自乙方依本協議書墊付款項之日起六個月內，非經乙方同意，甲方不得提前返還墊付款項並終止本協議書，否則甲方仍須按本協議書第三條約定，計算支付不足六個月之服務報酬予乙方。"
+    },
+    {
+     "page": 237,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書-增補契約",
+     "parties": [
+      "甲方：若水環境整合股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2024/01/26-2026/09/30惟不得逾本案取得使用執照後六個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣陸仟壹佰伍拾萬元整之範圍內，協助若水環境整合股份有限公司支應開發所需資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 237,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：若水環境整合股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2025/05/14-2029/05/14惟不得逾本案取得使用執照後六個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億參仟肆佰萬元整之範圍內，協助若水環境整合股份有限公司支應開發所需資金",
+     "restrictions": "本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。"
+    },
+    {
+     "page": 237,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：毅聯建設股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2023/04/11-2024/10/11",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億元整之範圍內，協助毅聯建設股份有限公司支應開發所需資金",
+     "restrictions": "1.本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。2.甲方同意自乙方依本協議書墊付款項之日起六個月內，非經乙方同意，甲方不得提前返還墊付款項並終止本協議書，否則甲方仍須按本協議書第三條約定，計算支付不足六個月之服務報酬予乙方。"
+    },
+    {
+     "page": 238,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書-增補契約",
+     "parties": [
+      "甲方：毅聯建設股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2024/10/11-2030/12/31惟不得逾本案取得使用執照後六個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣貳億元整之範圍內，協助毅聯建設股份有限公司支應開發所需資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 238,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：悅龍建設股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2023/12/04-2029/12/04惟不得逾本案取得使用執照後九個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億捌仟萬元整之範圍內，協助悅龍建設股份有限公司支應開發所需資金",
+     "restrictions": "本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。"
+    },
+    {
+     "page": 238,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：筑丰興業股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "(1)重陽路案2024/09/18-2029/09/18惟不得逾重陽路案取得使用執照後六個月(2)北寧路案2024/09/18-2026/09/18惟不得逾北寧路案取得使用執照後六個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億柒仟陸佰萬元整之範圍內，協助筑丰興業股份有限公司支應開發所須資金",
+     "restrictions": "本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。"
+    },
+    {
+     "page": 238,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：筑鴻合開發股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2024/09/18-2027/03/18惟不得逾本案建造執照取得後三個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億伍仟萬元整之範圍內，協助筑鴻合開發股份有限公司支應開發所須資金",
+     "restrictions": "本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。"
+    },
+    {
+     "page": 238,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：北城建設開發股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2024/09/24-2029/09/24惟不得逾本案取得使用執照後六個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣貳億貳仟萬元整之範圍內，協助北城建設開發股份有限公司支應開發所須資金",
+     "restrictions": "本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。"
+    },
+    {
+     "page": 238,
+     "entity": "富邦資產管理",
+     "nature": "「都更或危老重建」墊付款項協議書",
+     "parties": [
+      "甲方：精曜建設股份有限公司",
+      "乙方：富邦資產管理股份有限公司"
+     ],
+     "period": "2025/07/30-2029/07/30惟不得逾本案取得使用執照後六個月",
+     "content": "富邦資產管理股份有限公司同意於總金額新台幣壹億貳仟萬元整之範圍內，協助精曜建設股份有限公司支應開發所須資金",
+     "restrictions": "本協議書簽署達半年仍未符合協助墊付款項之給付條件並實際支付者，乙方得終止本協議。"
+    }
+   ],
+   "none_entities": [
+    "富邦金控",
+    "富邦銀行(香港)",
+    "富邦投信",
+    "富邦金控創投",
+    "富邦綜合保代"
+   ],
+   "notes": "節標題「4.17重要契約」，依子公司分段：(1)富邦金控：無、(2)富邦人壽、(3)台北富邦銀行、(4)富邦證券、(5)富邦產險、(6)富邦銀行(香港)：無、(7)富邦投信：無、(8)富邦金控創投：無、(9)富邦資產管理、(10)富邦綜合保代：無。共87列，p227–p239。跨頁列（立保保全ATM p231–232、德誠墊付款p235–236、若水墊付款p236–237、精曜墊付款p238–239）page記起始頁。富邦人壽表下註1–3在p230（註1：繼受租約公司為本公司之子公司Fubon MTL Property (Jersey) Limited；註2：…Fubon Eurotower (Luxembourg) S.à r.l.；註3：因契約執行完成日期未定，為預估完成日期。），期間欄的(註n)照存。富邦產險「設計、顧問及工程契約」為合併儲存格（契約性質與主要內容跨5列，當事人、日期、限制條款各列不同），拆成5列，各列重複性質與內容。富邦產險再保合約當事人儲存格原文「主要參與合約再保人包括:中央再保險公司(CENTRAL REINSURANCE CORPORATION)、瑞士再保險公司(SWISS Re Asia Pte. Ltd.)、慕尼黑再保險公司(MUNICH REINSURANCE COMPANY)及漢諾威再保險公司(HANNOVER REINSURANCE COMPANY) 等」，拆成4個當事人（前導句與「等」未存）。當事人「(1)(2)」編號已去除；墊付款協議書的「甲方：」保留，乙方統一為「乙方：富邦資產管理股份有限公司」。遠雄流通列主要內容原文缺右括號「(台中新時代商場」。pdfplumber在p228遠雄列、p229富邦媒體湖口列與星聚點列欄位錯位，以頁面圖像為準。富邦證券列「標的物: 」冒號為半形加空白，照原文。p227 CIT Blaton SA列「布魯塞爾」的「塞」在文字層為CJK相容字U+F96C，本檔存標準字U+585E；比對時建議NFKC正規化。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    267
+   ],
+   "chapter_heading": "6. 特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "see_mops",
+     "page": 267,
+     "text": "詳細請參考公開資訊觀測站>單一公司>電子文件下載>關係企業三書表專區:https://mopsov.twse.com.tw/mops/web/t57sb01_q10。"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 267,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 267,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 267,
+     "text": "無。"
+    }
+   },
+   "notes": "子項6.1關係企業、6.2私募、6.3其他補充、6.4第三十六條，各項內容另起一行寫「無。」。"
+  }
+ },
+ "2886": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    120
+   ],
+   "basis_label": null,
+   "statement_basis_from_text": "unstated",
+   "unit_text": "單位：新臺幣仟元",
+   "actual": {
+    "page": null,
+    "opening_cash": null,
+    "cfo": null,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": null,
+    "fx": null,
+    "closing_cash": null,
+    "remedy_invest": null,
+    "remedy_finance": null,
+    "column_headers": []
+   },
+   "actual_explanations": {
+    "operating": null,
+    "investing": null,
+    "financing": null
+   },
+   "forecast": {
+    "applicable": true,
+    "page": 120,
+    "opening_cash": 168055070,
+    "cfo": -161713742,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": -103579138,
+    "fx": null,
+    "closing_cash": 109920466,
+    "remedy_invest": "無",
+    "remedy_finance": "無",
+    "column_headers": [
+     "期初現金餘額（1）",
+     "預計全年來自營業活動淨現金流量（2）",
+     "預計全年現金流出量（3）",
+     "預計現金剩餘（不足）數額（1）＋（2）－（3）",
+     "預計現金不足額之補救措施／投資計畫",
+     "預計現金不足額之補救措施／籌資計劃"
+    ]
+   },
+   "forecast_explanations": {
+    "operating": null,
+    "investing": null,
+    "financing": null
+   },
+   "notes": "「三、現金流量」沒有表A：(一)最近兩年度現金流量分析只有比率表（單位：%），(二)未來一年度現金流動性分析為表B。actual全null。表B為「全年現金流出量」寫法，但營業淨流量與流出量原文都有括號：(161,713,742)、(103,579,138)，依規則記為負數（outflow=-103,579,138）。用原文符號代入表頭公式(1)+(2)-(3)：168,055,070+(-161,713,742)-(-103,579,138)=109,920,466，平。表B無說明文字。表內未寫合併或個體；數字推測為金控母公司個體數字。表頭「投資計畫」（畫）、「籌資計劃」（劃）照原文。頁面左側有直排章名「財務狀況及財務績效之檢討分析與風險管理」，文字層會混入單字列。"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    117
+   ],
+   "rows": [
+    {
+     "page": 117,
+     "entity": null,
+     "nature": "足以影響存款人或股東權益之重要契約",
+     "parties": [
+      "兆豐國際商業銀行股份有限公司",
+      "紐約州金融服務署(簡稱NYDFS)"
+     ],
+     "period": "契約簽訂日：2016年8月19日契約終止日：待NYDFS指定",
+     "content": "NYDFS前於2015年1~3月間對兆豐銀行紐約分行辦理一般業務檢查，檢查報告於2016年2月作成，嗣依據紐約銀行法第39條及第44條，於2016年8月19日與兆豐銀行簽署合意令，內容包含支付美金1.8億元整罰款、聘僱NYDFS指定之法令遵循顧問和獨立監督人督導兆豐銀行改善相關之洗錢防制措施。(有關兆豐銀行與獨立監督人之合約業於2019年底到期)",
+     "restrictions": "-"
+    },
+    {
+     "page": 117,
+     "entity": null,
+     "nature": "足以影響存款人或股東權益之重要契約",
+     "parties": [
+      "兆豐國際商業銀行股份有限公司",
+      "美國聯邦準備銀行理事會(簡稱FRB)",
+      "伊利諾州金融廳(簡稱IDFPR)"
+     ],
+     "period": "契約簽訂日：2018年1月17日契約終止日：2026年3月25日",
+     "content": "●FRB以2016年檢查報告之缺失含括紐約、芝加哥及矽谷等三家分行，均有防制洗錢之法令缺失，本行於2018年1月17日與FRB及IDFPR簽署裁罰令，主要內容為：需支付美金2,900萬元罰款；提交改善計畫；委任獨立第三方機構就紐約分行2015年1月至6月間之美元清算交易進行檢視與回溯調查。●FRB 於美國東部時間2026年4月9日公告，自2026年3月25日終止對兆豐銀行及兆豐銀行紐約、芝加哥及矽谷三家分行之裁罰令。",
+     "restrictions": "-"
+    },
+    {
+     "page": 117,
+     "entity": null,
+     "nature": "證券投資顧問委任契約",
+     "parties": [
+      "兆豐證券股份有限公司",
+      "兆豐國際證券投資顧問股份有限公司"
+     ],
+     "period": "契約存續期間自民國114年11月1日起至民國115年4月30日止",
+     "content": "委請兆豐國際證券投資顧問股份有限公司提供投資諮詢顧問服務事項。",
+     "restrictions": "-"
+    }
+   ],
+   "none_entities": [],
+   "notes": "節標題「十、重要契約：」。金控但本節沒有依子公司分段（無「(1)兆豐金控：無」型式），所有列entity填null；第1、2列為子公司兆豐銀行、第3列為兆豐證券的契約。限制條款原文為「-」。當事人儲存格依「及」「、」或換行拆分：第1列「兆豐國際商業銀行股份有限公司及紐約州金融服務署(簡稱NYDFS)」拆2個；第2列「兆豐國際商業銀行股份有限公司、美國聯邦準備銀行理事會(簡稱FRB)及伊利諾州金融廳(簡稱IDFPR)」拆3個；第3列兩行各1個。頁面右側有直排「營運概況」，文字層混入單字列。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    151,
+    152
+   ],
+   "chapter_heading": "特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "see_mops",
+     "page": 152,
+     "text": "(一) 關係企業合併營業報告書公開資訊觀測站 〉單一公司 〉電子文件下載 〉關係企業三書表專區https://mopsov.twse.com.tw/mops/web/t57sb01_q10(二) 關係企業合併財務報表本公司依「關係企業合併營業報告書關係企業合併財務報表及關係報告書編製準則」應納入編製關係企業合併財務報表之公司與依國際財務報導準則第十號應納入編製母子公司合併財務報告之公司均相同，且關"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 152,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 152,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 152,
+     "text": "無。"
+    }
+   },
+   "notes": "p151為章扉頁（「特別記載事項」「Special Disclosure」，無「捌、」等章號），p152頁首再寫「特別記載事項」，沒有章號。關係企業項：(一)合併營業報告書只給觀測站路徑，(二)(三)說明不另行編製，判see_mops（也可視為disclosed，有疑義）。頁面左側直排「特別記載事項」混入文字層。"
+  }
+ },
+ "1301": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    157,
+    158
+   ],
+   "basis_label": null,
+   "statement_basis_from_text": "unstated",
+   "unit_text": "單位：新台幣千元",
+   "actual": {
+    "page": 157,
+    "opening_cash": 18200100,
+    "cfo": 6619088,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": -14187366,
+    "fx": null,
+    "closing_cash": 10631822,
+    "remedy_invest": "-",
+    "remedy_finance": "-",
+    "column_headers": [
+     "期初現金餘額",
+     "全年來自營業活動淨現金流量",
+     "全年現金流出量",
+     "現金剩餘(不足)數額",
+     "現金不足額之補救措施／投資計劃",
+     "現金不足額之補救措施／理財計劃"
+    ]
+   },
+   "actual_explanations": {
+    "operating": "營業活動：本年度營業活動淨現金流入6,619,088千元，主要係營運產生之淨現金流入5,867,834千元，收取利息及股利分別為304,307千元及3,440,183千元，支付利息2,976,905千元及所得稅16,331千元所致。",
+    "investing": "投資活動：本年度投資活動淨現金流出6,096,434千元，主要係取得不動產、廠房及設備14,548,253千元所致。",
+    "financing": "籌資活動：本年度籌資活動淨現金流出8,861,318千元，主要係應付短期票券減少16,700,000千元、長短期借款淨增加5,161,795千元、公司債淨增加2,200,000千元，及發放現金股利3,156,378千元所致。"
+   },
+   "forecast": {
+    "applicable": true,
+    "page": 158,
+    "opening_cash": 10631822,
+    "cfo": 13877071,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": -16935595,
+    "fx": null,
+    "closing_cash": 7573298,
+    "remedy_invest": "-",
+    "remedy_finance": "-",
+    "column_headers": [
+     "期初現金餘額",
+     "預計全年來自營業活動淨現金流量",
+     "預計全年現金流出量",
+     "預計現金剩餘(不足)數額",
+     "預計現金不足額之補救措施／投資計劃",
+     "預計現金不足額之補救措施／理財計劃"
+    ]
+   },
+   "forecast_explanations": {
+    "operating": null,
+    "investing": null,
+    "financing": null
+   },
+   "notes": "「三、現金流量」跨p157（1.本年度表A）與p158（2.現金不足額之補救措施及流動性分析、3.未來一年表B）。單位「新台幣千元」（千＝仟，不換算）。表A、表B都是「全年現金流出量」寫法，流出量原文帶負號（-14,187,366、-16,935,595），依規則記為負數；表頭沒有寫公式。表A：18,200,100+6,619,088+(-14,187,366)=10,631,822，平（流出量以帶號數直接相加）。表B：10,631,822+13,877,071+(-16,935,595)=7,573,298，平。表A說明的投資-6,096,434＋籌資-8,861,318=-14,957,752，與流出量-14,187,366差770,386（推測為匯率影響，原文未寫）。表B說明只有一段總述，不分營業／投資／籌資，原文：「預期115年來自營業活動淨現金流量較114年增加，且期初現金餘額充足，預計未來一年期末現金仍有剩餘。」故forecast_explanations全null。p158另有「(1)本年度無現金不足額情形。」與最近二年度流動性比率表。補救措施原文「-」。表內未寫合併或個體。"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    154
+   ],
+   "rows": [
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "購買合約",
+     "parties": [
+      "中國石油公司"
+     ],
+     "period": "114.1~114.12",
+     "content": "氯乙烯及高密度聚乙烯用乙烯、丙烯、氫氣供應",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "買賣合約",
+     "parties": [
+      "台塑石化公司"
+     ],
+     "period": "114.1~114.12",
+     "content": "乙烯、丙烯、丁二烯、丁二烯萃餘油供應",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "技術授權契約",
+     "parties": [
+      "美國Lummus公司"
+     ],
+     "period": "107.11~122.11",
+     "content": "丙烷脫氫工藝技術",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "技術授權契約",
+     "parties": [
+      "美國Univation公司"
+     ],
+     "period": "103.10~123.10",
+     "content": "全密度氣相聚乙烯技術",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "台灣銀行"
+     ],
+     "period": "114.9~116.9",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "日商瑞穗銀行"
+     ],
+     "period": "114.12~116.8",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "合作金庫等16家銀行聯貸案"
+     ],
+     "period": "112.7~115.7",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "財務比率須符合合約標準"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "大陸商中國銀行"
+     ],
+     "period": "114.10~116.9",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "兆豐國際商業銀行"
+     ],
+     "period": "113.8~116.7",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "國泰世華銀行"
+     ],
+     "period": "113.12~116.11",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "中國信託商業銀行"
+     ],
+     "period": "114.1~116.10",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "無"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "中國進出口銀行"
+     ],
+     "period": "112.1~117.1",
+     "content": "支應PDH擴建案資金需求",
+     "restrictions": "財務比率須符合合約標準"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "中華票券等7家金融機構聯合承銷案"
+     ],
+     "period": "114.10~119.10",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "財務比率及信評須符合合約所訂標準"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "兆豐票券"
+     ],
+     "period": "114.3~117.3",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "財務比率及信評須符合合約所訂標準"
+    },
+    {
+     "page": 154,
+     "entity": null,
+     "nature": "長期借款契約",
+     "parties": [
+      "萬通票券"
+     ],
+     "period": "114.4~117.4",
+     "content": "改善財務結構及充實營運資金",
+     "restrictions": "財務比率及信評須符合合約所訂標準"
+    }
+   ],
+   "none_entities": [],
+   "notes": "節標題「七、重要契約」，15列，全在p154。每列1個當事人；聯貸案當事人照原文存1項（「合作金庫等16家銀行聯貸案」「中華票券等7家金融機構聯合承銷案」）。表頭「契約起迄日期」「限制條款」各分兩行。文字層「美國 Lummus 公司」「合作金庫等 16 家」有排版空白，已去除。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    167
+   ],
+   "chapter_heading": "陸、特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "see_mops",
+     "page": 167,
+     "text": "請參閱公開資訊觀測站>單一公司>電子文件下載>關係企業三書表專區。https://mopsov.twse.com.tw/mops/web/t57sb01_q10"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 167,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 167,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 167,
+     "text": "無。"
+    }
+   },
+   "notes": "章名列「陸、特別記載事項」在p167頁首（spec §1.3說1301找不到章名，實際PDF有章名列）。4項依序：關係企業、私募、其他補充、第三十六條。"
+  }
+ },
+ "2412": {
+  "cashflow": {
+   "status": "parsed",
+   "pages": [
+    157,
+    158
+   ],
+   "basis_label": "最近二年度合併現金流量變動分析",
+   "statement_basis_from_text": "consolidated",
+   "unit_text": "單位：新台幣仟元",
+   "actual": {
+    "page": 157,
+    "opening_cash": 36259689,
+    "cfo": 77445547,
+    "cfi": -28283839,
+    "cff": -48456928,
+    "cfi_cff": null,
+    "outflow": null,
+    "fx": -20263,
+    "closing_cash": 36944206,
+    "remedy_invest": null,
+    "remedy_finance": null,
+    "column_headers": [
+     "年度／項目",
+     "114年",
+     "113年",
+     "增（減）金額",
+     "變動比例（%）"
+    ]
+   },
+   "actual_explanations": {
+    "operating": null,
+    "investing": "投資活動之淨現金流出減少20%：主要係取得原始到期日超過3個月之定期存款、可轉讓定存單及商業本票減少所致。",
+    "financing": null
+   },
+   "forecast": {
+    "applicable": true,
+    "page": 158,
+    "opening_cash": 36944206,
+    "cfo": 76825517,
+    "cfi": null,
+    "cff": null,
+    "cfi_cff": null,
+    "outflow": 81449964,
+    "fx": null,
+    "closing_cash": 32319759,
+    "remedy_invest": "-",
+    "remedy_finance": "-",
+    "column_headers": [
+     "年初現金餘額",
+     "預計全年來自營業活動淨現金流量（註）",
+     "預計全年現金流出量（註）",
+     "預計現金剩餘數額",
+     "預計現金不足額之補救措施／投資計畫",
+     "預計現金不足額之補救措施／理財計畫"
+    ]
+   },
+   "forecast_explanations": {
+    "operating": "營業活動：預計115年度來自營業活動之淨現金流量大致維持穩定。",
+    "investing": "投資活動：預計115年度主要為支付網路建設之現金流出。",
+    "financing": "籌資活動：預計115年度將發放現金股利及償還公司債。"
+   },
+   "notes": "文字層字型對應損壞（大量亂碼字，例「斉噟活動」=營業活動），本節所有文字以頁面圖像為準；數字在文字層正確。表A不是準則的一列式表，而是「最近二年度合併現金流量變動分析」直式比較表（列＝項目，欄＝114年、113年、增（減）金額、變動比例（%）），取114年欄；無補救措施欄（remedy填null）。column_headers記該直式表的欄名；列名依序：年初現金及約當現金餘額、營業活動之淨現金流入、投資活動之淨現金流出、籌資活動之淨現金流出、匯率變動對現金及約當現金之影響、年底現金及約當現金餘額。表A平：36,259,689+77,445,547-28,283,839-48,456,928-20,263=36,944,206。說明只寫增減超過20%者：投資（填investing）與匯率（「匯率變動對現金及約當現金之影響減少151%：主要係子公司美金部位較大，而美金兌新台幣呈貶值走勢。」），營業、籌資無說明。p158另有「最近二年度個體現金流量變動分析」（114年：25,028,261｜73,724,117｜(25,450,793)｜(48,724,144)｜24,577,441，無匯率列），不取。表B「未來一年現金流動性分析」：全年現金流出量寫法，原文正數；36,944,206+76,825,517-81,449,964=32,319,759，平；表下註1「上表數據為合併資訊。」，註2–4為說明。"
+  },
+  "contracts": {
+   "status": "parsed",
+   "pages": [
+    114
+   ],
+   "rows": [
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "美商蘋果亞洲（股）公司台灣分公司"
+     ],
+     "period": "114.4.29～迄今",
+     "content": "供銷售商品",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "台灣愛立信（股）公司"
+     ],
+     "period": "114.11.18～迄今",
+     "content": "行動通信設備",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "台灣諾基亞通信（股）公司"
+     ],
+     "period": "114.11.11～迄今",
+     "content": "行動通信工程",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "萬鼎工程服務（股）公司"
+     ],
+     "period": "114.3.3～迄今",
+     "content": "營繕工程",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "天能綠電（股）有限公司"
+     ],
+     "period": "114.11.12～迄今",
+     "content": "再生能源多元綠電",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "宏華國際（股）公司"
+     ],
+     "period": "114.2.24～迄今",
+     "content": "勞務",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "中華系統整合（股）公司"
+     ],
+     "period": "114.3.4～迄今",
+     "content": "多媒體終端設備",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "緯謙科技（股）公司"
+     ],
+     "period": "114.3.31～迄今",
+     "content": "雲端、資訊系統",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "資拓宏宇國際（股）公司"
+     ],
+     "period": "114.7.25～迄今",
+     "content": "電腦及資訊系統",
+     "restrictions": "保密條款"
+    },
+    {
+     "page": 114,
+     "entity": null,
+     "nature": "採購",
+     "parties": [
+      "神腦國際企業（股）公司"
+     ],
+     "period": "114.12.1～迄今",
+     "content": "供銷售商品",
+     "restrictions": "保密條款"
+    }
+   ],
+   "none_entities": [],
+   "notes": "節標題「七、重要契約」，10列全在p114。第5列與第6列之間有一列跨欄分隔標題「關係企業」，其後5列（宏華國際、中華系統整合、緯謙科技、資拓宏宇國際、神腦國際企業）為與關係企業的契約；該分隔列不是契約列。文字層亂碼，以頁面圖像為準。期間欄的波浪號：pdfplumber為「～」(U+FF5E)、文字層為「∼」(U+223C)，此處用「～」。表後接「附錄」資安驗證列表（p114–p115），不屬本節。"
+  },
+  "special": {
+   "status": "parsed",
+   "pages": [
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179
+   ],
+   "chapter_heading": "特別記載事項",
+   "items": {
+    "affiliates": {
+     "status": "disclosed",
+     "page": 167,
+     "text": "(一)關係企業合併營業報告書1.關係企業組織圖114年12月31日"
+    },
+    "private_placement": {
+     "status": "none",
+     "page": 179,
+     "text": "無。"
+    },
+    "other_supplement": {
+     "status": "none",
+     "page": 179,
+     "text": "無。"
+    },
+    "material_events_36": {
+     "status": "none",
+     "page": 179,
+     "text": "無。"
+    }
+   },
+   "notes": "p166為章扉頁（大號「7」＋「特別記載事項」與4子項目錄），p167頁首「特別記載事項」為正文章名列。一、114年度關係企業相關資料（p167–p179）有完整揭露：組織圖、各關係企業基本資料、營運概況等表；(二)關係企業合併財務報告請至觀測站查詢。text欄只存子項開頭（組織圖為圖形，無連續文字）。子項順序：一關係企業、二私募、三第三十六條、四其他補充；二～四都在p179，內容另起一行「無。」。文字層亂碼，以頁面圖像為準。"
+  }
+ }
+}

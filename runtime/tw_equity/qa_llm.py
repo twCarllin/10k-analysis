@@ -10,7 +10,8 @@ import json
 from typing import Any, Callable
 
 from runtime.tw_equity.qa import (
-    FCF_TOPIC, _FCF_Q_RE, _pct, fmt_delta, fmt_value, render_topics_answer, verify_topics,
+    AR_CF_FIELDS, FCF_TOPIC, _FCF_Q_RE, _pct, ar_arith_hint, ar_basis_hint, fmt_delta, fmt_value,
+    render_topics_answer, verify_topics,
 )
 
 Llm = Callable[[dict[str, Any]], dict[str, Any]]
@@ -62,9 +63,38 @@ def _compare(t: dict[str, Any]) -> dict[str, Any]:
     return {"compare": f"current＝近四季 TTM（迄 {t.get('period_ttm')}），prior＝FY {t.get('period_fy')} 年度"}
 
 
+def _cf_llm_view(tbl: dict[str, Any] | None) -> dict[str, Any] | None:
+    """表 A／表 B → 億元字串；缺值一律「年報未列」（不是 0）。"""
+    if tbl is None:
+        return None
+    v = {f: tbl["yi"][f] or "年報未列" for f, _ in AR_CF_FIELDS}
+    v.update(page=tbl.get("page"), remedy_invest=tbl.get("remedy_invest"), remedy_finance=tbl.get("remedy_finance"))
+    if tbl.get("applicable") is not None:
+        v["applicable"] = tbl["applicable"]
+    return v
+
+
+def _ar_view(t: dict[str, Any]) -> dict[str, Any]:
+    if t["kind"] == "ar_cashflow":
+        return {"name": t["name"], "status": t["status"], "pages": t["pages"], "basis": t["basis"],
+                "basis_note": t["basis_note"], "basis_notice": ar_basis_hint(t),
+                "arith_ok": t["arith_ok"], "arith_notice": ar_arith_hint(t) if t["actual"] is not None else None,
+                "table_a_actual": _cf_llm_view(t["actual"]),
+                "table_b_forecast_is_estimate_not_actual": _cf_llm_view(t["forecast"]),
+                "table_a_explanations": t["actual_explanations"], "table_b_explanations": t["forecast_explanations"]}
+    if t["kind"] == "ar_contracts":
+        return {"name": t["name"], "status": t["status"], "pages": t["pages"], "rows": t["rows"],
+                "none_entities": t["none_entities"]}
+    return {"name": t["name"], "status": t["status"], "pages": t["pages"],
+            "items": {k: {"status": i["status"], "page": i["page"], "text": i["text"], "truncated": i["truncated"],
+                          "full_length": i["full_length"]} for k, i in t["items"].items()}}
+
+
 def _topic_view(t: dict[str, Any]) -> dict[str, Any]:
     if t["kind"] == "fcf":
         return _fcf_view(t["facts"])
+    if t["kind"].startswith("ar_"):
+        return _ar_view(t)
     if t["kind"] == "metric":
         u = t["unit"]
         v = {"name": t["name"], "formula": t["formula"], "current": fmt_value(t["current"], u),
@@ -104,6 +134,7 @@ def llm_inputs(pack: dict[str, Any], question: str, company: str) -> dict[str, A
                          "ifrs17_break": pack.get("ifrs17_break", False), "amount_unit": "億元",
                          "ttm_status": pack.get("ttm_status"), "ttm_reason": pack.get("ttm_reason"),
                          "ttm_period": pack.get("ttm_period"), "fy_period": pack.get("fy_period"),
+                         "ar_sections_status": pack.get("ar_sections_status"),
                          **({"period_notes": pack["period_notes"]} if pack.get("period_notes") else {})},
              "topics": {k: _topic_view(t) for k, t in pack["topics"].items()}}
     return {"question": question, "company": company,

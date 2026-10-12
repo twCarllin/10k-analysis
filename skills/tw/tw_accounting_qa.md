@@ -1,6 +1,6 @@
 ---
-skill_version: 1.3
-last_modified: 2026-10-11
+skill_version: 1.4
+last_modified: 2026-10-12
 ---
 
 # tw_accounting_qa
@@ -22,6 +22,7 @@ last_modified: 2026-10-11
    - 問毛利「為什麼變動」→ `bridge:gross_profit`（營收變動、成本變動）；問毛利率「為什麼上升／下降」→ `gross_margin` 加 `bridge:gross_margin`（營收變動效果、成本變動效果，單位百分點）
    - 問「近四季」「TTM」「過去 12 個月」「最近一年」→ `ttm:values`（TTM＝FY 年度數＋H1 本期−H1 去年同期）、`ttm:<指標 key>`（current＝TTM、prior＝FY 年度）、`ttm:bridge:<target>`（TTM vs FY 的營業利益／淨利變動）。`context.ttm_status` 不是 `ok` 時沒有 `ttm:*` 主題，依步驟 2 回答無法回答，並寫出 `ttm_reason`
    - 金控問集團資本適足率、逾放比、備抵呆帳覆蓋率 → `group_car`、`npl_ratio`、`coverage_ratio`。數字出自財報附註，引用時寫 `source` 的頁碼與銀行名；`stale` 為 true 時註明不是最新一期；值為「—」時寫出 `source.reason`
+   - 問年報「重要契約」→ `ar:contracts`；問「特別記載事項」「私募」「關係企業」「第三十六條」「重大影響事項」「其他必要補充說明」→ `ar:special`；問年報的現金流動性分析、未來一年現金流量預估、現金剩餘或不足 → `ar:cashflow`。`context.ar_sections_status` 列每章節的 status 與 reason；清單沒有該 `ar:*` 主題（章節 failed／not_found）時，依步驟 2 回答，並寫「年報此節無法解析」與 reason。問 FCF／自由現金流不選 `ar:cashflow`
 2. 問題無法用清單內主題回答 → `supported` 填 false、`topics` 填 []，`answer` 用一句話說明無法回答與可回答的範圍，**不寫任何數字**。
 3. 寫答案（繁體中文）：
    - 第一句直接回答問題（結論）；其後列出依據，每個依據附頁碼（寫成 `p.N`）
@@ -42,6 +43,10 @@ last_modified: 2026-10-11
    - basis 為 `H1` 時須註明：半年報只有 1–6 月累計數，「本季」「今年」皆以上半年累計回答；比率未年化
    - 註明核閱或查核；`ifrs17_break` 為 true 時註明去年同期為 IFRS 17 重編數，損益比較可能不一致
    - 用 `ttm:*` 主題時，寫明 TTM 迄日與比較的 FY 年度，並註明 TTM 由年報 FY 數（查核）與半年報數（核閱）組成；`ttm:values` 有 `comparability_note` 時照寫
+   - 用 `ar:*` 主題時：
+     - **年報現金流量**（`ar:cashflow`）：表 A 是實際數（`table_a_actual`），表 B 是公司預估數（`table_b_forecast_is_estimate_not_actual`），寫表 B 時一定寫「預估」，不可說成實際。數字照抄事實包的億元字串；值為「年報未列」時寫「年報未列」，不可寫成 0；流出量、負值照事實包的符號寫，不可自行加減。`basis_notice` 不是 null 時，答案一定要寫出（「年報此節的數字不是合併數字」或「無法確認是否為合併數字」），且不可與帳本的合併現金流量（`fcf_analysis`、`bridge:cfo` 等）混在同一句比較。`arith_notice` 不是 null 時，答案要註明「此表期初＋各項流量與期末不平（或無法驗算）」。說明原文（`*_explanations`）可引用，附頁碼
+     - **重要契約**（`ar:contracts`）與**特別記載事項**（`ar:special`）：每個引用的契約或子項都附頁碼 `p.N`；契約日期、金額、期間照事實包原文抄，不改寫數字。`none_entities` 是年報寫「無」的子公司
+     - 特別記載事項各子項的原文只含前 800 字；`truncated` 為 true 時，答案要說明「原文較長，此處只引用前 800 字」並附頁碼
 4. 有 `retry_hint` 時，優先修正 hint 指出的問題。
 5. 語氣依 `agents/analyst_agent.md`：事實描述，不用評價詞。
 

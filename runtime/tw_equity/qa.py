@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Any
 
 from runtime.tw_equity import pdf_doc
+from runtime.tw_equity.ar_sections import (
+    SPECIAL_KEYS, STATUS_NONE, STATUS_PARSED, apply_cashflow_basis, parse_cashflow, parse_contracts, parse_special)
 from runtime.tw_equity.doc_anchor import FS_HEADING_ANCHORS, find_annual_report_sections, find_heading_sections
 from runtime.tw_equity.inputs import uses_fh_schema
 from runtime.tw_equity.metrics import BRIDGE_SPECS, TtmView, _build_bridge, _label_of, _value, compute_metrics
@@ -330,10 +332,83 @@ _TTM_REASONS = {
 }
 
 
+AR_CASHFLOW_TOPIC, AR_CONTRACTS_TOPIC, AR_SPECIAL_TOPIC = "ar:cashflow", "ar:contracts", "ar:special"
+AR_TOPICS = (AR_CASHFLOW_TOPIC, AR_CONTRACTS_TOPIC, AR_SPECIAL_TOPIC)
+_AR_KEY_TOPIC = {"cashflow": AR_CASHFLOW_TOPIC, "contracts": AR_CONTRACTS_TOPIC, "special": AR_SPECIAL_TOPIC}
+_AR_KEY_LABEL = {"cashflow": "年報現金流量", "contracts": "年報重要契約", "special": "年報特別記載事項"}
+SPECIAL_TEXT_MAX = 800  # 特別記載 4 個子項問答都只給前 800 字（使用者裁示 Q3；主 flow 2026-10-12 擴及全部子項：2412 關係企業原文 15,304 字）
+AR_CF_FIELDS = (("opening_cash", "期初現金"), ("cfo", "營業活動淨現金流量"), ("cfi", "投資活動淨現金流量"),
+                ("cff", "籌資活動淨現金流量"), ("cfi_cff", "投資及籌資活動合計淨現金流量"),
+                ("outflow", "全年現金流出量"), ("fx", "匯率變動影響"), ("closing_cash", "現金剩餘數額（期末）"))
+AR_SPECIAL_LABELS = {
+    "affiliates": "關係企業相關資料", "private_placement": "私募有價證券辦理情形",
+    "other_supplement": "其他必要補充說明事項",
+    "material_events_36": "證券交易法第三十六條第三項第二款所定對股東權益或證券價格有重大影響之事項"}
+
+
+def _cf_table_view(t: dict[str, Any] | None) -> dict[str, Any] | None:
+    """表 A／表 B（CashflowTable.to_dict，仟元原值；缺值保持 None）＋ yi＝億元字串（缺值 None）。"""
+    if t is None:
+        return None
+    return {**t, "yi": {f: None if t.get(f) is None else fmt_value(t[f], "仟元") for f, _ in AR_CF_FIELDS}}
+
+
+def _ar_cashflow_topic(d: dict[str, Any]) -> dict[str, Any]:
+    """d＝CashflowSection.to_dict()（producer：ar_sections.py CashflowSection.to_dict）。"""
+    return {"kind": "ar_cashflow", "name": "年報現金流量（表 A 實際數、表 B 預估數）", "status": d["status"],
+            "pages": d["pages"], "basis": d["basis"], "basis_note": d["basis_note"], "arith_ok": d["arith_ok"],
+            "unit_text": d["unit_text"], "actual": _cf_table_view(d["actual"]),
+            "actual_explanations": d["actual_explanations"], "forecast": _cf_table_view(d["forecast"]),
+            "forecast_explanations": d["forecast_explanations"]}
+
+
+def _ar_contracts_topic(d: dict[str, Any]) -> dict[str, Any]:
+    """d＝ContractsSection.to_dict()。"""
+    return {"kind": "ar_contracts", "name": "年報重要契約", "status": d["status"], "pages": d["pages"],
+            "rows": d["rows"], "none_entities": d["none_entities"]}
+
+
+def _ar_special_topic(d: dict[str, Any]) -> dict[str, Any]:
+    """d＝SpecialSection.to_dict()；各子項 text 只留前 SPECIAL_TEXT_MAX 字並標 truncated。"""
+    items: dict[str, dict[str, Any]] = {}
+    for k, it in d["items"].items():
+        text = it["text"]
+        cut = text is not None and len(text) > SPECIAL_TEXT_MAX
+        items[k] = {"status": it["status"], "page": it["page"],
+                    "text": text[:SPECIAL_TEXT_MAX] if cut else text, "truncated": bool(cut),
+                    "full_length": None if text is None else len(text)}
+    return {"kind": "ar_special", "name": "年報特別記載事項", "status": d["status"], "pages": d["pages"],
+            "items": items}
+
+
+_AR_BUILDERS = {"cashflow": _ar_cashflow_topic, "contracts": _ar_contracts_topic, "special": _ar_special_topic}
+
+
+def load_ar_sections(ar: Any, ledger: StatementLedger | None) -> tuple[dict[str, Any] | None, str | None]:
+    """年報 PdfDoc → ({"cashflow": CashflowSection（已判口徑）, "contracts", "special"}, None)；
+    任一解析例外 → (None, "<類型>: <訊息>")（同 tables.extract_tables：三章節全部不可用）。口徑用當次問答選用的帳本。"""
+    try:
+        return {"cashflow": apply_cashflow_basis(parse_cashflow(ar), ledger), "contracts": parse_contracts(ar),
+                "special": parse_special(ar)}, None
+    except Exception as e:
+        return None, f"{type(e).__name__}: {e}"
+
+
+def _ar_status(ar_sections: dict[str, Any] | None, error: str | None) -> dict[str, dict[str, Any]]:
+    if ar_sections is None:
+        failed = error is not None
+        reason = f"年報讀取或解析失敗：{error}" if failed else "沒有可用的年報（annual_report_path 未設定）"
+        return {k: {"status": "failed" if failed else "not_found", "reason": reason} for k in _AR_BUILDERS}
+    return {k: {"status": ar_sections[k].status, "reason": ar_sections[k].reason} for k in _AR_BUILDERS}
+
+
 def topic_pack(ledger: StatementLedger | None, group: str | None = None, *, fy_income: Any = None,
-               notes: Any = None, ttm_error: str | None = None) -> dict[str, Any]:
+               notes: Any = None, ttm_error: str | None = None, ar_sections: dict[str, Any] | None = None,
+               ar_sections_error: str | None = None) -> dict[str, Any]:
     """主題事實包：fcf_analysis（G1 事實包；金控不提供）＋ 指標 key ＋ bridge:<target>；
-    fy_income（年報 FY 損益表）給定且 TTM 可用 → 另加 ttm:*；notes（金控附註）給定 → 附註三指標。ledger None → 不可答。"""
+    fy_income（年報 FY 損益表）給定且 TTM 可用 → 另加 ttm:*；notes（金控附註）給定 → 附註三指標。ledger None → 不可答。
+    ar_sections（load_ar_sections 的結果）給定 → 章節 status 為 parsed／none 者加 ar:cashflow／ar:contracts／ar:special；
+    failed／not_found 不加主題。pack["ar_sections_status"] 一律記每章節 status＋reason。"""
     if ledger is None:
         return {"answerable": False, "reason": "財報三表解析失敗（無帳本）"}
     mp = compute_metrics(ledger, fy_income, group="fh" if uses_fh_schema(group) else group, notes=notes)
@@ -355,8 +430,13 @@ def topic_pack(ledger: StatementLedger | None, group: str | None = None, *, fy_i
         ttm_status = "unavailable"
         code = "ledger_is_fy" if ttm is None else ttm.reason
         ttm_reason = f"年報讀取失敗：{ttm_error}" if ttm_error else f"{_TTM_REASONS.get(code, code)}（{code}）"
+    for key, build in _AR_BUILDERS.items():
+        sec = (ar_sections or {}).get(key)
+        if sec is not None and sec.status in (STATUS_PARSED, STATUS_NONE):
+            topics[_AR_KEY_TOPIC[key]] = build(sec.to_dict())
     return {"answerable": True, "unit": ledger.unit, "basis": ledger.basis, "assurance": ledger.assurance,
             "periods": dict(ledger.periods), "ifrs17_break": bool(mp.ifrs17_break),
+            "ar_sections_status": _ar_status(ar_sections, ar_sections_error),
             "ttm_status": ttm_status, "ttm_reason": ttm_reason,
             "ttm_period": None if ttm is None else ttm.period_ttm, "fy_period": None if ttm is None else ttm.period_fy,
             "topics": topics}
@@ -428,6 +508,14 @@ def _input_values(inputs: list[dict[str, Any]], levels: Levels, deltas: list[Del
         deltas += _dir(kind, i["current"], i["prior"], _delta(i["current"], i["prior"]), component=True)
 
 
+def _text_values(texts: list[str | None], levels: Levels) -> None:
+    """年報原文中帶單位的數字 → 可用數字（換算成該單位類別的基準值；金額為仟元）。"""
+    for text in texts:
+        for m in _NUM_UNIT_RE.finditer(text or ""):
+            x, _, kind, scale = _parse(m.group(1), m.group(2))
+            levels[kind].append(x * scale)
+
+
 def _topic_values(t: dict[str, Any]) -> tuple[Levels, list[Delta]]:
     """主題 → (非變動值, 變動值)；單位類別 amt＝仟元、pct＝百分數、day＝天、x＝倍。"""
     if t["kind"] == "fcf":
@@ -450,6 +538,16 @@ def _topic_values(t: dict[str, Any]) -> tuple[Levels, list[Delta]]:
         for r in t["rows"]:
             levels["amt"] += _vals(r["fy"], r["h1_current"], r["h1_prior"], r["ttm"])
             deltas += _dir("amt", r["ttm"], r["fy"], _delta(r["ttm"], r["fy"]), component=True)
+    elif t["kind"] == "ar_cashflow":  # 表 A／表 B 各欄＋說明原文中的金額（年報原文可照抄）
+        for tbl in (t["actual"], t["forecast"]):
+            if tbl is not None:
+                levels["amt"] += _vals(*(tbl.get(f) for f, _ in AR_CF_FIELDS))
+        _text_values([*t["actual_explanations"].values(), *t["forecast_explanations"].values()], levels)
+    elif t["kind"] == "ar_contracts":  # 契約金額、日期原文不核對來源欄位；原文出現的帶單位數字視為可引用
+        _text_values([str(v) for r in t["rows"] for k, v in r.items() if k not in ("page", "parties")]
+                     + [p for r in t["rows"] for p in r["parties"]], levels)
+    elif t["kind"] == "ar_special":
+        _text_values([it["text"] for it in t["items"].values()], levels)
     else:
         levels["amt"] += _vals(t["current"], t["prior"], t["residual"])
         deltas += _dir("amt", t["current"], t["prior"], t["delta"])
@@ -596,6 +694,108 @@ def _render_ttm_values(t: dict[str, Any]) -> list[str]:
     return lines
 
 
+def ar_basis_hint(t: dict[str, Any]) -> str | None:
+    """年報現金流量口徑提示：basis 不是 consolidated（含未判定）→ 提示句；consolidated → None。"""
+    b = t.get("basis")
+    if b == "consolidated":
+        return None
+    note = f"（{t['basis_note']}）" if t.get("basis_note") else ""
+    head = "年報此節的數字不是合併數字" if b == "non_consolidated" else "年報此節的數字無法確認是否為合併數字"
+    return f"{head}{note}，不可與財報合併現金流量表的數字混在同一句比較。"
+
+
+def ar_arith_hint(t: dict[str, Any]) -> str | None:
+    """表 A 驗算提示：arith_ok 不是 True（含 None＝無法驗算）→ 提示句；True → None。"""
+    return None if t.get("arith_ok") is True else "此表期初＋各項流量與期末不平（或無法驗算）。"
+
+
+def _pages_text(pages: list[int]) -> str:
+    return "p." + "、".join(str(p) for p in pages) if pages else "頁碼不明"
+
+
+def _ar_table_lines(title: str, tbl: dict[str, Any] | None, explanations: dict[str, str | None]) -> list[str]:
+    if tbl is None:
+        return [f"  {title}：年報未列此表。"]
+    if tbl.get("applicable") is False:
+        return [f"  {title}：年報寫「不適用」。"]
+    listed = [f"{lab} {tbl['yi'][f]}" for f, lab in AR_CF_FIELDS if tbl.get(f) is not None]
+    missing = [lab for f, lab in AR_CF_FIELDS if tbl.get(f) is None]
+    pg = "" if tbl.get("page") is None else f"（p.{tbl['page']}）"
+    body = "、".join(listed) if listed else "年報未列任何金額"
+    lines = [f"  {title}{pg}：{body}" + (f"；年報未列：{'、'.join(missing)}" if listed and missing else "")]
+    if tbl.get("remedy_invest") is not None or tbl.get("remedy_finance") is not None:
+        lines.append(f"    現金不足額之補救措施／投資計畫：{tbl.get('remedy_invest') or '年報未列'}；"
+                     f"理財計畫：{tbl.get('remedy_finance') or '年報未列'}")
+    for k, lab in (("operating", "營業活動"), ("investing", "投資活動"), ("financing", "籌資活動")):
+        if explanations.get(k):
+            lines.append(f"    {lab}說明（年報原文）：{explanations[k]}")
+    return lines
+
+
+def _render_ar_cashflow(t: dict[str, Any]) -> list[str]:
+    lines = [f"■ 年報現金流量（檢討分析章現金流量節，{_pages_text(t['pages'])}）"]
+    if t["status"] == STATUS_NONE:
+        return lines + ["  年報此節寫「無」或「不適用」，沒有現金流量分析表。"]
+    hint = ar_basis_hint(t)
+    if hint:
+        lines.append(f"  注意：{hint}")
+    arith = ar_arith_hint(t)
+    if arith and t["actual"] is not None:
+        lines.append(f"  注意：表 A {arith}")
+    lines += _ar_table_lines("表 A（實際數）", t["actual"], t["actual_explanations"])
+    lines += _ar_table_lines("表 B（預估數：公司預計未來一年的數字，不是實際數）", t["forecast"], t["forecast_explanations"])
+    return lines
+
+
+def _render_ar_contracts(t: dict[str, Any]) -> list[str]:
+    lines = [f"■ 年報重要契約（{_pages_text(t['pages'])}）"]
+    if t["status"] == STATUS_NONE or not t["rows"]:
+        lines.append("  年報此節寫「無」，沒有列出重要契約。")
+    else:
+        lines.append(f"  共 {len(t['rows'])} 筆：")
+    for r in t["rows"]:
+        ent = f"［{r['entity']}］" if r.get("entity") else ""
+        lines.append(f"  - {ent}{r['nature'] or '—'}（p.{r['page']}）：當事人 {'、'.join(r['parties']) or '—'}；"
+                     f"期間 {r['period'] or '—'}；內容 {r['content'] or '—'}；限制條款 {r['restrictions'] or '—'}")
+    if t["none_entities"]:
+        lines.append(f"  年報寫「無」的子公司：{'、'.join(t['none_entities'])}。")
+    return lines
+
+
+def _render_ar_special(t: dict[str, Any]) -> list[str]:
+    lines = [f"■ 年報特別記載事項（{_pages_text(t['pages'])}）"]
+    for k in SPECIAL_KEYS:
+        it, lab = t["items"][k], AR_SPECIAL_LABELS[k]
+        if it["status"] == "not_found" or it["page"] is None:
+            lines.append(f"  - {lab}：年報找不到此項。")
+            continue
+        state = {"none": "年報寫「無」或「不適用」", "see_mops": "年報只列公開資訊觀測站連結"}.get(it["status"], "年報有揭露")
+        lines.append(f"  - {lab}（p.{it['page']}）：{state}")
+        if it["text"]:
+            lines.append(f"    {it['text']}")
+        if it["truncated"]:
+            lines.append(f"    （原文共 {it['full_length']} 字，此處只列前 {SPECIAL_TEXT_MAX} 字，其餘省略；全文見年報 p.{it['page']}）")
+    return lines
+
+
+def _render_ar(t: dict[str, Any]) -> list[str]:
+    return (_render_ar_cashflow(t) if t["kind"] == "ar_cashflow"
+            else _render_ar_contracts(t) if t["kind"] == "ar_contracts" else _render_ar_special(t))
+
+
+def render_ar_answer(pack: dict[str, Any], keys: list[str], *, company: str = "", source: str = "") -> str:
+    """年報章節模板答案（不打 API）。keys＝章節名（cashflow／contracts／special）；章節不可答 → 「年報此節無法解析（原因）」。"""
+    lines = [f"【{company}】"]
+    for key in keys:
+        t = pack["topics"].get(_AR_KEY_TOPIC[key])
+        if t is not None:
+            lines += [""] + _render_ar(t)
+            continue
+        st = (pack.get("ar_sections_status") or {}).get(key) or {}
+        lines += ["", f"■ {_AR_KEY_LABEL[key]}：年報此節無法解析（{st.get('reason') or '找不到章節'}）。"]
+    return "\n".join(lines + ["", f"出處：{source or '年報 PDF'}"])
+
+
 _COST_KEYS = ("cogs", "selling_expenses", "admin_expenses", "rd_expenses", "total_opex", "other_opex_residual",
               "finance_costs", "income_tax")
 
@@ -658,6 +858,8 @@ def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: st
     if not pack.get("answerable"):
         return f"{company} 無法回答：{pack.get('reason')}"
     known = [k for k in topics if k in pack["topics"]]
+    if known and all(k in AR_TOPICS for k in known):
+        return render_ar_answer(pack, [k for k, v in _AR_KEY_TOPIC.items() if v in known], company=company, source=source)
     if known == [FCF_TOPIC]:
         return render_fcf_answer(pack["topics"][FCF_TOPIC]["facts"], company=company, source=source,
                                  period_notes=notes)
@@ -667,7 +869,8 @@ def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: st
         lines += [""] + (_fcf_sections(t["facts"], company, source)
                          if t["kind"] == "fcf" else _render_metric(t) if t["kind"] == "metric"
                          else _render_margin(t) if t["kind"] == "margin_bridge"
-                         else _render_ttm_values(t) if t["kind"] == "ttm_values" else _render_bridge(t))
+                         else _render_ttm_values(t) if t["kind"] == "ttm_values"
+                         else _render_ar(t) if t["kind"].startswith("ar_") else _render_bridge(t))
     per = pack["periods"]
     lines += ["", "期間與限制",
               f"  - 本期 {_period_text(per.get('flow_current'))}（資產負債表 {per.get('bs_current') or '—'}），"
@@ -687,6 +890,17 @@ def render_topics_answer(pack: dict[str, Any], topics: list[str], *, company: st
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 _FCF_Q_RE = re.compile(r"FCF|自由現金流", re.IGNORECASE)
+# 年報章節問題分流（模板路徑）：用詞取窄；FCF 問題先走 FCF 路徑；「契約負債」等會計科目不算重要契約
+_AR_ROUTES = (
+    ("cashflow", re.compile(r"現金流動性|未來一年.{0,6}現金(?:流動性|狀況|流量|餘額)|現金流量預估|預估現金|現金剩餘(?!.{0,4}股)|現金不足")),
+    ("contracts", re.compile(r"重要契約|契約(?!負債|資產|成本|收入)")),
+    ("special", re.compile(r"特別記載|私募(?!基金)|關係企業(?!交易)|第三十六條|第36條|對股東權益或證券價格有重大影響|重大影響之?事項")),
+)
+
+
+def route_ar_sections(question: str) -> list[str]:
+    """問題用詞 → 要答的年報章節（cashflow／contracts／special，依此序；都不符 → []）。"""
+    return [key for key, rx in _AR_ROUTES if rx.search(question)]
 
 
 _QUARTER_RE = re.compile(r"第[一二三四]季|Q[1-4]|單季|季度", re.IGNORECASE)  # 單季用詞（答案加「沒有單季財報」說明）
@@ -761,11 +975,13 @@ def load_ledger(fs_path: Path, group: str | None = None) -> StatementLedger | No
     return extract_statements(doc, find_heading_sections(doc, FS_HEADING_ANCHORS, required=set()), group=group)
 
 
-def load_fy_income(ar_path: Path, roc_year: int, group: str | None = None) -> tuple[Any, str | None]:
-    """年報 PDF → (FyIncome 或 None, 錯誤)；任何例外 → (None, "<類型>: <訊息>")（G3b：問答照常、無 TTM 主題）。"""
+def load_fy_income(ar_path: Path, roc_year: int, group: str | None = None, *,
+                   ar: pdf_doc.PdfDoc | None = None) -> tuple[Any, str | None]:
+    """年報 PDF → (FyIncome 或 None, 錯誤)；任何例外 → (None, "<類型>: <訊息>")（G3b：問答照常、無 TTM 主題）。
+    ar 給定（呼叫端已讀過年報）→ 重用，不重讀檔。"""
     from runtime.tw_equity.fy_income import extract_fy_income
     try:
-        ar = _load_doc(ar_path)
+        ar = ar if ar is not None else _load_doc(ar_path)
         anchors = find_annual_report_sections(ar, required=set(), **({"group": "fh"} if uses_fh_schema(group) else {}))
         return extract_fy_income(ar, anchors, roc_year=roc_year, group="fh" if uses_fh_schema(group) else group), None
     except Exception as e:
@@ -787,23 +1003,34 @@ def load_fh_notes(fs_path: Path, ledger: StatementLedger | None) -> Any:
 
 
 def build_pack(base: Path, raw: dict[str, Any], question: str = "", period_arg: str = "auto") -> tuple[dict[str, Any], str]:
-    """--llm 路徑的事實包：財報帳本＋年報 FY 損益表（TTM）＋金控附註 → (pack, 出處)。
-    期間依 select_period 選（全年財報或半年報）；全年帳本 basis 不是 H1，不讀年報做 TTM。"""
+    """--llm 與年報章節模板路徑的事實包：財報帳本＋年報（FY 損益表 TTM、三章節）＋金控附註 → (pack, 出處)。
+    期間依 select_period 選（全年財報或半年報）；全年帳本 basis 不是 H1，不做 TTM。
+    有 annual_report_path 時一律讀年報（只讀快取）解析三章節，全年帳本也讀；年報只讀一次，TTM 與三章節共用。"""
     period, notes = _period_choice(raw, question, period_arg, base)
     fs_rel = raw["fy_consolidated_fs_path"] if period == "fy" else raw["consolidated_fs_path"]
     ar_rel, group = raw.get("annual_report_path"), raw.get("group")
     ledger = load_ledger(base / fs_rel, group=group)
+    ar_doc, ar_sections, ar_sec_err = None, None, None  # 年報只讀一次：TTM 與三章節共用同一份 PdfDoc
+    if ledger is not None and ar_rel:
+        try:
+            ar_doc = _load_doc(base / ar_rel)
+        except Exception as e:
+            ar_sec_err = f"{type(e).__name__}: {e}"
+        if ar_doc is not None:
+            ar_sections, ar_sec_err = load_ar_sections(ar_doc, ledger)
     fy, err = None, None
     if ledger is not None and ledger.basis == "H1":  # 年度帳本不需 TTM，不讀年報
         if not ar_rel or not raw.get("fiscal_year"):
             err = "annual_report_path 或 fiscal_year 未設定"
         else:
-            fy, err = load_fy_income(base / ar_rel, int(raw["fiscal_year"]) - 1911, group)
+            fy, err = load_fy_income(base / ar_rel, int(raw["fiscal_year"]) - 1911, group, ar=ar_doc)
     fh_notes = load_fh_notes(base / fs_rel, ledger) if uses_fh_schema(group) else None
-    pack = topic_pack(ledger, group, fy_income=fy, notes=fh_notes, ttm_error=err)
+    pack = topic_pack(ledger, group, fy_income=fy, notes=fh_notes, ttm_error=err,
+                      ar_sections=ar_sections, ar_sections_error=ar_sec_err)
     if notes:
         pack["period_notes"] = notes
-    return pack, fs_rel + (f"；年報 {ar_rel}" if ar_rel and pack.get("ttm_status") == "ok" else "")
+    used_ar = pack.get("ttm_status") == "ok" or any(k in pack.get("topics", {}) for k in AR_TOPICS)
+    return pack, fs_rel + (f"；年報 {ar_rel}" if ar_rel and used_ar else "")
 
 
 def answer(ticker: str, question: str, *, base_dir: Path | None = None,
@@ -823,7 +1050,17 @@ def answer(ticker: str, question: str, *, base_dir: Path | None = None,
         text, _meta = answer_llm(pack, question, company=company, source=source, llm=llm)
         return text, pack
     if not _FCF_Q_RE.search(question):
-        return "G1 只支援 FCF 問題（問題需含「FCF」或「自由現金流」）。", None
+        keys = route_ar_sections(question)
+        if not keys:
+            return ("G1 只支援 FCF 問題（問題需含「FCF」或「自由現金流」）。"
+                    "年報章節問題需含「重要契約」「特別記載」「現金流動性」等用詞。"), None
+        if not raw.get("consolidated_fs_path"):
+            return f"{company} 無財報 PDF（consolidated_fs_path 未設定）。", None
+        pack, source = build_pack(base, raw, question, period)
+        if not pack["answerable"]:
+            return f"{company} 無法回答：{pack['reason']}", None
+        text = render_ar_answer(pack, keys, company=company, source=source)
+        return text + "\n（模板答案只回答年報章節；問題中的其他部分請單獨提問或加 --llm）", pack
     if uses_fh_schema(raw.get("group")):
         return (f"{company} 為金控，FCF（營業現金流＋資本支出）不適用於金融業："
                 "放款與存款變動都列在營業活動，數字不代表可自由運用的現金。"), None
@@ -850,7 +1087,8 @@ def main(argv: list[str] | None = None) -> int:
     print(text)
     if facts is not None:
         if not args.llm:
-            bad = verify_numbers(text, facts)
+            bad = (verify_topics(text, facts, [k for k in AR_TOPICS if k in facts["topics"]])
+                   if "topics" in facts else verify_numbers(text, facts))
             if bad:
                 print(f"\n[數字核對] 對不上：{', '.join(bad)}")
         if args.json:

@@ -183,6 +183,27 @@ python main.py 3653 --market tw-equity --ocr        # 亂碼頁改走 OCR（付�
 - 合併財報三表逐列解析為標準化帳本（`raw.json` 的 `bundle.statements`），含勾稽結果（附錄 D）。
 - 帳本衍生 30 項指標與 8 組變動歸因（附錄 E、`raw.json` 的 `bundle.metrics`）。
 - **`--ocr`**：年報中的亂碼頁（`(cid:N)` 字元過多）預設清空並記入附錄 B；加 `--ocr` 才會呼叫 OCR（Mistral 為主、失敗改 Azure DI），屬付費外部 API，預設關閉。
+- **年報三章節結構化解析**（`runtime/tw_equity/ar_sections.py`，`raw.json` 的 `bundle.ar_cashflow`／`ar_contracts`／`ar_special`，解析失敗記 `ar_sections_error`，不影響其他表）：
+  - 現金流量節：表 A（實際數）、表 B（未來一年預估數）、營業／投資／籌資說明原文；`arith_ok` 驗算表 A（期初＋各項流量＝期末，容差 2 仟元）；`basis` 比對帳本現金判斷是否為合併數字（`consolidated`／`non_consolidated`／`unknown`）。新版年報常只有比率表與表 B，此時 `actual` 為 null、`arith_ok` 為 null。
+  - 重要契約節：每列契約性質、當事人、起訖日期、主要內容、限制條款；年報寫「無」時 status 為 `none`。
+  - 特別記載事項：關係企業、私募、其他必要補充說明、證交法第 36 條重大影響事項 4 個子項的 status 與原文。
+  - 解析不了的章節記 `failed`／`not_found` 與 reason，不猜數字。101 家的未通過名單與已知限制見 `spec/2026-10-12-tw-equity-ar-sections.md` §2.6、§2.7。
+- **會計問答**（`runtime/tw_equity/qa.py`，規則見 `skills/tw/tw_accounting_qa.md`）：
+
+```bash
+python -m runtime.tw_equity.qa --ticker 3653 --ask "有哪些重要契約？"          # 模板答案，不打 API
+python -m runtime.tw_equity.qa --ticker 3653 --ask "FCF 為什麼變動？" --llm    # LLM 寫答案，程式核對數字
+python -m runtime.tw_equity.qa --ticker 2454 --ask "2025 年 FCF" --period fy   # 期間：auto（依用詞）／h1／fy
+```
+
+  年報章節主題：`ar:cashflow`（現金流動性分析、未來一年預估）、`ar:contracts`、`ar:special`；答案附頁碼，數字只准引用事實包內的值。章節 failed／not_found 時不加該主題。
+- **驗收工具**（只讀快取，不打 OCR／API）：
+
+```bash
+python -m runtime.tw_equity.fs_acceptance --all70        # 三表帳本勾稽，SUMMARY conform=98/101
+python -m runtime.tw_equity.ar_acceptance --all101 --gold # 年報三章節，含金標 10 家比對
+```
+
 - **Phase 1A 限制**：解析層只用 pdfplumber（無 DI／OCR 備援）；財報缺檔時 T1–T5 列入 `missing_tables`，並在報告附錄明示；T6（產銷量值）為選配，錨不到同樣記 `missing_tables`；T9（背書保證／資金貸與）延到 Phase 1B。
 
 **會計年度命名**：「FY2026」= 結束於 2026 年的會計年度，預設 fiscal year end = 3/31（大多數日企）。FY2026 Q1 = 2025/4–6、Q4 = 2026/1–3（年度結尾）。

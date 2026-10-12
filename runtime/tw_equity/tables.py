@@ -16,6 +16,7 @@ from runtime.tw_equity.inputs import uses_fh_schema
 
 if TYPE_CHECKING:
     from runtime.tw_equity.pdf_doc import PdfDoc
+    from runtime.tw_equity.ar_sections import CashflowSection, ContractsSection, SpecialSection
     from runtime.tw_equity.fy_income import FyIncome
     from runtime.tw_equity.metrics import MetricsPack
     from runtime.tw_equity.statements import StatementLedger
@@ -1529,6 +1530,10 @@ class TablesBundle:
     fy_income_error: str | None = None             # FY 損益表解析例外（`<類型>: <訊息>`）；成功 → None
     fh_notes_error: str | None = None               # 金控附註抽取例外（`<類型>: <訊息>`）；僅 fh 且失敗時 to_dict 輸出
     fh_notes: Any = None                            # 金控附註抽取（FhNotes；僅 group=="fh"）；其餘 None、to_dict 不輸出
+    ar_cashflow: "CashflowSection | None" = None    # 年報現金流量節（含口徑判定 basis）；None → to_dict 不輸出
+    ar_contracts: "ContractsSection | None" = None  # 年報重要契約節；None → to_dict 不輸出
+    ar_special: "SpecialSection | None" = None      # 年報特別記載事項章；None → to_dict 不輸出
+    ar_sections_error: str | None = None            # 年報三章節解析例外（`<類型>: <訊息>`）；成功 → None、to_dict 不輸出
 
     def to_dict(self) -> dict[str, Any]:
         d = self._base_dict()
@@ -1536,6 +1541,12 @@ class TablesBundle:
             d["fh_notes"] = self.fh_notes.to_dict()
         if self.fh_notes_error is not None:
             d["fh_notes_error"] = self.fh_notes_error
+        for name in ("ar_cashflow", "ar_contracts", "ar_special"):
+            v = getattr(self, name)
+            if v is not None:
+                d[name] = v.to_dict()
+        if self.ar_sections_error is not None:
+            d["ar_sections_error"] = self.ar_sections_error
         return d
 
     def _base_dict(self) -> dict[str, Any]:
@@ -1774,6 +1785,22 @@ def extract_tables(
         msg = f"[tw-equity 警示] FY 損益表解析失敗：{fy_income_error}；TTM 不可用"
         print(msg)
         log.warning(msg)
+    # 年報三章節（現金流量、重要契約、特別記載事項）：任何例外只記 ar_sections_error，不中斷其他表；成功才全部帶上
+    ar_cashflow = ar_contracts = ar_special = None
+    ar_sections_error: str | None = None
+    try:
+        from runtime.tw_equity.ar_sections import (
+            apply_cashflow_basis, parse_cashflow, parse_contracts, parse_special)
+
+        _cf = apply_cashflow_basis(parse_cashflow(ar), statements)
+        _ct = parse_contracts(ar)
+        _sp = parse_special(ar)
+        ar_cashflow, ar_contracts, ar_special = _cf, _ct, _sp
+    except Exception as e:
+        ar_sections_error = f"{type(e).__name__}: {e}"
+        msg = f"[tw-equity 警示] 年報三章節（現金流量／重要契約／特別記載）解析失敗：{ar_sections_error}"
+        print(msg)
+        log.warning(msg)
     fh_notes = None
     fh_notes_error: str | None = None
     if uses_fh_schema(group) and fs is not None:
@@ -1844,4 +1871,8 @@ def extract_tables(
         fy_income_error=fy_income_error,
         fh_notes=fh_notes,
         fh_notes_error=fh_notes_error,
+        ar_cashflow=ar_cashflow,
+        ar_contracts=ar_contracts,
+        ar_special=ar_special,
+        ar_sections_error=ar_sections_error,
     )
