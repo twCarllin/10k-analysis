@@ -34,3 +34,10 @@ tw_report/
 cache/
 evidence/
 gate1/
+
+# 開發流程產出物（spec／run manifest／風險／使用情境／影響面）
+spec/
+run/
+risk/
+usage/
+impact/
