@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from runtime.tw_credit.adapters import AdapterError
+from runtime.tw_equity.ocr_adapters import AdapterError
 from runtime.tw_equity import ocr as ocr_mod
 from runtime.tw_equity import pdf_doc
 from runtime.tw_equity.cross_year import build_cross_year, ocr_checks

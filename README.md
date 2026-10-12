@@ -4,8 +4,7 @@
 
 - **US**：SEC EDGAR 10-K / 10-Q + Yahoo Finance earnings call transcript（[Stagehand](https://github.com/browserbase/stagehand) LOCAL 模式）
 - **JP**：EDINET 有価証券報告書（yuho）/ 半期報 / 臨時報 + TDNET 適時開示（決算短信 PDF 解析）+ logmi 法說會逐字稿
-- **TW 投資研究**（`--market tw-equity`）：年報＋合併財報 PDF → 三表帳本、勾稽、指標與變動歸因、年報章節解析、會計問答
-- **TW 徵信**（`--market tw`）：年報 PDF ＋網路搜尋佐證 → 授信風險報告（人工 GATE 1 審核後續跑）
+- **TW**（`--market tw-equity`）：年報＋合併財報 PDF → 三表帳本、勾稽、指標與變動歸因、年報章節解析、會計問答
 
 各 pipeline 共用 orchestrator / eval loop / report writer 底層，互不干擾。
 
@@ -19,8 +18,7 @@ JP 輸出範例：`6315_20260517_1639_jp_report.pdf`（TOWA FY2026 Q4 決算短�
 
 ## Changelog
 
-- **2026-10** — TW 投資研究 pipeline（`--market tw-equity`）：年報／財報解析、三表帳本與勾稽（前 100 大 98/101 通過）、金控 fh schema、30 項指標與變動歸因、FY 損益／TTM、批次 runner、年報三章節解析、會計問答（`runtime.tw_equity.qa`）。
-- **2026-07** — TW 徵信 pipeline（`--market tw`）：Phase A–D、GATE 1 人工審核、Vertex AI／Bing grounding 搜尋、Google Document AI OCR、本地產研 PDF 佐證、報告 PDF。
+- **2026-10** — TW pipeline（`--market tw-equity`）：年報／財報解析、三表帳本與勾稽（前 100 大 98/101 通過）、金控 fh schema、30 項指標與變動歸因、FY 損益／TTM、批次 runner、年報三章節解析、會計問答（`runtime.tw_equity.qa`）。
 - **2026-05-17** — JP pipeline Phase 1A–1C：EDINET 有報 / 半期報 / 臨時報、jpcrp iXBRL 解析、7 個 jp_* narrative skill、TDNET scraper（決算短信 PDF 用 markitdown 抽 key_metrics / segment / forward_guidance）、logmi Stagehand adapter、watch / event 模式。報告按公司分子目錄。
 - **2026-05-01** — 新增 earnings call transcript 抓取（Stagehand LOCAL 模式 + Yahoo Finance）與 `transcript_analysis` skill。報告章節重排，transcript 三節置頂。
 - **2026-04-28** — 新增 `supply_chain_analysis` 與 `competitor_mapping` skill。
@@ -61,11 +59,8 @@ python main.py 6315 2025 --market jp
 # 4d. 日股 FY2026 Q4 速報（yuho 未發時自動 fallback TDNET 決算短信）
 python main.py 6315 2026 --market jp --quarter Q4
 
-# 4e. 台股投資研究（先準備 tw_equity_inputs/<ticker>.json 與 PDF，見下方「台股」）
+# 4e. 台股（先準備 tw_equity_inputs/<ticker>.json 與 PDF，見下方「台股」）
 python main.py 2330 --market tw-equity
-
-# 4f. 台股徵信（先準備 tw_credit_inputs/<ticker>.json 與年報 PDF）
-python main.py 3653 --market tw
 ```
 
 ## API Key 申請
@@ -77,11 +72,9 @@ python main.py 3653 --market tw
 | SEC EDGAR | 抓取美股 10-K / 10-Q | 免費，**無需 key**，僅需 User-Agent header | — |
 | TDNET（日股決算短信） | 從 release.tdnet.info scrape | 免費，**無需 key**，僅需 polite UA | — |
 | logmi Finance | 日股法說會逐字稿 | 免費，**無需 key**（需 Stagehand 用 Anthropic API 解析網頁） | — |
-| Azure（台股選用） | gpt-5.5（徵信 LLM）、Document Intelligence OCR、Bing grounding、Mistral OCR | 付費 | https://portal.azure.com/ |
-| Google Cloud（台股徵信選用） | Document AI OCR（主）、Vertex AI Google Search grounding | 付費 | https://console.cloud.google.com/ |
-| Brave Search（台股徵信舊路徑） | 網頁搜尋 | 有免費額度 | https://brave.com/search/api/ |
+| Azure（台股選用） | Document Intelligence OCR、Mistral OCR（`--ocr` 時才用） | 付費 | https://portal.azure.com/ |
 
-台股 PDF 解析本身（pdfplumber）不需 key；只有 `--ocr`、徵信的搜尋與 OCR 會打上面的付費 API。
+台股 PDF 解析本身（pdfplumber）不需 key；只有 `--ocr` 會打上面的付費 API。
 
 **日股 EDINET API key 申請流程**（5 分鐘內可拿到）：
 
@@ -105,7 +98,6 @@ python main.py 3653 --market tw
   "edgar_user_agent": "10k-research your-name@example.com",
   "edinet_api_key": "your-edinet-api-key",
   "azure": { "...": "台股用，欄位見 config.example.json" },
-  "google": { "...": "台股徵信用，欄位見 config.example.json" },
   "model": "claude-sonnet-4-5",
   "max_tokens": 4096,
   "max_tokens_by_skill": {
@@ -118,7 +110,7 @@ python main.py 3653 --market tw
 }
 ```
 
-台股 OCR 另在 `azure` 區塊加 `di_endpoint`／`di_key`（Azure Document Intelligence）與 `mistral_ocr_endpoint`／`mistral_ocr_key`；徵信舊搜尋路徑用頂層 `brave_api_key`。
+台股 OCR 另在 `azure` 區塊加 `di_endpoint`／`di_key`（Azure Document Intelligence）與 `mistral_ocr_endpoint`／`mistral_ocr_key`。
 
 ## CLI 用法
 
@@ -170,12 +162,9 @@ python main.py --market jp --tdnet-watch 6315,7203,9984 --since-minutes 30
 python main.py 6315 --market jp --analyze-call
 ```
 
-### 台股（`--market tw` 徵信 vs `--market tw-equity` 投資研究）
+### 台股（`--market tw-equity`）
 
-兩條線定位不同，不要混用：
-
-- `--market tw`：**徵信**（`runtime/tw_credit/`），評估授信風險。
-- `--market tw-equity`：**投資研究**（`runtime/tw_equity/`），與美股／日股並列的 market adapter，輸入為年報＋財報 PDF。
+`runtime/tw_equity/`，與美股／日股並列的 market adapter，輸入為年報＋財報 PDF。
 
 ```bash
 python main.py 3653 --market tw-equity              # 真跑（LLM 走 agent_runner 既有 provider）
@@ -234,17 +223,6 @@ python -m runtime.tw_equity.batch --tickers 2330,3653 --out data/output/batch/te
 python -m runtime.tw_equity.fs_acceptance --all70        # 三表帳本勾稽，SUMMARY conform=98/101
 python -m runtime.tw_equity.ar_acceptance --all101 --gold # 年報三章節，含金標 10 家比對
 ```
-
-#### 台股徵信（`--market tw`）
-
-```bash
-python main.py 3653 --market tw                              # 新 run：Phase A（年報解析）→ Phase B（搜尋佐證）→ 停在 GATE 1
-python main.py 3653 --market tw --resume <run_id>            # 人工審核 GATE 1 後續跑 Phase C（LLM 分析）→ Phase D（報告）
-python main.py 3653 --market tw --dry-run --resume <run_id>  # 不打 API，只重新產生既有 run 的報告
-```
-
-- 輸入檔 `tw_credit_inputs/<ticker>.json`（repo 只附範例 `3653.json`）：`company_name`、`aliases`、`annual_report_path`、`report_base_date` 必填；`tax_id`、`credit_horizon_years`（預設 3）、`sections_pages` 選填。
-- 年度由 `report_base_date` 決定，`year` 位置參數忽略。
 
 - **Phase 1A 限制**：解析層只用 pdfplumber（無 DI／OCR 備援）；財報缺檔時 T1–T5 列入 `missing_tables`，並在報告附錄明示；T6（產銷量值）為選配，錨不到同樣記 `missing_tables`；T9（背書保證／資金貸與）延到 Phase 1B。
 
@@ -371,7 +349,7 @@ python main.py 3653 --market tw --dry-run --resume <run_id>  # 不打 API，只�
 
 ```
 tenk/
-├── main.py                          # CLI 入口
+├── main.py                          # CLI 入口（--market sec / jp / tw-equity）
 ├── config.json                      # API key + model（.gitignore）
 ├── config.example.json              # 設定範本
 ├── requirements.txt
@@ -381,53 +359,66 @@ tenk/
 │   ├── common/                      # 市場無關：eval／synthesis／rerate／cross_year／三表交叉
 │   ├── us/                          # SEC 10-K／10-Q 專用
 │   ├── jp/                          # jp_* EDINET／TDNET 專用
-│   └── tw/                          # tw_credit_* 徵信、tw_* 投資研究專用
+│   └── tw/                          # tw_* 台股分析、tw_accounting_qa 問答
+├── docs/jp/                         # JP 資料來源使用條款
 ├── runtime/
-│   ├── agent_runner.py              # Claude API + context log + dry-run
+│   ├── agent_runner.py              # LLM 呼叫（依 config provider 切換）+ context log + dry-run
+│   ├── mock_outputs.json            # dry-run 用的 mock skill 結果
 │   ├── orchestrator.py              # 多階段執行 + eval loop + checkpoint
 │   ├── pipeline_state.py            # per-agent checkpoint/resume
 │   ├── eval_runner.py               # hard rule + schema + LLM eval
-│   ├── sec_data_fetcher.py          # EDGAR HTM + XBRL
-│   ├── doc_converter.py             # iXBRL strip + BeautifulSoup / markitdown fallback
-│   ├── section_splitter.py          # TOC-guided + LLM fallback + footnotes 切割
 │   ├── report_writer.py             # 繁中 MD + PDF + 折線圖
 │   ├── report.css                   # PDF 樣式
-│   ├── fonts/                       # Noto Sans TC（PDF 中文字型）
-│   └── transcript_scraper/          # earnings call transcript 模組
-│       ├── scraper.py               # Python wrapper（subprocess + JSON over stdout）
-│       ├── parser.py                # transcript 結構化解析
-│       ├── models.py                # transcript dataclass
-│       └── node/                    # Stagehand LOCAL 模式 side car
-│           ├── src/scrape.ts        # Yahoo Finance 抓取腳本
-│           ├── package.json         # @browserbasehq/stagehand + zod
-│           └── tsconfig.json
-├── runtime/
-│   ├── ...                          # 上方既有 SEC 模組
-│   ├── jp_data_fetcher.py           # EDINET API + DuckDB index + ticker map
-│   ├── jp_ixbrl_parser.py           # iXBRL 5 年表 + narrative chapter splitter
-│   ├── jp_tdnet_scraper.py          # TDNET HTML scraper + PDF parse (markitdown)
-│   ├── jp_pipeline.py               # JP orchestrator（yuho / event / watch 三 mode）
-│   ├── jp_report_writer.py          # JP 報告（重用 SEC PDF css helper）
-│   └── transcript_scraper/
-│       ├── logmi_scraper.py         # logmi.jp Stagehand wrapper
-│       ├── logmi_parser.py          # Q&A / presentation 分段
-│       └── node/src/scrape-logmi.ts # Stagehand sidecar（共用 node/）
-├── runtime/tw_equity/               # 台股投資研究：PDF 解析、三表帳本、指標、批次、問答
-├── runtime/tw_credit/               # 台股徵信：Phase A–D、搜尋／OCR adapter、報告
-├── tw_equity_inputs/                # 台股投資研究輸入檔（只附範例）
-├── tw_credit_inputs/                # 台股徵信輸入檔（只附範例）
-├── tw_report/                       # 台股 PDF（.gitignore）
-└── data/
+│   ├── fonts/                       # PDF 中文字型
+│   │
+│   ├── sec_data_fetcher.py          # [US] EDGAR HTM + XBRL
+│   ├── doc_converter.py             # [US] iXBRL strip + BeautifulSoup / markitdown fallback
+│   ├── section_splitter.py          # [US] TOC-guided + LLM fallback + footnotes 切割
+│   │
+│   ├── jp_data_fetcher.py           # [JP] EDINET API + DuckDB index + ticker map
+│   ├── jp_ixbrl_parser.py           # [JP] iXBRL 5 年表 + narrative chapter splitter
+│   ├── jp_tdnet_scraper.py          # [JP] TDNET HTML scraper + PDF parse (markitdown)
+│   ├── jp_pipeline.py               # [JP] orchestrator（yuho / event / watch 三 mode）
+│   ├── jp_report_writer.py          # [JP] 報告（重用 SEC PDF css helper）
+│   │
+│   ├── transcript_scraper/          # 法說會逐字稿（US Yahoo Finance、JP logmi）
+│   │   ├── scraper.py / parser.py / models.py          # US transcript
+│   │   ├── logmi_scraper.py / logmi_parser.py          # JP logmi
+│   │   └── node/                    # Stagehand LOCAL 模式 sidecar（src/scrape.ts、src/scrape-logmi.ts）
+│   │
+│   └── tw_equity/                   # [TW] --market tw-equity
+│       ├── tw_pipeline.py           # orchestrator（單年度＋跨年）
+│       ├── inputs.py                # tw_equity_inputs/<ticker>.json 載入與驗證
+│       ├── pdf_doc.py               # pdfplumber／PyMuPDF 封裝＋快取
+│       ├── ocr.py / ocr_adapters.py # OCR：Mistral 為主、Azure DI 備援
+│       ├── doc_anchor.py / sections.py / tables.py   # 章節錨定、段落組裝、表格解析
+│       ├── statements.py            # 合併財報三表逐列解析、科目對照、帳本與勾稽
+│       ├── fh_schema.py / fh_notes.py               # 金控／銀行三表 schema 與附註
+│       ├── fy_income.py             # 全年損益表與 TTM
+│       ├── metrics.py               # 帳本衍生指標與 bridge 變動歸因
+│       ├── cross_year.py            # 跨年比對（無 LLM）
+│       ├── ar_sections.py           # 年報三章節（現金流量、重要契約、特別記載事項）
+│       ├── tasks.py / report.py     # skill task 清單；md＋pdf＋raw.json 輸出
+│       ├── qa.py / qa_llm.py        # 會計問答（模板／LLM＋數字核對）
+│       ├── batch.py / batch_summary.py              # 批次 runner、跨公司排名與紅旗
+│       └── *_acceptance.py          # 驗收工具（fs／fh／fy／ar）
+│
+├── tests/                           # pytest（tests/tw_equity、tests/fixtures）
+├── tw_equity_inputs/                # 台股輸入檔（只附範例 2330、3653）
+├── tw_report/                       # 台股年報／財報 PDF（.gitignore）
+└── data/                            # （.gitignore）
     ├── cache/
     │   ├── pipeline_{ticker}_{year}.json    # SEC checkpoint
-    │   └── jp/
-    │       ├── master.duckdb        # ticker_map + filings_index + tdnet_index
-    │       ├── _scanned_dates.json  # EDINET scan checkpoint
-    │       ├── _tdnet_scanned_dates.json
-    │       ├── raw/{edinet_code}/   # EDINET ZIP
-    │       ├── extracted/{doc_id}/  # ZIP 解壓
-    │       └── tdnet/{YYYYMMDD}/    # TDNET PDF
+    │   ├── jp/
+    │   │   ├── master.duckdb        # ticker_map + filings_index + tdnet_index
+    │   │   ├── _scanned_dates.json  # EDINET scan checkpoint
+    │   │   ├── _tdnet_scanned_dates.json
+    │   │   ├── raw/{edinet_code}/   # EDINET ZIP
+    │   │   ├── extracted/{doc_id}/  # ZIP 解壓
+    │   │   └── tdnet/{YYYYMMDD}/    # TDNET PDF
+    │   └── tw_equity/               # PDF 解析與 OCR 快取（.json／.ocr.json）
     └── output/
-        ├── {TICKER}/                # 按公司分（HWM, GEV, 6315, ...）
+        ├── {TICKER}/                # 按公司分（HWM, 6315, 2330, ...）
+        ├── batch/{YYYYMMDD-HHMMSS}/ # tw-equity 批次輸出
         └── contexts/                # API call log（共用）
 ```

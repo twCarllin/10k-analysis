@@ -17,7 +17,7 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(_REPO_ROOT))
 
-from runtime.tw_credit.adapters import _load_azure_config  # noqa: E402
+from runtime.tw_equity.ocr_adapters import _load_azure_config  # noqa: E402
 from runtime.tw_equity.ocr import MistralPageOcr  # noqa: E402
 
 _PDF_PATH = _REPO_ROOT / "tw_report" / "3653_2024年報.pdf"

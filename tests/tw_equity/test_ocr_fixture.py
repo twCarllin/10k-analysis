@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from runtime.tw_credit.adapters import _load_azure_config
+from runtime.tw_equity.ocr_adapters import _load_azure_config
 from runtime.tw_equity.ocr import markdown_to_page
 from runtime.tw_equity.tables import parse_top_shareholders
 

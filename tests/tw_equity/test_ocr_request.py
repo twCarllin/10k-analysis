@@ -1,7 +1,7 @@
 """DiPageOcr.fetch 請求／輪詢／錯誤處理（全以注入假 HTTP，不發真實請求）。"""
 import pytest
 
-from runtime.tw_credit.adapters import AdapterError
+from runtime.tw_equity.ocr_adapters import AdapterError
 from runtime.tw_equity import ocr as ocr_mod
 from runtime.tw_equity.ocr import DiPageOcr
 

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from runtime.tw_credit.adapters import AdapterError
+from runtime.tw_equity.ocr_adapters import AdapterError
 from runtime.tw_equity.pdf_doc import Page, PdfDoc, apply_ocr_policy, is_garbled, load_pdf
 
 GARBLED = "(cid:123)" * 20

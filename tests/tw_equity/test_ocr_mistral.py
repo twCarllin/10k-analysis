@@ -4,7 +4,7 @@ import os
 import fitz
 import pytest
 
-from runtime.tw_credit.adapters import AdapterError
+from runtime.tw_equity.ocr_adapters import AdapterError
 from runtime.tw_equity.ocr import MistralPageOcr, markdown_to_page
 
 

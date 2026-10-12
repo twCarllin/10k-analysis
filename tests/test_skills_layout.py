@@ -2,7 +2,7 @@
 
 skills/ 分子目錄後的版面與 loader 契約（run 2026-10-08-skills-reorg）：
 - skills/ 根目錄不再有 .md；四個子目錄內 basename 全域唯一
-- runtime/agent_runner.skill_path 與 runtime/tw_credit/prompts._load_skill 都能解析既有 skill 名稱
+- runtime/agent_runner.skill_path 能解析既有 skill 名稱
 - 找不到的名稱 raise FileNotFoundError 並列出搜尋目錄
 """
 from __future__ import annotations
@@ -75,13 +75,3 @@ def test_get_skill_version_still_reads_header():
     ar = _import_agent_runner()
     assert ar._get_skill_version("business_analysis") == "1.0"
     assert ar._get_skill_version("not_exist") == "unknown"
-
-
-def test_tw_credit_prompts_load_from_subdir():
-    from runtime.tw_credit import prompts
-    body = prompts._load_skill("tw_credit_market")
-    assert body.strip() and not body.startswith("---") and not body.startswith("#")
-    consts = [v for k, v in vars(prompts).items() if k.startswith("PROMPT_") and k.endswith("_SYSTEM")]
-    assert len(consts) == 8 and all(isinstance(c, str) and c.strip() for c in consts)
-    with pytest.raises(FileNotFoundError):
-        prompts._load_skill("not_exist")

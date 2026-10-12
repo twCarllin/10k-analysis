@@ -13,7 +13,7 @@ from pathlib import Path
 
 import fitz
 
-from runtime.tw_credit.adapters import (
+from runtime.tw_equity.ocr_adapters import (
     AdapterError,
     MistralOCRAdapter,
     _DI_API_VERSION,

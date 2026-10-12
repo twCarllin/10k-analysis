@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / "runtime"))
 
 import pytest  # noqa: E402
 
-from runtime.tw_credit.adapters import AdapterError  # noqa: E402
+from runtime.tw_equity.ocr_adapters import AdapterError  # noqa: E402
 from runtime.tw_equity import pdf_doc, tw_pipeline  # noqa: E402
 from runtime.tw_equity.doc_anchor import AnchorError  # noqa: E402
 from runtime.tw_equity.pdf_doc import PdfDoc  # noqa: E402

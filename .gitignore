@@ -28,8 +28,6 @@ run/*.search_trace.jsonl
 tw_equity_inputs/*.json
 !tw_equity_inputs/2330.json
 !tw_equity_inputs/3653.json
-tw_credit_inputs/*.json
-!tw_credit_inputs/3653.json
 tw_report/
 cache/
 evidence/

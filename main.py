@@ -28,8 +28,6 @@ Examples:
   python main.py 6315 2025 --market jp --analyze-call      # JP logmi call analysis
   python main.py 6315 --market jp --event-doc-id S100W8RH  # event pipeline (no year needed)
   python main.py --market jp --tdnet-watch 6315,7203 --since-minutes 30  # watch mode
-  python main.py 6771 --market tw --resume <run_id>            # TW credit: resume C/D
-  python main.py 6771 --market tw --dry-run --resume <run_id>  # TW credit: 純離線重渲染既有 run
 """
 import sys
 import json
@@ -136,8 +134,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("ticker", nargs="?", default=None)
     p.add_argument("year", nargs="?", type=int, default=None)
-    p.add_argument("--market", default="sec", choices=["sec", "jp", "tw", "tw-equity"],
-                   help="Market: sec (US SEC), jp (EDINET Japanese), tw (TW credit), or tw-equity (TW equity analysis). Default: sec")
+    p.add_argument("--market", default="sec", choices=["sec", "jp", "tw-equity"],
+                   help="Market: sec (US SEC), jp (EDINET Japanese), or tw-equity (TW equity analysis). Default: sec")
     p.add_argument("--prior-year", type=int, default=None,
                    help="手動覆蓋前期年份（預設自動推算）")
     p.add_argument("--file", default=None)
@@ -168,8 +166,6 @@ def main():
                    help="JP logmi mode: fetch latest earnings call transcript for TICKER and analyse")
     p.add_argument("--since-minutes", type=int, default=15,
                    help="Watch mode: look back N minutes for new TDNET disclosures (default: 15)")
-    p.add_argument("--resume", default=None, metavar="RUN_ID",
-                   help="TW credit: resume from a previous run_id (after GATE 1 review)")
     args = p.parse_args()
 
     # Ticker is optional for watch mode (watchlist is in --tdnet-watch flag)
@@ -177,7 +173,7 @@ def main():
     filing_type = args.filing_type
     quarter = args.quarter
 
-    # TW equity branch — early return before TW credit/SEC/JP logic
+    # TW equity branch — early return before SEC/JP logic
     if args.market == "tw-equity":
         if ticker is None:
             p.error("ticker is required for --market tw-equity")
@@ -194,30 +190,6 @@ def main():
             print(f"[tw-equity] {exc}")
             sys.exit(1)
         sys.exit(0)
-
-    # TW credit branch — early return before SEC/JP logic
-    if args.market == "tw":
-        if ticker is None:
-            p.error("ticker is required for --market tw")
-        if args.year is not None:
-            print("  [tw] year 參數在 tw market 中忽略（年度由輸入檔 report_base_date 決定）")
-        if args.dry_run and args.resume is None:
-            p.error("--dry-run（tw）需搭配 --resume <run_id>：只重渲染既有 run 的報告")
-        from runtime.tw_credit.tw_pipeline import run_tw_pipeline
-        try:
-            result = run_tw_pipeline(
-                ticker, resume_run_id=args.resume, dry_run=args.dry_run
-            )
-        except (FileNotFoundError, ValueError) as exc:
-            print(f"  [tw] 輸入驗證失敗：{exc}")
-            sys.exit(1)
-        status = result.get("status")
-        if status in ("gate1_pending", "completed"):
-            sys.exit(0)
-        else:
-            reason = result.get("reason", "")
-            print(f"  [tw] pipeline 終止：status={status}  reason={reason}")
-            sys.exit(1)
 
     # SEC-specific quarter validation (skipped for JP branch)
     if args.market != "jp":

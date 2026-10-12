@@ -90,23 +90,6 @@ def test_missing_ticker_exits_nonzero(main_mod):
     assert _run(main_mod, ["--market", "tw-equity"]) != 0
 
 
-def test_market_tw_still_routes_to_credit_branch(main_mod):
-    import runtime.tw_credit.tw_pipeline as credit
-    import runtime.tw_equity.tw_pipeline as equity
-    called = {}
-
-    def fake_credit(ticker, **kw):
-        called["credit"] = ticker
-        return {"status": "completed"}
-
-    with mock.patch.object(credit, "run_tw_pipeline", fake_credit), \
-         mock.patch.object(equity, "run_tw_equity_pipeline",
-                           side_effect=AssertionError("tw 不得走 tw-equity")):
-        code = _run(main_mod, ["3653", "--market", "tw"])
-    assert code == 0
-    assert called["credit"] == "3653"
-
-
 def _ocr_seen(main_mod, argv):
     import runtime.tw_equity.tw_pipeline as real
     seen = {}
@@ -134,17 +117,3 @@ def test_ocr_flag_passes_true(main_mod):
 def test_dry_run_and_ocr_both_passed(main_mod):
     seen = _ocr_seen(main_mod, ["3653", "--market", "tw-equity", "--dry-run", "--ocr"])
     assert seen["dry_run"] is True and seen["ocr"] is True
-
-
-def test_ocr_flag_on_tw_credit_branch_not_passed(main_mod):
-    import runtime.tw_credit.tw_pipeline as credit
-    got = {}
-
-    def fake_credit(ticker, **kw):
-        got.update(kw)
-        return {"status": "completed"}
-
-    with mock.patch.object(credit, "run_tw_pipeline", fake_credit):
-        code = _run(main_mod, ["3653", "--market", "tw", "--ocr"])
-    assert code == 0
-    assert "ocr" not in got
