@@ -1,0 +1,13 @@
+:root { font-family: system-ui, sans-serif; color: #18324b; background: #f3f6fa; }
+body { margin: 0; } header { padding: 1rem 2rem; background: white; border-bottom: 1px solid #ccd5df; }
+h1 { margin-top: 0; } label { display: inline-block; margin: .4rem; }
+main { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 1rem; padding: 1rem; }
+section, aside { background: white; padding: 1rem; border-radius: .5rem; min-width: 0; }
+button, input, select { font: inherit; padding: .4rem; } button { cursor: pointer; color: #17496b; background: #edf5fb; border: 1px solid #98b6ce; border-radius: .3rem; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #2674b8; }
+.card { padding: .6rem; margin-bottom: .6rem; border: 1px solid #d3dce5; border-radius: .3rem; }
+p, pre, td { overflow-wrap: anywhere; } pre { white-space: pre-wrap; font: inherit; }
+table { width: 100%; border-collapse: collapse; } th, td { padding: .4rem; border-bottom: 1px solid #d3dce5; text-align: left; }
+.empty { color: #637283; padding: .8rem; } .blocked { color: #9b351d; }
+@media (max-width: 1000px) { main { grid-template-columns: 1fr 1fr; } aside { grid-column: 1 / -1; } }
+@media (max-width: 650px) { main { display: block; } section, aside { margin-bottom: 1rem; } }
