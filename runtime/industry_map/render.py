@@ -208,14 +208,38 @@ def render(snapshot, out):
 <html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>產業地圖</title><link rel="stylesheet" href="style.css"></head>
-<body><header><h1>產業地圖</h1><label>產品／技術搜尋 <input id="search" type="search"></label>
-<label>環節 <select id="stage"><option value="">全部</option></select></label>
-<label><input id="pending" type="checkbox" checked>顯示待查核</label></header>
-<main><section aria-label="產業總覽"><h2>產業總覽</h2><div id="overview"></div></section>
-<section aria-label="公司詳情"><h2>公司詳情</h2><div id="detail">請選取公司</div>
-<h2>財務比較</h2><label>指標 <select id="metric"></select></label>
-<label>完整期別 <select id="period"></select></label><div id="comparison"></div></section>
-<aside aria-label="證據側欄"><h2>證據</h2><div id="evidence">請選取來源</div></aside></main>
+<body><header><h1>產業地圖</h1>
+<p>點節點展開關係；拖動節點或背景，使用滾輪縮放。</p>
+<label for="search">搜尋公司、產業或產品／服務</label>
+<input id="search" type="search" autocomplete="off" placeholder="輸入名稱或代號">
+<div id="search-results" aria-label="搜尋結果" aria-live="polite"></div></header>
+<main><section class="map-panel" aria-label="產業關係地圖">
+<div class="map-toolbar" aria-label="畫布操作">
+<button id="zoom-in" type="button" aria-label="放大">＋</button>
+<button id="zoom-out" type="button" aria-label="縮小">−</button>
+<span id="zoom-level" aria-live="polite">100%</span>
+<button id="fit-map" type="button">適合畫面</button>
+<button id="collapse-node" type="button" disabled>收合選取節點</button>
+<button id="reset-map" type="button">重置</button>
+<label>關係方向 <select id="direction"><option value="">全部</option>
+<option value="upstream">上游供應商</option><option value="downstream">下游客戶</option>
+<option value="competitor">競爭者</option></select></label>
+<label><input id="pending" type="checkbox" checked>顯示待查核</label></div>
+<svg id="map" viewBox="0 0 1000 650" role="group" aria-label="產業節點與連線；Tab 選取，Enter 或空白鍵展開"></svg>
+<p id="map-empty" class="empty" hidden>尚無產業資料。可使用 Tab 選取起點，或使用重置按鈕。</p>
+<div class="map-legend" aria-label="圖例">
+<span class="legend-industry">● 產業</span><span>□ 公司</span>
+<span class="legend-product">● 產品／服務</span><span>→ 供貨</span>
+<span>─ · ─ 競爭</span><span>┄┄ 待查核</span><span>── 分類／提供</span></div>
+<div id="overview" hidden></div></section>
+<aside aria-label="節點與連線詳情"><h2>詳情</h2><div id="detail">請選取節點或連線</div>
+<div hidden><label>環節 <select id="stage"><option value="">全部</option></select></label></div>
+<details id="finance-panel"><summary>公司財務（展開後讀取）</summary><div id="financials"></div></details>
+<details id="comparison-panel"><summary>財務比較</summary>
+<p>在公司詳情加入比較。僅比較目前圖中可見公司。</p>
+<label>指標 <select id="metric"></select></label>
+<label>完整期別 <select id="period"></select></label><div id="comparison"></div></details>
+<h2>證據</h2><div id="evidence">請選取來源</div></aside></main>
 <script id="snapshot" type="application/json">SNAPSHOT</script>
 <script src="app.js"></script></body></html>""".replace("SNAPSHOT", embedded)
     (destination / "index.html").write_text(page, encoding="utf-8")

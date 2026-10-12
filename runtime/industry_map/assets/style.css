@@ -1,13 +1,104 @@
-:root { font-family: system-ui, sans-serif; color: #18324b; background: #f3f6fa; }
-body { margin: 0; } header { padding: 1rem 2rem; background: white; border-bottom: 1px solid #ccd5df; }
-h1 { margin-top: 0; } label { display: inline-block; margin: .4rem; }
-main { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 1rem; padding: 1rem; }
-section, aside { background: white; padding: 1rem; border-radius: .5rem; min-width: 0; }
-button, input, select { font: inherit; padding: .4rem; } button { cursor: pointer; color: #17496b; background: #edf5fb; border: 1px solid #98b6ce; border-radius: .3rem; }
-button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #2674b8; }
-.card { padding: .6rem; margin-bottom: .6rem; border: 1px solid #d3dce5; border-radius: .3rem; }
-p, pre, td { overflow-wrap: anywhere; } pre { white-space: pre-wrap; font: inherit; }
-table { width: 100%; border-collapse: collapse; } th, td { padding: .4rem; border-bottom: 1px solid #d3dce5; text-align: left; }
-.empty { color: #637283; padding: .8rem; } .blocked { color: #9b351d; }
-@media (max-width: 1000px) { main { grid-template-columns: 1fr 1fr; } aside { grid-column: 1 / -1; } }
-@media (max-width: 650px) { main { display: block; } section, aside { margin-bottom: 1rem; } }
+:root {
+  font-family: system-ui, sans-serif;
+  color: #18324b;
+  background: #f3f6fa;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+header {
+  padding: 1rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #ccd5df;
+}
+h1 { margin: 0 0 .5rem; font-size: 1.6rem; }
+header p { color: #637283; margin: .5rem 0; }
+label { display: inline-block; margin: .4rem; }
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
+  padding: 1rem;
+}
+section, aside {
+  background: white;
+  padding: 1rem;
+  border-radius: .5rem;
+  min-width: 0;
+}
+aside { max-height: 80vh; overflow-y: auto; }
+button, input, select { font: inherit; padding: .4rem; max-width: 100%; }
+button {
+  cursor: pointer;
+  color: #17496b;
+  background: #edf5fb;
+  border: 1px solid #98b6ce;
+  border-radius: .3rem;
+}
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #2674b8;
+  outline-offset: 2px;
+}
+[hidden] { display: none !important; }
+#search { width: min(100%, 360px); }
+#search-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  max-height: 160px;
+  overflow-y: auto;
+}
+#search-results button { overflow-wrap: anywhere; text-align: left; }
+.map-panel { padding: 0; overflow: hidden; }
+.map-toolbar, .map-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .6rem;
+  padding: .75rem;
+}
+.map-legend { font-size: .85rem; border-top: 1px solid #d3dce5; }
+.legend-industry { color: #185ba0; }
+.legend-product { color: #257346; }
+#map {
+  display: block;
+  width: 100%;
+  height: min(72vh, 780px);
+  min-height: 420px;
+  touch-action: none;
+  background-color: #f8fbff;
+  background-image: radial-gradient(#cbd9e7 1px, transparent 1px);
+  background-size: 22px 22px;
+  user-select: none;
+  cursor: grab;
+}
+#map:active { cursor: grabbing; }
+.map-node { cursor: pointer; }
+.map-node rect { fill: #e6eff8; stroke: #577c9d; stroke-width: 2; }
+.map-node.industry rect { fill: #185ba0; stroke: #124578; }
+.map-node.industry text { fill: white; }
+.map-node.company rect { fill: white; stroke: #577c9d; }
+.map-node.product rect { fill: #e1f4e7; stroke: #257346; }
+.map-node text { fill: #18324b; font-size: 14px; pointer-events: none; }
+.map-node.selected rect, .map-node:focus-visible rect {
+  stroke: #d57b0a;
+  stroke-width: 4;
+}
+.edge-line { stroke: #476581; stroke-width: 2; fill: none; }
+.competing .edge-line { stroke: #8a519e; stroke-dasharray: 12 4 2 4; }
+.pending .edge-line { stroke-dasharray: 5 5; }
+.edge-hit { stroke: transparent; stroke-width: 20; fill: none; cursor: pointer; }
+.edge-hit:focus-visible { stroke: #d57b0a55; outline: none; }
+.card { padding: .6rem; margin-bottom: .6rem; border: 1px solid #d3dce5; }
+p, pre, td, h3 { overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; font: inherit; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .4rem; border-bottom: 1px solid #d3dce5; text-align: left; }
+.empty { color: #637283; padding: .8rem; }
+.blocked { color: #9b351d; }
+@media (max-width: 760px) {
+  header { padding: 1rem; }
+  main { grid-template-columns: minmax(0, 1fr); padding: .5rem; }
+  aside { max-height: none; }
+  #map { height: 55vh; min-height: 320px; }
+}
