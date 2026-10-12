@@ -1,11 +1,13 @@
-# Multi-Agent Investment Research Pipeline (US + JP)
+# Multi-Agent Investment Research Pipeline (US + JP + TW)
 
-雙市場財報分析 pipeline，使用 multi-agent + skill 架構：
+多市場財報分析 pipeline，使用 multi-agent + skill 架構：
 
 - **US**：SEC EDGAR 10-K / 10-Q + Yahoo Finance earnings call transcript（[Stagehand](https://github.com/browserbase/stagehand) LOCAL 模式）
 - **JP**：EDINET 有価証券報告書（yuho）/ 半期報 / 臨時報 + TDNET 適時開示（決算短信 PDF 解析）+ logmi 法說會逐字稿
+- **TW 投資研究**（`--market tw-equity`）：年報＋合併財報 PDF → 三表帳本、勾稽、指標與變動歸因、年報章節解析、會計問答
+- **TW 徵信**（`--market tw`）：年報 PDF ＋網路搜尋佐證 → 授信風險報告（人工 GATE 1 審核後續跑）
 
-兩條 pipeline 共用 orchestrator / eval loop / report writer 底層，互不干擾。
+各 pipeline 共用 orchestrator / eval loop / report writer 底層，互不干擾。
 
 輸出繁體中文 Markdown + PDF 報告，按公司分資料夾（`data/output/{TICKER}/`）。
 
@@ -17,6 +19,8 @@ JP 輸出範例：`6315_20260517_1639_jp_report.pdf`（TOWA FY2026 Q4 決算短�
 
 ## Changelog
 
+- **2026-10** — TW 投資研究 pipeline（`--market tw-equity`）：年報／財報解析、三表帳本與勾稽（前 100 大 98/101 通過）、金控 fh schema、30 項指標與變動歸因、FY 損益／TTM、批次 runner、年報三章節解析、會計問答（`runtime.tw_equity.qa`）。
+- **2026-07** — TW 徵信 pipeline（`--market tw`）：Phase A–D、GATE 1 人工審核、Vertex AI／Bing grounding 搜尋、Google Document AI OCR、本地產研 PDF 佐證、報告 PDF。
 - **2026-05-17** — JP pipeline Phase 1A–1C：EDINET 有報 / 半期報 / 臨時報、jpcrp iXBRL 解析、7 個 jp_* narrative skill、TDNET scraper（決算短信 PDF 用 markitdown 抽 key_metrics / segment / forward_guidance）、logmi Stagehand adapter、watch / event 模式。報告按公司分子目錄。
 - **2026-05-01** — 新增 earnings call transcript 抓取（Stagehand LOCAL 模式 + Yahoo Finance）與 `transcript_analysis` skill。報告章節重排，transcript 三節置頂。
 - **2026-04-28** — 新增 `supply_chain_analysis` 與 `competitor_mapping` skill。
@@ -56,6 +60,12 @@ python main.py 6315 2025 --market jp
 
 # 4d. 日股 FY2026 Q4 速報（yuho 未發時自動 fallback TDNET 決算短信）
 python main.py 6315 2026 --market jp --quarter Q4
+
+# 4e. 台股投資研究（先準備 tw_equity_inputs/<ticker>.json 與 PDF，見下方「台股」）
+python main.py 2330 --market tw-equity
+
+# 4f. 台股徵信（先準備 tw_credit_inputs/<ticker>.json 與年報 PDF）
+python main.py 3653 --market tw
 ```
 
 ## API Key 申請
@@ -67,6 +77,11 @@ python main.py 6315 2026 --market jp --quarter Q4
 | SEC EDGAR | 抓取美股 10-K / 10-Q | 免費，**無需 key**，僅需 User-Agent header | — |
 | TDNET（日股決算短信） | 從 release.tdnet.info scrape | 免費，**無需 key**，僅需 polite UA | — |
 | logmi Finance | 日股法說會逐字稿 | 免費，**無需 key**（需 Stagehand 用 Anthropic API 解析網頁） | — |
+| Azure（台股選用） | gpt-5.5（徵信 LLM）、Document Intelligence OCR、Bing grounding、Mistral OCR | 付費 | https://portal.azure.com/ |
+| Google Cloud（台股徵信選用） | Document AI OCR（主）、Vertex AI Google Search grounding | 付費 | https://console.cloud.google.com/ |
+| Brave Search（台股徵信舊路徑） | 網頁搜尋 | 有免費額度 | https://brave.com/search/api/ |
+
+台股 PDF 解析本身（pdfplumber）不需 key；只有 `--ocr`、徵信的搜尋與 OCR 會打上面的付費 API。
 
 **日股 EDINET API key 申請流程**（5 分鐘內可拿到）：
 
@@ -89,6 +104,8 @@ python main.py 6315 2026 --market jp --quarter Q4
   "anthropic_api_key": "sk-ant-...",
   "edgar_user_agent": "10k-research your-name@example.com",
   "edinet_api_key": "your-edinet-api-key",
+  "azure": { "...": "台股用，欄位見 config.example.json" },
+  "google": { "...": "台股徵信用，欄位見 config.example.json" },
   "model": "claude-sonnet-4-5",
   "max_tokens": 4096,
   "max_tokens_by_skill": {
@@ -100,6 +117,8 @@ python main.py 6315 2026 --market jp --quarter Q4
   }
 }
 ```
+
+台股 OCR 另在 `azure` 區塊加 `di_endpoint`／`di_key`（Azure Document Intelligence）與 `mistral_ocr_endpoint`／`mistral_ocr_key`；徵信舊搜尋路徑用頂層 `brave_api_key`。
 
 ## CLI 用法
 
@@ -169,16 +188,21 @@ python main.py 3653 --market tw-equity --ocr        # 亂碼頁改走 OCR（付�
 
 ```json
 {
-  "ticker": "3653",
-  "company_name": "健策精密工業股份有限公司",
+  "ticker": "2330",
+  "company_name": "台灣積體電路製造股份有限公司",
   "fiscal_year": 2025,
-  "annual_report_path": "tw_report/2025_3653_健策年報.pdf",
-  "consolidated_fs_path": null,
-  "parent_fs_path": null
+  "group": "industrial",
+  "annual_report_path": "tw_report/2330_2025年報.pdf",
+  "consolidated_fs_path": "tw_report/2330_2026Q2財報.pdf",
+  "fs_period": "2026H1",
+  "parent_fs_path": null,
+  "fy_consolidated_fs_path": "tw_report/2330_2025Q4合併財報.pdf",
+  "fy_fs_period": "FY2025"
 }
 ```
 
-  `ticker`、`company_name`、`fiscal_year`（西元年）、`annual_report_path` 必填；`consolidated_fs_path`／`parent_fs_path` 可為 `null` 或省略，但給了路徑而檔案不存在會報 `FileNotFoundError`。輸入驗證失敗時印 `[tw-equity] <訊息>` 並以 exit 1 結束。
+  repo 只附範例 `tw_equity_inputs/2330.json`、`3653.json`；其他公司的輸入檔與 `tw_report/` 下的 PDF 不進 git，請自行準備（PDF 可從公開資訊觀測站下載）。
+  `ticker`、`company_name`、`fiscal_year`（西元年）、`annual_report_path` 必填；`group` 為 `fh`（金控）或 `bank`（銀行）時走金控三表 schema，其他值或省略走工業流程；`fy_consolidated_fs_path`／`fy_fs_period` 選填，提供時可問全年財報問題。`consolidated_fs_path`／`parent_fs_path` 可為 `null` 或省略，但給了路徑而檔案不存在會報 `FileNotFoundError`。輸入驗證失敗時印 `[tw-equity] <訊息>` 並以 exit 1 結束。
 - **跨年比較（Phase 1B-2）**：輸入檔可加選填 `prior`（`fiscal_year` 須為前一年、`annual_report_path` 必填，`consolidated_fs_path`／`parent_fs_path` 可省略）。有 `prior` 時前一年度另跑一次分析，報告多出第 8 節「跨年比較」與附錄 C；無 `prior` 時第 8 節印「本節未執行：未提供前一年度」。
 - 合併財報三表逐列解析為標準化帳本（`raw.json` 的 `bundle.statements`），含勾稽結果（附錄 D）。
 - 帳本衍生 30 項指標與 8 組變動歸因（附錄 E、`raw.json` 的 `bundle.metrics`）。
@@ -187,7 +211,7 @@ python main.py 3653 --market tw-equity --ocr        # 亂碼頁改走 OCR（付�
   - 現金流量節：表 A（實際數）、表 B（未來一年預估數）、營業／投資／籌資說明原文；`arith_ok` 驗算表 A（期初＋各項流量＝期末，容差 2 仟元）；`basis` 比對帳本現金判斷是否為合併數字（`consolidated`／`non_consolidated`／`unknown`）。新版年報常只有比率表與表 B，此時 `actual` 為 null、`arith_ok` 為 null。
   - 重要契約節：每列契約性質、當事人、起訖日期、主要內容、限制條款；年報寫「無」時 status 為 `none`。
   - 特別記載事項：關係企業、私募、其他必要補充說明、證交法第 36 條重大影響事項 4 個子項的 status 與原文。
-  - 解析不了的章節記 `failed`／`not_found` 與 reason，不猜數字。101 家的未通過名單與已知限制見 `spec/2026-10-12-tw-equity-ar-sections.md` §2.6、§2.7。
+  - 解析不了的章節記 `failed`／`not_found` 與 reason，不猜數字。101 家中仍有部分公司解析未通過。
 - **會計問答**（`runtime/tw_equity/qa.py`，規則見 `skills/tw/tw_accounting_qa.md`）：
 
 ```bash
@@ -197,12 +221,30 @@ python -m runtime.tw_equity.qa --ticker 2454 --ask "2025 年 FCF" --period fy   
 ```
 
   年報章節主題：`ar:cashflow`（現金流動性分析、未來一年預估）、`ar:contracts`、`ar:special`；答案附頁碼，數字只准引用事實包內的值。章節 failed／not_found 時不加該主題。
-- **驗收工具**（只讀快取，不打 OCR／API）：
+- **批次**（不呼叫 LLM，每家輸出固定 schema JSON，單家失敗不中斷）：
+
+```bash
+python -m runtime.tw_equity.batch                    # 全部 tw_equity_inputs/*.json
+python -m runtime.tw_equity.batch --tickers 2330,3653 --out data/output/batch/test
+```
+
+- **驗收工具**（只讀快取，不打 OCR／API；需要本地有對應的輸入檔與 PDF）：
 
 ```bash
 python -m runtime.tw_equity.fs_acceptance --all70        # 三表帳本勾稽，SUMMARY conform=98/101
 python -m runtime.tw_equity.ar_acceptance --all101 --gold # 年報三章節，含金標 10 家比對
 ```
+
+#### 台股徵信（`--market tw`）
+
+```bash
+python main.py 3653 --market tw                              # 新 run：Phase A（年報解析）→ Phase B（搜尋佐證）→ 停在 GATE 1
+python main.py 3653 --market tw --resume <run_id>            # 人工審核 GATE 1 後續跑 Phase C（LLM 分析）→ Phase D（報告）
+python main.py 3653 --market tw --dry-run --resume <run_id>  # 不打 API，只重新產生既有 run 的報告
+```
+
+- 輸入檔 `tw_credit_inputs/<ticker>.json`（repo 只附範例 `3653.json`）：`company_name`、`aliases`、`annual_report_path`、`report_base_date` 必填；`tax_id`、`credit_horizon_years`（預設 3）、`sections_pages` 選填。
+- 年度由 `report_base_date` 決定，`year` 位置參數忽略。
 
 - **Phase 1A 限制**：解析層只用 pdfplumber（無 DI／OCR 備援）；財報缺檔時 T1–T5 列入 `missing_tables`，並在報告附錄明示；T6（產銷量值）為選配，錨不到同樣記 `missing_tables`；T9（背書保證／資金貸與）延到 Phase 1B。
 
@@ -325,27 +367,6 @@ python -m runtime.tw_equity.ar_acceptance --all101 --gold # 年報三章節，�
 18. 交叉驗證
 19. 附錄：關鍵術語
 
-## Checkpoint / Resume
-
-Pipeline 使用 per-agent checkpoint，支援中斷恢復：
-
-- State 存在 `data/cache/pipeline_{ticker}_{year}.json`
-- 每個 agent call 獨立記錄完成狀態
-- 中斷後重跑自動跳過已完成步驟
-- `--only task1,task2` 只重跑指定 agent，其餘從快取
-- `--clean` 清除 checkpoint 重頭開始
-
-## Context Log
-
-每次 API call 自動記錄：
-
-```
-data/output/contexts/
-  {timestamp}_{task_label}_request.md    ← system prompt + user input
-  {timestamp}_{task_label}_response.md   ← raw output
-data/output/usage.jsonl                  ← token 用量 + 成本 + skill version
-```
-
 ## 專案結構
 
 ```
@@ -360,7 +381,7 @@ tenk/
 │   ├── common/                      # 市場無關：eval／synthesis／rerate／cross_year／三表交叉
 │   ├── us/                          # SEC 10-K／10-Q 專用
 │   ├── jp/                          # jp_* EDINET／TDNET 專用
-│   └── tw/                          # tw_credit_* 徵信 pipeline 專用
+│   └── tw/                          # tw_credit_* 徵信、tw_* 投資研究專用
 ├── runtime/
 │   ├── agent_runner.py              # Claude API + context log + dry-run
 │   ├── orchestrator.py              # 多階段執行 + eval loop + checkpoint
@@ -391,6 +412,11 @@ tenk/
 │       ├── logmi_scraper.py         # logmi.jp Stagehand wrapper
 │       ├── logmi_parser.py          # Q&A / presentation 分段
 │       └── node/src/scrape-logmi.ts # Stagehand sidecar（共用 node/）
+├── runtime/tw_equity/               # 台股投資研究：PDF 解析、三表帳本、指標、批次、問答
+├── runtime/tw_credit/               # 台股徵信：Phase A–D、搜尋／OCR adapter、報告
+├── tw_equity_inputs/                # 台股投資研究輸入檔（只附範例）
+├── tw_credit_inputs/                # 台股徵信輸入檔（只附範例）
+├── tw_report/                       # 台股 PDF（.gitignore）
 └── data/
     ├── cache/
     │   ├── pipeline_{ticker}_{year}.json    # SEC checkpoint
