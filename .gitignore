@@ -23,3 +23,14 @@ runtime/transcript_scraper/node/.pnpm-store/
 # per-run request/response tracing（診斷產物，不進 git）
 run/*.llm_trace.jsonl
 run/*.search_trace.jsonl
+
+# 本地資料（只留一個範例進 git）
+tw_equity_inputs/*.json
+!tw_equity_inputs/2330.json
+!tw_equity_inputs/3653.json
+tw_credit_inputs/*.json
+!tw_credit_inputs/3653.json
+tw_report/
+cache/
+evidence/
+gate1/
