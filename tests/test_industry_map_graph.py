@@ -334,28 +334,89 @@ def test_chrome_click_collapse_search_and_empty_direction(graph_snapshot, tmp_pa
             page.locator("#fit-map").click()
             page.locator("#map").get_by_role("button", name=label, exact=True).click()
 
-        industry = "產業：半導體，展開"
+        industry = "產業：半導體，查看詳情"
+        initial_ids = page.locator("#map .map-node").evaluate_all(
+            "nodes => nodes.map(n => n.dataset.nodeId)"
+        )
         click_node(industry)
-        click_node("公司：設備公司，展開")
-        click_node("產品／服務：量測，展開")
-        assert page.locator("#map .company").count() > 0, "跨層展開公司"
-        assert page.locator("#map .product").count() > 0, "跨層展開產品"
-        click_node(industry)
-        page.locator("#collapse-node").click()
-        assert page.locator("#map .company").count() == 0, "產業收合隱藏公司"
-        assert page.locator("#map .product").count() == 0, "產業收合隱藏產品"
-        assert page.locator("#map .edge-hit").count() == 2, "僅剩產業／待分類導航"
-
-        # Direction anchoring must not turn ordinary selection into a search root.
-        click_node(industry)
-        click_node("公司：設備公司，展開")
+        assert (
+            page.locator("#map .map-node").evaluate_all(
+                "nodes => nodes.map(n => n.dataset.nodeId)"
+            )
+            == initial_ids
+        ), "C1 點選不展開"
+        page.get_by_role("button", name="以此為中心", exact=True).click()
+        industry_ids = page.locator("#map .map-node").evaluate_all(
+            "nodes => nodes.map(n => n.dataset.nodeId)"
+        )
+        click_node("公司：設備公司，查看詳情")
+        assert (
+            page.locator("#map .map-node").evaluate_all(
+                "nodes => nodes.map(n => n.dataset.nodeId)"
+            )
+            == industry_ids
+        ), "C1 點公司只更新詳情"
+        assert "設備公司" in page.locator("#detail").inner_text()
+        assert (
+            page.locator("#map .center").get_attribute("data-node-id")
+            != graph_snapshot["entities"][0]["id"]
+        )
+        page.get_by_role("button", name="以此為中心", exact=True).click()
+        supplier_id = graph_snapshot["entities"][0]["id"]
+        assert (
+            page.locator("#map .center").get_attribute("data-node-id") == supplier_id
+        ), "C2 明確換中心"
+        assert page.locator('[data-node-id="map:root"]').count() == 0, "C2 無前層導航"
+        supplier_ids = page.locator("#map .map-node").evaluate_all(
+            "nodes => nodes.map(n => n.dataset.nodeId)"
+        )
+        click_node("公司：晶圓公司，查看詳情")
         page.locator("#direction").select_option("upstream")
-        assert page.locator("#map .company.selected").count() == 1, "空上游保留選取公司"
+        assert (
+            page.locator("#map .center").get_attribute("data-node-id") == supplier_id
+        ), "C6 篩選不跟隨詳情"
         assert "目前沒有已記錄關係" in page.locator("#detail").inner_text()
         page.locator("#direction").select_option("")
-        click_node(industry)
+        assert (
+            page.locator("#map .map-node").evaluate_all(
+                "nodes => nodes.map(n => n.dataset.nodeId)"
+            )
+            == supplier_ids
+        )
+        page.locator("#pending").uncheck()
+        assert page.locator("#map .pending").count() == 0, "C7 移除候選線"
+        assert page.locator("#map .center").get_attribute("data-node-id") == supplier_id
+        page.locator("#pending").check()
+        page.locator("#map .edge-hit").first.click()
+        page.get_by_role("button", name="查看來源", exact=True).click()
+        assert (
+            graph_snapshot["evidence"][0]["quote"]
+            in page.locator("#evidence").inner_text()
+        ), "C8 原來源可讀"
+        click_node("公司：設備公司，查看詳情")
+        page.locator("#finance-panel summary").click()
+        playwright.expect(page.locator("#financials")).to_contain_text("revenue")
+        assert "revenue" in page.locator("#financials").inner_text(), "C9 財務仍可讀"
         page.locator("#collapse-node").click()
-        assert page.locator("#map .company").count() == 0, "方向入口不污染收合層級"
+        assert page.locator("#map .map-node").count() == 1, "中心收合"
+        page.locator("#collapse-node").click()
+        assert page.locator("#map .map-node").count() > 1, "中心再展開"
+        page.locator("#back-center").click()
+        assert (
+            page.locator("#map .map-node").evaluate_all(
+                "nodes => nodes.map(n => n.dataset.nodeId)"
+            )
+            == industry_ids
+        ), "C3 返回前中心"
+        page.locator("#center-path").get_by_role(
+            "button", name="產業地圖", exact=True
+        ).click()
+        assert (
+            page.locator("#map .map-node").evaluate_all(
+                "nodes => nodes.map(n => n.dataset.nodeId)"
+            )
+            == initial_ids
+        ), "C3 路徑返回入口"
 
         page.locator("#reset-map").click()
         page.locator("#search").fill("INLOCAL")
@@ -374,4 +435,139 @@ def test_chrome_click_collapse_search_and_empty_direction(graph_snapshot, tmp_pa
         page.locator("#reset-map").click()
         assert page.locator("#map .company").count() == 0, "重置移除搜尋入口"
         assert errors == [], "Chrome 不得有 pageerror"
+        browser.close()
+
+
+def test_centered_boundary_layout_and_pending(graph_snapshot):  # testlint: allow
+    run_node(
+        graph_snapshot,
+        """
+const view = api.centeredGraph(graph,buyer);
+assert.ok(view.nodes.some(n=>n.id===buyer),'C4 中心存在');
+const expected = graph.edges.filter(e=>[e.source_id,e.target_id].includes(buyer));
+assert.deepEqual(view.edges,expected,'C2/C10 只有直接連線，原紀錄方向/來源不變');
+assert.ok(!ids(view).includes('map:root'),'C2 不累積無關分支');
+const points = api.centeredLayout(view,buyer);
+assert.deepEqual(points[buyer],{x:0,y:0},'C5 中心置中');
+assert.ok(points[supplier].x < points[buyer].x,'C5 上游左');
+assert.ok(points[snapshot.entities[3].id].x > points[buyer].x,'C5 下游右');
+assert.ok(points[product].y < points[buyer].y,'C5 產品上');
+const supplierView = api.centeredGraph(graph,supplier);
+const supplierPoints = api.centeredLayout(supplierView,supplier);
+assert.ok(supplierPoints[snapshot.entities[3].id].y > supplierPoints[supplier].y,'C5 競爭者下');
+for (const [id, point] of Object.entries(points)) for (const [otherId, other] of Object.entries(points)) {
+  if (id !== otherId) assert.ok(Math.abs(point.x-other.x)>=190 || Math.abs(point.y-other.y)>=85,'C5 卡片不重疊');
+}
+const filtered = api.centeredGraph(graph,supplier,{includePending:false});
+assert.ok(!filtered.edges.some(e=>e.status==='pending'),'C7 待查核線移除');
+const connected = new Set([supplier,...filtered.edges.flatMap(e=>[e.source_id,e.target_id])]);
+assert.deepEqual(new Set(ids(filtered)),connected,'C7 不留候選孤立鄰居');
+assert.deepEqual(api.centeredGraph(graph,supplier,{collapsed:true}),{nodes:[graph.nodes.find(n=>n.id===supplier)],edges:[]},'C4 收合保留中心');
+const emptyGraph = api.createGraph(api.createIndex({entities:[],roles:[],relations:[],evidence:[],observations:[],coverage:[]}));
+assert.deepEqual(api.centeredGraph(emptyGraph).nodes.map(n=>n.id),['map:root'],'C4 空資料可操作入口');
+assert.equal(JSON.stringify(snapshot),original,'C10 不改快照');
+""",
+    )
+
+
+@pytest.fixture
+def crowded_graph_snapshot(graph_snapshot):
+    center = graph_snapshot["entities"][0]
+    for number in range(15):
+        neighbor = entity(f"競爭公司{number}", market="US", ticker=f"MORE{number}")
+        graph_snapshot["entities"].append(neighbor)
+        graph_snapshot["relations"].append(
+            relation(
+                center["id"],
+                "competes_with",
+                neighbor["id"],
+                status="pending",
+                evidence_ids=[graph_snapshot["evidence"][0]["id"]],
+            )
+        )
+    return graph_snapshot
+
+
+def test_centered_sections_more_and_symmetric_fit(  # testlint: allow
+    crowded_graph_snapshot,
+):  # testlint: allow
+    run_node(
+        crowded_graph_snapshot,
+        """
+const initial = api.pagedCenteredGraph(graph,supplier);
+const competitors = view => view.edges.filter(edge=>edge.predicate==='competes_with');
+assert.equal(competitors(initial).length,5,'C11 預設五個競爭鄰居');
+assert.equal(initial.remaining.competitor,11,'C11 剩餘數量');
+const more = api.pagedCenteredGraph(graph,supplier,{limits:{competitor:10}});
+assert.equal(competitors(more).length,10,'C11 更多只增加指定區');
+assert.equal(more.remaining.competitor,6,'C11 更多後剩餘數量');
+const all = api.pagedCenteredGraph(graph,supplier,{limits:{competitor:20}});
+assert.equal(competitors(all).length,16,'C11 最後一批全部可取得');
+assert.ok(!all.remaining.competitor,'C11 沒有剩餘');
+for(const edge of competitors(all)) {
+  assert.deepEqual(edge,graph.edges.find(record=>record.id===edge.id),'C11 不漏原關係與證據');
+}
+assert.ok(all.edges.every(edge=>[edge.source_id,edge.target_id].includes(supplier)),'C11 更多仍限一層');
+assert.deepEqual(api.pagedCenteredGraph(graph,supplier),initial,'C11 新中心預設限制');
+const points=api.centeredLayout(initial,supplier);
+const competitorIds=competitors(initial).map(edge=>edge.source_id===supplier?edge.target_id:edge.source_id);
+assert.equal(new Set(competitorIds.map(id=>points[id].y)).size,1,'C11 競爭區單列');
+assert.equal(new Set(competitorIds.map(id=>points[id].x)).size,5,'C11 單列不重疊');
+for(const view of [initial,more,all,api.pagedCenteredGraph(graph,'map:root')]) {
+ const center=view===initial||view===more||view===all?supplier:'map:root';
+ const layout=api.centeredLayout(view,center), camera=api.fitCenteredGraph(view,layout);
+ assert.equal(layout[center].x*camera.scale+camera.x,500,'C12 中心畫布橫向中點');
+ assert.equal(layout[center].y*camera.scale+camera.y,325,'C12 中心畫布縱向中點');
+ assert.ok(camera.scale>=.75,'C12 保留可讀縮放下限');
+}
+""",
+    )
+
+
+def test_chrome_section_more_reset_and_center(crowded_graph_snapshot, tmp_path):
+    playwright = pytest.importorskip("playwright.sync_api")
+    from runtime.industry_map.render import render
+
+    render(crowded_graph_snapshot, tmp_path)
+    with playwright.sync_playwright() as driver:
+        browser = driver.chromium.launch(channel="chrome", headless=True)
+        page = browser.new_page(viewport={"width": 1440, "height": 1000})
+        page.goto((tmp_path / "index.html").as_uri())
+
+        def assert_center():
+            offset = page.locator("#map .center").evaluate("""node => {
+                const svg = document.querySelector('#map').getBoundingClientRect();
+                const card = node.getBoundingClientRect();
+                return {x: card.x+card.width/2-svg.x-svg.width/2,
+                        y: card.y+card.height/2-svg.y-svg.height/2};
+            }""")
+            assert abs(offset["x"]) < 2 and abs(offset["y"]) < 2, "C12 畫布中點"
+
+        assert_center()
+        page.locator("#search").fill("設備公司")
+        page.locator("#search-results button").click()
+        assert_center()
+        assert page.locator("#map .competing").count() == 5, "C11 初始五個"
+        more = page.locator('#section-more [data-zone="competitor"]')
+        assert "尚有 11 個" in more.inner_text(), "C11 剩餘數量可讀"
+        more.click()
+        assert page.locator("#map .competing").count() == 10, "C11 點更多"
+        assert_center()
+        page.locator("#search").fill("晶圓公司")
+        page.locator("#search-results button").click()
+        assert_center()
+        page.locator("#back-center").click()
+        assert_center()
+        assert page.locator("#map .competing").count() == 5, "C11 返回重設五個"
+        center = page.locator("#map .center")
+        box = center.bounding_box()
+        page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        page.mouse.down()
+        page.mouse.move(
+            box["x"] + box["width"] / 2 + 80, box["y"] + box["height"] / 2 + 60
+        )
+        page.mouse.up()
+        assert_center()
+        page.locator("#reset-map").click()
+        assert_center()
         browser.close()

@@ -209,7 +209,7 @@ def render(snapshot, out):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>產業地圖</title><link rel="stylesheet" href="style.css"></head>
 <body><header><h1>產業地圖</h1>
-<p>點節點展開關係；拖動節點或背景，使用滾輪縮放。</p>
+<p>點節點查看詳情；按「以此為中心」切換一層關係。拖動其他節點或背景，使用滾輪縮放。</p>
 <label for="search">搜尋公司、產業或產品／服務</label>
 <input id="search" type="search" autocomplete="off" placeholder="輸入名稱或代號">
 <div id="search-results" aria-label="搜尋結果" aria-live="polite"></div></header>
@@ -219,13 +219,16 @@ def render(snapshot, out):
 <button id="zoom-out" type="button" aria-label="縮小">−</button>
 <span id="zoom-level" aria-live="polite">100%</span>
 <button id="fit-map" type="button">適合畫面</button>
-<button id="collapse-node" type="button" disabled>收合選取節點</button>
+<button id="back-center" type="button" disabled>返回前中心</button>
+<button id="collapse-node" type="button">收合中心一層</button>
 <button id="reset-map" type="button">重置</button>
 <label>關係方向 <select id="direction"><option value="">全部</option>
 <option value="upstream">上游供應商</option><option value="downstream">下游客戶</option>
 <option value="competitor">競爭者</option></select></label>
 <label><input id="pending" type="checkbox" checked>顯示待查核</label></div>
-<svg id="map" viewBox="0 0 1000 650" role="group" aria-label="產業節點與連線；Tab 選取，Enter 或空白鍵展開"></svg>
+<div id="section-more" aria-label="各區更多鄰居" aria-live="polite"></div>
+<nav id="center-path" aria-label="中心路徑"></nav>
+<svg id="map" viewBox="0 0 1000 650" role="group" aria-label="產業節點與連線；Tab 選取，Enter 或空白鍵查看詳情"></svg>
 <p id="map-empty" class="empty" hidden>尚無產業資料。可使用 Tab 選取起點，或使用重置按鈕。</p>
 <div class="map-legend" aria-label="圖例">
 <span class="legend-industry">● 產業</span><span>□ 公司</span>

@@ -214,6 +214,72 @@
     });
     return positions;
   }
+  // A focused view never traverses a neighbor's relationships.
+  function centeredGraph(graph, centerId = 'map:root', options = {}) {
+    const center = graph.nodes.find(node => node.id === centerId);
+    if (!center) return { nodes: [], edges: [] };
+    const allowed = new Set(graphRelations(graph, centerId, options).map(edge => edge.id));
+    const edges = options.collapsed ? [] : graph.edges.filter(edge => {
+      if (edge.source_id !== centerId && edge.target_id !== centerId) return false;
+      if (options.includePending === false && edge.status === 'pending') return false;
+      return edge.kind !== 'relation' || allowed.has(edge.id);
+    });
+    const ids = new Set([centerId, ...edges.flatMap(edge => [edge.source_id, edge.target_id])]);
+    const nodes = graph.nodes.filter(node => ids.has(node.id));
+    const present = new Set(nodes.map(node => node.id));
+    return copy({ nodes, edges: edges.filter(edge => present.has(edge.source_id) && present.has(edge.target_id)) });
+  }
+  function neighborZone(view, centerId, id) {
+    const edges = view.edges.filter(edge => [edge.source_id, edge.target_id].includes(id));
+    // Fixed priority assigns one card; every original edge stays available.
+    if (edges.some(edge => edge.predicate === 'supplies_to' && edge.target_id === centerId)) return 'upstream';
+    if (edges.some(edge => edge.predicate === 'supplies_to' && edge.source_id === centerId)) return 'downstream';
+    if (edges.some(edge => edge.predicate === 'competes_with')) return 'competitor';
+    if (edges.some(edge => edge.kind === 'offering')) return 'product';
+    return 'classification';
+  }
+  function pagedCenteredGraph(graph, centerId, options = {}) {
+    const full = centeredGraph(graph, centerId, options);
+    const counts = {}, remaining = {}, shown = new Set([centerId]);
+    full.nodes.filter(node => node.id !== centerId).forEach(node => {
+      const zone = neighborZone(full, centerId, node.id);
+      counts[zone] = (counts[zone] || 0) + 1;
+      if (counts[zone] <= (options.limits?.[zone] || 5)) shown.add(node.id);
+      else remaining[zone] = (remaining[zone] || 0) + 1;
+    });
+    return { nodes: full.nodes.filter(node => shown.has(node.id)),
+      edges: full.edges.filter(edge => shown.has(edge.source_id) && shown.has(edge.target_id)), remaining };
+  }
+  function centeredLayout(view, centerId) {
+    const positions = { [centerId]: { x: 0, y: 0 } };
+    const groups = { upstream: [], downstream: [], competitor: [], product: [], classification: [] };
+    view.nodes.filter(node => node.id !== centerId).forEach(node => groups[neighborZone(view, centerId, node.id)].push(node));
+    const productExtent = Math.max(0, groups.product.length - 1) * 105;
+    const classificationExtent = groups.product.length && groups.classification.length
+      ? (groups.product.length + 2 * groups.classification.length - 1) * 105 + 115
+      : Math.max(0, groups.classification.length - 1) * 105;
+    const sideX = Math.max(330, productExtent + 220, classificationExtent + 220, (groups.competitor.length - 1) * 105 + 220);
+    const sideHeight = (Math.max(groups.upstream.length, groups.downstream.length) - 1) * 50;
+    const lowerY = Math.max(220, sideHeight + 120);
+    Object.entries(groups).forEach(([zone, nodes]) => nodes.forEach((node, number) => {
+      if (zone === 'upstream' || zone === 'downstream') {
+        positions[node.id] = { x: (zone === 'upstream' ? -1 : 1) * sideX, y: (number - (nodes.length - 1) / 2) * 100 };
+      } else {
+        const y = zone === 'competitor' ? lowerY : -220;
+        const offset = zone === 'classification' && groups.product.length ? -(groups.product.length + nodes.length) * 105 - 115 : 0;
+        positions[node.id] = { x: offset + (number - (nodes.length - 1) / 2) * 210, y };
+      }
+    }));
+    return positions;
+  }
+  function fitCenteredGraph(view, positions, width = 1000, height = 650) {
+    const points = view.nodes.map(node => positions[node.id]);
+    const halfWidth = Math.max(115, ...points.map(point => Math.abs(point.x) + 115));
+    const halfHeight = Math.max(95, ...points.map(point => Math.abs(point.y) + 95));
+    // Keep labels readable; large expanded sections can be reached by panning.
+    const scale = Math.max(.75, Math.min(1, width / (2 * halfWidth) * .9, height / (2 * halfHeight) * .9));
+    return { x: width / 2, y: height / 2, scale };
+  }
   function edgeGeometry(source, target) {
     const dx = target.x - source.x, dy = target.y - source.y;
     if (!dx && !dy) return `M ${source.x} ${source.y - 36} C ${source.x + 150} ${source.y - 150} ${source.x + 150} ${source.y + 150} ${source.x} ${source.y + 36}`;
@@ -254,9 +320,9 @@
     const defs = makeSVG('defs'), marker = makeSVG('marker', { id: 'supply-arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 9, markerHeight: 9, orient: 'auto', markerUnits: 'userSpaceOnUse' });
     marker.append(makeSVG('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#476581' }));
     defs.append(marker);
-    const world = makeSVG('g'), edgesLayer = makeSVG('g'), nodesLayer = makeSVG('g');
-    world.append(edgesLayer, nodesLayer); svg.append(defs, world);
-    let graphState = createGraphState(), positions = {}, selectedId = null, selectedEdgeId = null;
+    const world = makeSVG('g'), zonesLayer = makeSVG('g'), edgesLayer = makeSVG('g'), nodesLayer = makeSVG('g');
+    world.append(zonesLayer, edgesLayer, nodesLayer); svg.append(defs, world);
+    let centerId = 'map:root', history = ['map:root'], collapsed = false, limits = {}, positions = {}, selectedId = 'map:root', selectedEdgeId = null;
     let camera = { x: 500, y: 325, scale: 1 }, visible, gesture = null, suppressClick = false;
     const kinds = { root: '起點', industry: '產業', company: '公司', product: '產品／服務' };
     function applyCamera() {
@@ -305,7 +371,7 @@
         panel.append(html('p', `來源：${source?.name || item.source_id} → 對象：${target?.name || item.target_id}`),
           html('p', `產品／服務：${readable(item.product)}；期別：${readable(item.period)}；${statusText(item.status)}`), evidenceButton(item));
       } else {
-        panel.append(html('p', kinds[item.kind] || '節點'));
+        panel.append(html('p', kinds[item.kind] || '節點'), actionButton('以此為中心', () => setCenter(item.id)));
         if (detail.owner) panel.append(html('p', `匿名對象；披露公司：${detail.owner.name}（${detail.owner.id}）`));
         if (item.kind === 'product') panel.append(html('p', '提供相同產品／服務不代表競爭。'));
         if (item.kind === 'company') {
@@ -373,10 +439,7 @@
     function activate(item) {
       if (suppressClick) { suppressClick = false; return; }
       selectedId = item.id; selectedEdgeId = null;
-      if (item.kind !== 'company') byId('direction').value = '';
-      graphState = expandGraph(graphState, item.id);
-      graphState = { ...graphState, focus: item.id };
-      draw(item.id);
+      draw();
       const current = [...nodesLayer.children].find(element => element.getAttribute('data-node-id') === item.id);
       if (current) current.focus();
     }
@@ -386,16 +449,39 @@
         if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); action(); }
       });
     }
-    function draw(anchorId = selectedId || 'map:root', refreshDetail = true) {
+    function setCenter(id, record = true) {
+      if (!graph.nodes.some(node => node.id === id)) return;
+      if (record && id !== centerId) history.push(id);
+      centerId = id; selectedId = id; selectedEdgeId = null; collapsed = false; limits = {};
+      byId('direction').value = ''; positions = {};
+      draw(); camera = fitCenteredGraph(visible, positions); applyCamera();
+    }
+    function draw(anchorId = centerId, refreshDetail = true) {
       const focused = document.activeElement?.getAttribute('data-node-id');
-      const direction = byId('direction').value;
-      // Direction filters keep their anchor reachable only for this view.
-      // Ordinary clicks must not become independent, persistent search roots.
-      const directionalState = direction && selectedId
-        ? { ...graphState, roots: [...new Set([...graphState.roots, selectedId])] }
-        : graphState;
-      visible = visibleGraph(graph, directionalState, { companyId: selectedId, direction, includePending: byId('pending').checked });
-      positions = layoutGraph(visible, positions, anchorId);
+      visible = pagedCenteredGraph(graph, centerId, { direction: byId('direction').value, includePending: byId('pending').checked, collapsed, limits });
+      if (!visible.nodes.some(node => node.id === selectedId)) selectedId = centerId;
+      const layout = centeredLayout(visible, centerId);
+      positions = Object.fromEntries(visible.nodes.map(node => [node.id, positions[node.id] || layout[node.id]]));
+      zonesLayer.replaceChildren();
+      const labels = { upstream: '上游供應商', downstream: '下游客戶', competitor: '競爭者', product: '產品／服務（提供關係）', classification: '分類／產業導航' };
+      const more = byId('section-more'); more.replaceChildren();
+      Object.entries(visible.remaining).forEach(([zone, count]) => {
+        const button = actionButton(`${labels[zone]}：尚有 ${count} 個，查看更多`, () => {
+          limits[zone] = (limits[zone] || 5) + 5; positions = {};
+          draw(); camera = fitCenteredGraph(visible, positions); applyCamera();
+        });
+        button.dataset.zone = zone; more.append(button);
+      });
+      Object.entries(labels).forEach(([zone, label]) => {
+        const points = visible.nodes.filter(node => node.id !== centerId && neighborZone(visible, centerId, node.id) === zone).map(node => positions[node.id]);
+        if (points.length) zonesLayer.append(makeSVG('text', { x: points.reduce((sum, point) => sum + point.x, 0) / points.length, y: Math.min(...points.map(point => point.y)) - 60, class: 'zone-label', 'text-anchor': 'middle' }, label));
+      });
+      const path = byId('center-path'); path.replaceChildren();
+      history.forEach((id, number) => {
+        if (number) path.append(html('span', ' → '));
+        path.append(actionButton(graph.nodes.find(node => node.id === id)?.name || id, () => { history = history.slice(0, number + 1); setCenter(id, false); }));
+      });
+      byId('back-center').disabled = history.length < 2;
       edgesLayer.replaceChildren(); nodesLayer.replaceChildren();
       visible.edges.forEach(edge => {
         const path = edgeGeometry(positions[edge.source_id], positions[edge.target_id]);
@@ -413,7 +499,7 @@
       });
       visible.nodes.forEach(item => {
         const point = positions[item.id];
-        const element = makeSVG('g', { transform: `translate(${point.x} ${point.y})`, class: `map-node ${item.kind}${selectedId === item.id ? ' selected' : ''}`, tabindex: 0, role: 'button', 'aria-label': `${kinds[item.kind] || '節點'}：${item.name}，展開`, 'aria-expanded': graphState.expanded.includes(item.id), 'data-node-id': item.id });
+        const element = makeSVG('g', { transform: `translate(${point.x} ${point.y})`, class: `map-node ${item.kind}${selectedId === item.id ? ' selected' : ''}${centerId === item.id ? ' center' : ''}`, tabindex: 0, role: 'button', 'aria-label': `${kinds[item.kind] || '節點'}：${item.name}，查看詳情`, 'aria-expanded': item.id === centerId && !collapsed, 'data-node-id': item.id });
         element.append(makeSVG('title', {}, item.name), makeSVG('rect', { x: -90, y: -36, width: 180, height: 72, rx: item.kind === 'company' ? 8 : 24 }));
         const characters = Array.from(item.name || '未知');
         const label = makeSVG('text', { 'text-anchor': 'middle' });
@@ -424,7 +510,7 @@
         nodesLayer.append(element);
       });
       byId('map-empty').hidden = graph.nodes.some(item => item.kind !== 'root');
-      byId('collapse-node').disabled = !selectedId;
+      byId('collapse-node').textContent = collapsed ? '展開中心一層' : '收合中心一層';
       applyCamera();
       if (refreshDetail) {
         if (selectedEdgeId && !visible.edges.some(edge => edge.id === selectedEdgeId)) selectedEdgeId = null;
@@ -447,6 +533,7 @@
       const point = localPoint(event), dx = point.x - gesture.start.x, dy = point.y - gesture.start.y;
       if (Math.hypot(dx, dy) > 5) gesture.moved = true;
       if (!gesture.moved) return;
+      if (gesture.nodeId === centerId) return;
       if (gesture.nodeId) {
         positions[gesture.nodeId] = { x: gesture.point.x + dx / camera.scale, y: gesture.point.y + dy / camera.scale };
         draw(undefined, false);
@@ -467,14 +554,15 @@
     }, { passive: false });
     byId('zoom-in').addEventListener('click', () => { camera = zoomGraph(camera, 1.25); applyCamera(); });
     byId('zoom-out').addEventListener('click', () => { camera = zoomGraph(camera, .8); applyCamera(); });
-    byId('fit-map').addEventListener('click', () => { camera = fitGraph(visible, positions); applyCamera(); });
-    byId('collapse-node').addEventListener('click', () => { graphState = collapseGraph(graphState, selectedId); draw(); });
+    byId('fit-map').addEventListener('click', () => { camera = fitCenteredGraph(visible, positions); applyCamera(); });
+    byId('collapse-node').addEventListener('click', () => { collapsed = !collapsed; positions = {}; draw(); });
+    byId('back-center').addEventListener('click', () => { if (history.length > 1) { history.pop(); setCenter(history.at(-1), false); } });
     byId('reset-map').addEventListener('click', () => {
-      graphState = resetGraph(); positions = {}; selectedId = null; selectedEdgeId = null; comparisonIds.clear();
+      centerId = 'map:root'; history = [centerId]; collapsed = false; limits = {}; positions = {}; selectedId = centerId; selectedEdgeId = null; comparisonIds.clear();
       byId('direction').value = ''; byId('pending').checked = true;
       byId('search').value = ''; byId('search-results').replaceChildren();
       byId('detail').replaceChildren(html('p', '請選取節點或連線'));
-      draw(); camera = fitGraph(visible, positions); applyCamera();
+      draw(); camera = fitCenteredGraph(visible, positions); applyCamera();
     });
     byId('search').addEventListener('input', () => {
       const results = byId('search-results'); results.replaceChildren();
@@ -483,19 +571,13 @@
       matches.forEach(item => {
         const button = html('button', `${kinds[item.kind] || '節點'}：${item.name}`); button.type = 'button';
         button.addEventListener('click', () => {
-          selectedId = item.id; selectedEdgeId = null;
-          if (item.kind !== 'company') byId('direction').value = '';
-          graphState = expandGraph(focusGraph(graph, graphState, item.id), item.id);
-          draw(item.id);
-          const point = positions[item.id]; camera = { ...camera, x: 500 - point.x * camera.scale, y: 325 - point.y * camera.scale };
-          applyCamera(); results.replaceChildren();
+          setCenter(item.id); results.replaceChildren();
           [...nodesLayer.children].find(element => element.getAttribute('data-node-id') === item.id)?.focus();
         }); results.append(button);
       });
     });
     ['direction', 'pending'].forEach(id => byId(id).addEventListener('change', () => {
-      if (selectedId) graphState = expandGraph(graphState, selectedId);
-      draw();
+      positions = {}; draw();
     }));
     for (const metric of new Set(index.snapshot.observations.map(record => record.metric))) {
       const option = html('option', metric); option.value = metric; byId('metric').append(option);
@@ -505,9 +587,9 @@
     }
     ['metric', 'period'].forEach(id => byId(id).addEventListener('change', renderGraphComparison));
     byId('finance-panel').addEventListener('toggle', () => { if (byId('finance-panel').open) renderFinancials(); });
-    draw(); camera = fitGraph(visible, positions); applyCamera();
+    draw(); camera = fitCenteredGraph(visible, positions); applyCamera();
   }
-  const api = { createIndex, filter, select, selectEvidence, compare, completePeriod, createGraph, createGraphState, expandGraph, collapseGraph, resetGraph, visibleGraph, searchGraph, focusGraph, graphRelations, layoutGraph, edgeGeometry, fitGraph, zoomGraph, graphDetail };
+  const api = { pagedCenteredGraph, fitCenteredGraph, centeredGraph, centeredLayout, createIndex, filter, select, selectEvidence, compare, completePeriod, createGraph, createGraphState, expandGraph, collapseGraph, resetGraph, visibleGraph, searchGraph, focusGraph, graphRelations, layoutGraph, edgeGeometry, fitGraph, zoomGraph, graphDetail };
   if (typeof window !== 'undefined') window.IndustryMap = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof document === 'undefined') return;

@@ -102,3 +102,10 @@ th, td { padding: .4rem; border-bottom: 1px solid #d3dce5; text-align: left; }
   aside { max-height: none; }
   #map { height: 55vh; min-height: 320px; }
 }
+
+#center-path { padding: .5rem .75rem; overflow-wrap: anywhere; }
+#center-path button { margin: .2rem; }
+.map-node.center rect { stroke: #185ba0; stroke-width: 5; }
+.zone-label { fill: #526a80; font-size: 16px; pointer-events: none; }
+
+#section-more { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .75rem; }
