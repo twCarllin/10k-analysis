@@ -53,7 +53,10 @@ def test_actual_t8_amount_is_sales_or_purchase_not_order(pilot_inputs):
     )
     proofs = {proof["id"]: proof for proof in result["evidence"]}
     disclosures = [
-        item for edge in result["relations"] for item in edge.get("disclosures", [])
+        item
+        for edge in result["relations"]
+        for item in edge.get("disclosures", [])
+        if item["kind"] in {"sales_amount", "purchase_amount"}
     ]
     assert disclosures
     assert {item["kind"] for item in disclosures} == {"sales_amount", "purchase_amount"}

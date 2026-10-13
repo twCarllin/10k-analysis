@@ -290,6 +290,31 @@ def _t8_candidates(
                             evidence_ids=[amount_proof["id"]],
                         )
                     )
+                share = entry.get("pct")
+                if (
+                    type(share) in (int, float)
+                    and math.isfinite(share)
+                    and 0 <= share <= 100
+                ):
+                    share_proof = evidence(
+                        str(source_path),
+                        document_hash=source_hash,
+                        locator={"pointer": pointer.rsplit("/", 1)[0] + "/pct"},
+                        quote=json.dumps(share, ensure_ascii=False),
+                        period=period,
+                        source_type="analysis",
+                    )
+                    fragment["evidence"].append(share_proof)
+                    disclosures.append(
+                        dict(
+                            kind="sales_share" if kind == "sales" else "purchase_share",
+                            value=share,
+                            unit="%",
+                            currency=None,
+                            period=period,
+                            evidence_ids=[share_proof["id"]],
+                        )
+                    )
                 fragment["relations"].append(
                     relation(
                         source,

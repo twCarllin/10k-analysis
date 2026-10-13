@@ -203,6 +203,88 @@
     const selection = options.period === undefined ? (periods[0] || { period: null, basis: null, scope: null }) : { period: options.period, basis: options.basis, scope: options.scope };
     return { ...selection, periods, rows: ids.map(id => financialSummary(index, id, selection.period, selection.basis, selection.scope)) };
   }
+  function periodDays(period) {
+    const [start, end] = period.split('~');
+    return (Date.parse(end) - Date.parse(start)) / 86400000 + 1;
+  }
+  function financialTrend(index, companyId, metric, selection = {}) {
+    const period = completePeriod(selection.period);
+    if (!period || !analysisMetrics.includes(metric) || !knownAnalysisField(selection.basis) || !knownAnalysisField(selection.scope)) return { points: [], reason: '期別或口徑不完整' };
+    const cutoff = period.split('~')[1];
+    const periods = [...new Set((index.observations.get(companyId) || []).filter(item => item.basis === selection.basis && item.scope === selection.scope && [...analysisMetrics, ...analysisAmounts].includes(item.metric)).map(item => completePeriod(item.period)).filter(candidate => candidate && candidate.split('~')[1] <= cutoff && Math.abs(periodDays(candidate) - periodDays(period)) <= 7))].sort().slice(-8);
+    const points = periods.map(candidate => {
+      const cell = financialSummary(index, companyId, candidate, selection.basis, selection.scope).cells[metric];
+      const evidenceIds = cell.value !== null ? cell.evidenceIds : [...new Set((index.observations.get(companyId) || []).filter(item => completePeriod(item.period) === candidate && item.basis === selection.basis && item.scope === selection.scope && (item.metric === metric || analysisAmounts.includes(item.metric))).flatMap(item => item.evidence_ids || []))];
+      return { period: candidate, value: cell.value, reason: cell.reason, formula: cell.formula, inputs: cell.inputs, evidenceIds };
+    });
+    const validCount = points.filter(point => point.value !== null).length;
+    const reason = points.length === 0 ? '未匯入可比期間' : validCount === 0 ? '無有效比率，無法判讀趨勢' : points.length === 1 ? '僅一個期別，無法判讀趨勢' : validCount === 1 ? '僅一個有效值，無法判讀趨勢' : null;
+    return { points, validCount, reason };
+  }
+  function relationStrength(index, edge, requestedKind) {
+    if (requestedKind === undefined) {
+      const sales = relationStrength(index, edge, 'sales_share');
+      const purchase = relationStrength(index, edge, 'purchase_share');
+      if (sales.value !== null) return sales;
+      if (purchase.value !== null) return purchase;
+      return sales.kind ? sales : purchase;
+    }
+    const shares = (edge.disclosures || []).filter(item => ['sales_share', 'purchase_share'].includes(item.kind));
+    const kind = shares.some(item => item.kind === requestedKind) ? requestedKind : null;
+    const denominator = kind === 'sales_share' ? '披露供應商同期總銷貨／營收' : kind === 'purchase_share' ? '披露買方同期總進貨' : null;
+    const missing = (reason, period = null) => ({ value: null, kind, period, denominator, evidenceIds: [], reason, width: 2 });
+    if (!kind) return missing('占比未揭露，未知不是零');
+    const selected = shares.filter(item => item.kind === kind);
+    if (selected.some(item => !completePeriod(item.period))) return missing('占比期別不完整');
+    const period = selected.map(item => completePeriod(item.period)).sort().at(-1);
+    const latest = selected.filter(item => completePeriod(item.period) === period);
+    const valid = latest.every(item => Number.isFinite(item.value) && item.value >= 0 && item.value <= 100 && item.unit === '%' && item.currency == null && analysisProofValid(index, item));
+    if (!valid) return missing('最新占比資料或來源不完整', period);
+    if (new Set(latest.map(item => item.value)).size !== 1) return missing('最新占比揭露衝突', period);
+    const value = latest[0].value;
+    return { value, kind, period, denominator, evidenceIds: [...new Set(latest.flatMap(item => item.evidence_ids))], reason: null, width: 2 + 6 * Math.sqrt(value / 100) };
+  }
+  function researchSignal(summary, metrics, text, followup = null) {
+    const current = metrics.map(metric => ({ metric, period: summary.period, ...summary.cells[metric] }));
+    const prior = metrics.filter(metric => summary.cells[metric].delta !== null).map(metric => {
+      const cell = summary.cells[metric];
+      return { metric, period: cell.priorPeriod, value: cell.value - cell.delta, evidenceIds: cell.priorEvidenceIds || [] };
+    });
+    return { company: summary.company, companyId: summary.companyId, period: summary.period, metrics, text, followup, current, prior, evidenceIds: [...new Set([...current, ...prior].flatMap(item => item.evidenceIds))] };
+  }
+  function researchSignals(index, companyId, selection = {}) {
+    const summary = financialSummary(index, companyId, selection.period, selection.basis, selection.scope);
+    const cells = summary.cells, signals = [];
+    const hasDelta = metric => cells[metric].value !== null && Number.isFinite(cells[metric].delta);
+    if (hasDelta('gross_margin') && hasDelta('operating_margin') && cells.gross_margin.delta < 0 && cells.operating_margin.delta > 0) {
+      signals.push(researchSignal(summary, ['gross_margin', 'operating_margin'], `毛利率同比下降 ${Math.abs(cells.gross_margin.delta).toFixed(2)} 百分點、營業利益率同比上升 ${cells.operating_margin.delta.toFixed(2)} 百分點；可追查費用率或業務組合`, '可追查費用率或業務組合'));
+    }
+    if (hasDelta('net_margin') && hasDelta('fcf_margin') && cells.net_margin.delta > 0 && Math.abs(cells.fcf_margin.delta) < 0.1 - 1e-10) {
+      const signal = researchSignal(summary, ['net_margin', 'fcf_margin'], `稅後淨利率同比上升 ${cells.net_margin.delta.toFixed(2)} 百分點、自由現金流營收率大致持平（同比變動絕對值小於 0.1 百分點）；可追查營運資金與資本支出`, '可追查營運資金與資本支出');
+      signal.threshold = { metric: 'fcf_margin', absoluteDeltaBelow: 0.1, unit: '百分點' };
+      signals.push(signal);
+    }
+    const edges = index.relations.get(companyId) || [];
+    for (const edge of edges) {
+      if (signals.length >= 3) break;
+      const ownerKind = edge.source_id === companyId ? 'sales_share' : edge.target_id === companyId ? 'purchase_share' : null;
+      if (!ownerKind) continue;
+      const strength = relationStrength(index, edge, ownerKind);
+      if (strength.value === null || strength.period !== summary.period) continue;
+      signals.push({ company: summary.company, companyId, period: strength.period, metrics: [strength.kind], text: `${strength.kind === 'sales_share' ? '銷貨／營收占比' : '進貨占比'} ${strength.value}%（${strength.period}；分母：${strength.denominator}）`, followup: null, evidenceIds: strength.evidenceIds, current: [strength], prior: [], relationId: edge.id });
+    }
+    const covered = new Set(signals.flatMap(signal => signal.metrics));
+    const labels = { gross_margin: '毛利率', operating_margin: '營業利益率', net_margin: '稅後淨利率', fcf_margin: '自由現金流營收率' };
+    for (const metric of analysisMetrics) {
+      if (signals.length >= 3) break;
+      const cell = cells[metric];
+      if (cell.value === null || covered.has(metric)) continue;
+      const change = hasDelta(metric) ? `；同比${cell.delta > 0 ? '上升' : cell.delta < 0 ? '下降' : '持平'} ${Math.abs(cell.delta).toFixed(2)} 百分點` : '';
+      signals.push(researchSignal(summary, [metric], `${labels[metric]} ${cell.value.toFixed(2)}%${change}`));
+    }
+    if (!signals.length) signals.push({ company: summary.company, companyId, period: summary.period, metrics: [], text: '缺少可核對資料，請補財務或占比來源', followup: '補資料', evidenceIds: [], current: [], prior: [] });
+    return signals;
+  }
   // Graph IDs occupy a client-only namespace; entity identity remains unchanged.
   const graphId = (kind, value) => `map:${kind}:${JSON.stringify(value)}`;
   function createGraph(index) {
@@ -448,7 +530,7 @@
       return element;
     };
     const defs = makeSVG('defs'), marker = makeSVG('marker', { id: 'supply-arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 9, markerHeight: 9, orient: 'auto', markerUnits: 'userSpaceOnUse' });
-    marker.append(makeSVG('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#476581' }));
+    marker.append(makeSVG('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#a4bdd5' }));
     defs.append(marker);
     const world = makeSVG('g'), zonesLayer = makeSVG('g'), edgesLayer = makeSVG('g'), nodesLayer = makeSVG('g');
     world.append(zonesLayer, edgesLayer, nodesLayer); svg.append(defs, world);
@@ -501,14 +583,79 @@
     function showRatioSource(cell, row) {
       showGraphEvidence([...new Set([...cell.evidenceIds, ...(cell.priorEvidenceIds || [])])]);
       const panel = byId('evidence');
+      panel.append(html('p', `數值：${cell.value == null ? '缺資料' : `${cell.value}%`}`));
+      if (cell.reason) panel.append(html('p', `缺資料：${cell.reason}`));
       panel.prepend(html('p', `公式：${readable(cell.formula)}；輸入：${readable(cell.inputs)}`),
         html('p', `當期：${row.period || '未知'}；去年：${cell.priorPeriod || '未匯入'}；同比：${cell.delta == null ? '—' : `${cell.delta.toFixed(2)} 百分點`}`));
       panel.tabIndex = -1; panel.focus({ preventScroll: true });
       panel.scrollIntoView({ block: 'nearest' });
     }
+    let researchCompanyId = null, currentAnalysis = null;
+    function appendTrend(td, row, metric) {
+      const trend = financialTrend(index, row.companyId, metric, row);
+      const periods = trend.points, label = html('small');
+      const h1 = periods.length && periods.every(point => point.period.endsWith('-06-30') && point.period.includes('-01-01~'));
+      label.className = 'trend-summary'; label.title = trend.reason || '';
+      const shortReason = !periods.length ? '無歷史' : periods.length === 1 ? '僅1期；無法判趨勢' : trend.validCount < 2 ? '有效值不足；無法判趨勢' : '';
+      label.textContent = `${periods.length}期${h1 ? ' H1' : ''}${shortReason ? `；${shortReason}` : ''}`;
+      td.append(label);
+      if (!periods.length) return;
+      const chart = makeSVG('svg', { viewBox: '0 0 120 36', class: 'sparkline', role: 'group', 'aria-label': `${row.company?.name} ${ratioLabels[metric]}歷史` });
+      const values = periods.filter(point => point.value !== null).map(point => point.value);
+      const minimum = Math.min(...values), maximum = Math.max(...values), span = maximum - minimum || 1;
+      const points = periods.map((point, number) => ({ x: periods.length === 1 ? 60 : 8 + number * 104 / (periods.length - 1), y: point.value === null ? 30 : 28 - (point.value - minimum) / span * 20 }));
+      periods.forEach((point, number) => {
+        const position = points[number];
+        if (number && point.value !== null && periods[number - 1].value !== null) {
+          const previous = points[number - 1];
+          chart.append(makeSVG('path', { d: `M ${previous.x} ${previous.y} L ${position.x} ${position.y}`, class: 'trend-segment' }));
+        }
+        const dot = makeSVG('circle', { cx: position.x, cy: position.y, r: 4, tabindex: 0, role: 'button', class: `trend-point${point.value === null ? ' missing' : ''}`, 'data-period': point.period, 'aria-label': `${point.period} ${point.value === null ? `缺資料：${point.reason}` : `${point.value.toFixed(2)}%`} 查看來源` });
+        dot.append(makeSVG('title', {}, `${point.period}；${point.value === null ? point.reason : `${point.value}%`}`));
+        bindActivation(dot, () => showRatioSource(point, { period: point.period }));
+        chart.append(dot);
+      });
+      td.append(chart);
+    }
+    function showSignalSource(signal) {
+      showGraphEvidence(signal.evidenceIds || []);
+      const panel = byId('evidence');
+      panel.prepend(html('p', `${signal.company?.name || signal.companyId}；${signal.period}；${signal.text}`),
+        html('p', '這是已匯入資料的事實與可追查事項，不代表因果、預測或投資排序。'),
+        html('pre', `當期：${readable(signal.current)}\n去年：${readable(signal.prior)}`));
+      if (signal.threshold) panel.prepend(html('p', `持平門檻：同比變動絕對值小於 ${signal.threshold.absoluteDeltaBelow} ${signal.threshold.unit}`));
+      panel.tabIndex = -1; panel.focus({ preventScroll: true }); panel.scrollIntoView({ block: 'nearest' });
+    }
+    function renderResearch(ids, selection) {
+      currentAnalysis = { ids, selection };
+      const select = byId('research-company'); select.replaceChildren();
+      if (!ids.includes(researchCompanyId)) researchCompanyId = ids.includes(centerId) ? centerId : ids[0];
+      ids.forEach(id => {
+        const option = html('option', index.entities.get(id)?.name || id); option.value = id; option.selected = id === researchCompanyId; select.append(option);
+      });
+      select.disabled = !ids.length;
+      const panel = byId('research-signals'); panel.replaceChildren();
+      if (!ids.length) { panel.append(html('p', '請選產業或公司；缺資料時請補來源。')); return; }
+      researchSignals(index, researchCompanyId, selection).slice(0, 3).forEach(signal => {
+        const card = html('article'); card.className = 'research-card';
+        card.append(html('strong', `${signal.company?.name || signal.companyId}｜${signal.period || '期別未匯入'}`), html('p', signal.text), actionButton('提示來源', () => showSignalSource(signal)));
+        panel.append(card);
+      });
+    }
+    byId('research-company').addEventListener('change', () => {
+      researchCompanyId = byId('research-company').value;
+      if (currentAnalysis) renderResearch(currentAnalysis.ids, currentAnalysis.selection);
+    });
+    function sharePeriod(period) {
+      return period ? period.replace(/(\d{4})-01-01~\1-12-31/g, '$1全年').replace(/(\d{4})-01-01~\1-06-30/g, '$1上半年') : '期別未知';
+    }
+    function shareLabel(strength) {
+      const kind = strength.kind === 'purchase_share' ? '進貨占比' : '銷貨／營收占比';
+      return strength.value === null ? `${strength.reason}｜${sharePeriod(strength.period)}` : `${kind}${strength.value}%｜${sharePeriod(strength.period)}`;
+    }
     function renderAnalysis() {
       const ids = analysisCompanyIds(), group = `${centerId}|${ids.join('|')}`;
-      if (group !== analysisGroup) { analysisGroup = group; analysisSelection = null; }
+      if (group !== analysisGroup) { analysisGroup = group; analysisSelection = null; researchCompanyId = null; }
       const result = analysisComparison(index, ids, analysisSelection || {});
       const select = byId('analysis-period'); select.replaceChildren();
       result.periods.forEach((selection, number) => {
@@ -519,6 +666,7 @@
       });
       select.disabled = !result.periods.length;
       const panel = byId('analysis-comparison'); panel.replaceChildren();
+      renderResearch(ids, result);
       if (!ids.length) { panel.append(html('p', '請選產業或公司，以查看四率。')); return; }
       panel.append(html('p', `公司整體；不代表單筆交易。共用期別：${result.period || '未匯入'}；口徑：${result.basis || '未知'}／${result.scope || '未知'}。同比單位：百分點。`));
       const table = html('table'), head = html('tr');
@@ -539,7 +687,7 @@
             bar.style.width = `${Math.min(100, Math.abs(cell.value))}%`; bar.setAttribute('aria-hidden', 'true');
             td.append(button, bar, html('small', `同比 ${cell.delta == null ? '—' : `${cell.delta >= 0 ? '+' : ''}${cell.delta.toFixed(2)} 百分點`}`));
           }
-          tr.append(td);
+          appendTrend(td, row, metric); tr.append(td);
         });
         body.append(tr);
       });
@@ -549,12 +697,13 @@
       analysisSelection = analysisPeriods(index, analysisCompanyIds())[Number(byId('analysis-period').value)];
       renderAnalysis();
     });
-    const disclosureNames = { order_quantity: '下單量', order_amount: '下單金額', backlog_amount: '在手訂單', sales_amount: '已實現銷貨', purchase_amount: '已實現進貨' };
+    const disclosureNames = { order_quantity: '下單量', order_amount: '下單金額', backlog_amount: '在手訂單', sales_amount: '已實現銷貨', purchase_amount: '已實現進貨', sales_share: '銷貨／營收占比', purchase_share: '進貨占比' };
     function disclosureText(record) {
       const label = disclosureNames[record.kind] || '交易';
-      const amount = record.kind !== 'order_quantity';
+      const share = ['sales_share', 'purchase_share'].includes(record.kind);
+      const amount = record.kind !== 'order_quantity' && !share;
       const hasProof = Array.isArray(record.evidence_ids) && record.evidence_ids.length && record.evidence_ids.every(id => index.evidence.has(id));
-      const complete = Number.isFinite(record.value) && record.value >= 0 && record.unit && record.unit !== 'unknown' && completePeriod(record.period) && hasProof && (!amount || record.currency && record.currency !== 'unknown');
+      const complete = Number.isFinite(record.value) && record.value >= 0 && record.unit && record.unit !== 'unknown' && completePeriod(record.period) && hasProof && (!share || record.value <= 100 && record.unit === '%' && record.currency == null) && (!amount || record.currency && record.currency !== 'unknown');
       if (!complete) return `${label}：資料不完整；期別：${readable(record.period)}`;
       return `${label}：${record.value} ${record.unit}${amount ? ` ${record.currency}` : ''}；${completePeriod(record.period)}`;
     }
@@ -565,7 +714,7 @@
       const records = edge.disclosures || [], orders = records.filter(record => record.kind === 'order_quantity');
       if (disclosureConflict(orders)) return '下單量：揭露衝突';
       const quantities = orders.length ? orders.map(disclosureText).join('／') : '下單量未揭露';
-      const amounts = records.filter(record => record.kind !== 'order_quantity');
+      const amounts = records.filter(record => !['order_quantity', 'sales_share', 'purchase_share'].includes(record.kind));
       if (!amounts.length) return quantities;
       return `${quantities}；${disclosureConflict(amounts) ? '交易金額：揭露衝突' : amounts.map(disclosureText).join('／')}`;
     }
@@ -573,6 +722,12 @@
       const records = edge.disclosures || [];
       if (!records.some(record => record.kind === 'order_quantity')) panel.append(html('p', '下單量未揭露'));
       if (disclosureConflict(records)) panel.append(html('p', '交易揭露衝突；不可擇一或合計。'));
+      ['sales_share', 'purchase_share'].forEach(kind => {
+        const strength = relationStrength(index, edge, kind);
+        if (!strength.kind) return;
+        const owner = kind === 'sales_share' ? edge.source_id : edge.target_id;
+        panel.append(html('p', `${shareLabel(strength)}；分母：${strength.denominator}；披露公司：${index.entities.get(owner)?.name || owner}`));
+      });
       records.forEach(record => {
         const row = html('p', disclosureText(record)); row.append(evidenceButton(record)); panel.append(row);
       });
@@ -717,7 +872,10 @@
         const competing = edge.predicate === 'competes_with';
         const group = makeSVG('g', { class: `map-edge${competing ? ' competing' : ''}${edge.status === 'pending' ? ' pending' : ''}` });
         const line = makeSVG('path', { d: path, class: 'edge-line' });
-        if (edge.predicate === 'supplies_to') line.setAttribute('marker-end', 'url(#supply-arrow)');
+        if (edge.predicate === 'supplies_to') {
+          line.setAttribute('marker-end', 'url(#supply-arrow)');
+          line.style.strokeWidth = String(relationStrength(index, edge).width);
+        }
         const source = graph.nodes.find(node => node.id === edge.source_id).name;
         const target = graph.nodes.find(node => node.id === edge.target_id).name;
         const label = `${source} ${competing ? '競爭' : edge.predicate === 'supplies_to' ? '供貨給' : '連結'} ${target}${edge.status === 'pending' ? '（待查核）' : ''}`;
@@ -736,6 +894,10 @@
           const compact = Array.from(dated).length > 30 ? `${Array.from(dated).slice(0, 29).join('')}…` : dated;
           const badge = makeSVG('text', { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 - 12, class: 'supply-label', 'text-anchor': 'middle' }, compact);
           badge.append(makeSVG('title', {}, full)); group.append(badge);
+          const strength = relationStrength(index, edge);
+          const shareBadge = makeSVG('text', { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 + 12, class: 'supply-label share-label', 'text-anchor': 'middle' }, shareLabel(strength));
+          const owner = strength.kind === 'purchase_share' ? edge.target_id : edge.source_id;
+          shareBadge.append(makeSVG('title', {}, `分母：${strength.denominator || '未揭露'}；披露公司：${index.entities.get(owner)?.name || owner}`)); group.append(shareBadge);
         }
         edgesLayer.append(group);
       });
@@ -831,7 +993,7 @@
     byId('finance-panel').addEventListener('toggle', () => { if (byId('finance-panel').open) renderFinancials(); });
     draw(); camera = fitCenteredGraph(visible, positions); applyCamera();
   }
-  const api = { financialSummary, analysisPeriods, analysisComparison, pagedCenteredGraph, fitCenteredGraph, centeredGraph, centeredLayout, createIndex, filter, select, selectEvidence, compare, completePeriod, createGraph, createGraphState, expandGraph, collapseGraph, resetGraph, visibleGraph, searchGraph, focusGraph, graphRelations, layoutGraph, edgeGeometry, fitGraph, zoomGraph, graphDetail };
+  const api = { financialTrend, researchSignals, relationStrength, financialSummary, analysisPeriods, analysisComparison, pagedCenteredGraph, fitCenteredGraph, centeredGraph, centeredLayout, createIndex, filter, select, selectEvidence, compare, completePeriod, createGraph, createGraphState, expandGraph, collapseGraph, resetGraph, visibleGraph, searchGraph, focusGraph, graphRelations, layoutGraph, edgeGeometry, fitGraph, zoomGraph, graphDetail };
   if (typeof window !== 'undefined') window.IndustryMap = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof document === 'undefined') return;
