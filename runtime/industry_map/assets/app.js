@@ -46,7 +46,7 @@
   function completePeriod(period) {
     const match = typeof period === 'string' && /^(ROC)?(\d{3,4})-(\d{2})-(\d{2})~(?:ROC)?(\d{3,4})-(\d{2})-(\d{2})$/.exec(period);
     if (!match) return null;
-    const offset = match[1] ? 1911 : 0;
+    const offset = match[1] || match[2].length === 3 ? 1911 : 0;
     function dateAt(position) {
       const year = Number(match[position]) + offset, month = Number(match[position + 1]), day = Number(match[position + 2]);
       const date = new Date(0); date.setUTCFullYear(year, month - 1, day); date.setUTCHours(0, 0, 0, 0);
@@ -72,6 +72,136 @@
     });
     if (rows.some(item => item.value == null)) reasons.push('value: missing');
     return copy({ comparable: !reasons.length, reasons, rows });
+  }
+  const analysisMetrics = ['gross_margin', 'operating_margin', 'net_margin', 'fcf_margin'];
+  const analysisAmounts = ['revenue', 'gross_profit', 'operating_income', 'net_income', 'cfo', 'capex'];
+  const knownAnalysisField = value => value != null && !['', 'unknown', 'null'].includes(String(value).trim().toLowerCase());
+  function analysisPeriods(index, companyIds) {
+    const choices = new Map();
+    [...new Set(companyIds)].forEach(id => (index.observations.get(id) || []).forEach(item => {
+      const period = completePeriod(item.period);
+      if (!period || !knownAnalysisField(item.basis) || !knownAnalysisField(item.scope)) return;
+      if (![...analysisMetrics, ...analysisAmounts].includes(item.metric)) return;
+      const choice = { period, basis: item.basis, scope: item.scope };
+      choices.set(JSON.stringify(choice), choice);
+    }));
+    const sorted = [...choices.values()].sort((a, b) => b.period.split('~')[1].localeCompare(a.period.split('~')[1]) || b.period.localeCompare(a.period) || a.basis.localeCompare(b.basis) || a.scope.localeCompare(b.scope));
+    const usable = sorted.filter(choice => companyIds.some(id => {
+      const summary = financialSummary(index, id, choice.period, choice.basis, choice.scope);
+      return analysisMetrics.some(metric => summary.cells[metric].value !== null);
+    }));
+    return usable.length ? usable : sorted;
+  }
+  function emptyAnalysisCell(reason) {
+    return { value: null, reason, formula: null, inputs: null, evidenceIds: [], delta: null };
+  }
+  function analysisProofValid(index, item) {
+    return Array.isArray(item.evidence_ids) && item.evidence_ids.length > 0 && item.evidence_ids.every(id => index.evidence.has(id));
+  }
+  function uniqueAnalysisObservation(index, rows) {
+    if (!rows.length) return { reason: '缺資料' };
+    if (rows.some(item => item.quality?.conflict || !Number.isFinite(item.value))) return { reason: '數值缺漏或衝突' };
+    if (rows.some(item => !analysisProofValid(index, item))) return { reason: '來源缺漏' };
+    const signatures = rows.map(item => JSON.stringify([item.value, item.unit, item.currency, item.formula, item.inputs]));
+    if (new Set(signatures).size > 1) return { reason: '數值或口徑衝突' };
+    return { item: { ...rows[0], evidence_ids: [...new Set(rows.flatMap(item => item.evidence_ids))] } };
+  }
+  function validDirectFcf(item) {
+    const inputs = item.inputs;
+    if (typeof item.formula !== 'string' || !inputs || !Number.isFinite(inputs.revenue) || inputs.revenue === 0) return false;
+    const compact = item.formula.replace(/\s/g, '');
+    const matchesValue = fcf => Math.abs(item.value - fcf / inputs.revenue * 100) < 1e-8;
+    const hasRawInputs = Object.hasOwn(inputs, 'cfo') || Object.hasOwn(inputs, 'capex');
+    const rawInputsValid = Number.isFinite(inputs.cfo) && Number.isFinite(inputs.capex);
+    if (compact === 'fcf/revenue*100') {
+      if (!Number.isFinite(inputs.fcf)) return false;
+      if (!hasRawInputs) return matchesValue(inputs.fcf);
+      if (!rawInputsValid) return false;
+      const expectedFcf = inputs.cfo - Math.abs(inputs.capex);
+      return Math.abs(inputs.fcf - expectedFcf) < 1e-8 && matchesValue(inputs.fcf);
+    }
+    if (!rawInputsValid) return false;
+    const signedLedger = compact === '(cfo+capex)/revenue*100' && inputs.capex <= 0;
+    const paymentAmount = compact === '(cfo-capex)/revenue*100' && inputs.capex >= 0;
+    if (!signedLedger && !paymentAmount) return false;
+    const expectedFcf = inputs.cfo + (signedLedger ? inputs.capex : -inputs.capex);
+    if (Object.hasOwn(inputs, 'fcf') && (!Number.isFinite(inputs.fcf) || Math.abs(inputs.fcf - expectedFcf) >= 1e-8)) return false;
+    return matchesValue(expectedFcf);
+  }
+  function analysisCapex(index, item) {
+    const pointers = item.evidence_ids.map(id => index.evidence.get(id)?.locator?.pointer || '');
+    const ledger = pointers.some(pointer => pointer.startsWith('/bundle/statements/rows/'));
+    const xbrl = item.quality?.source === 'xbrl' && item.quality?.concept === 'PaymentsToAcquirePropertyPlantAndEquipment';
+    if (ledger === xbrl) return null;
+    if (ledger && item.value <= 0) return -item.value;
+    if (xbrl && item.value >= 0) return item.value;
+    return null;
+  }
+  function derivedAnalysisCell(index, rows, metric) {
+    const numerator = { gross_margin: 'gross_profit', operating_margin: 'operating_income', net_margin: 'net_income' }[metric];
+    const keys = numerator ? ['revenue', numerator] : ['revenue', 'cfo', 'capex'];
+    const selected = keys.map(key => uniqueAnalysisObservation(index, rows.filter(item => item.metric === key && knownAnalysisField(item.unit) && knownAnalysisField(item.currency))));
+    const blocked = selected.find(result => result.reason);
+    if (blocked) return emptyAnalysisCell(blocked.reason);
+    const amounts = selected.map(result => result.item);
+    const revenue = amounts[0];
+    const compatible = amounts.every(item => knownAnalysisField(item.unit) && item.unit !== '%' && knownAnalysisField(item.currency) && item.unit === revenue.unit && item.currency === revenue.currency);
+    if (!compatible) return emptyAnalysisCell('金額單位或幣別不相容');
+    if (revenue.value === 0) return emptyAnalysisCell('營收為零');
+    const inputs = Object.fromEntries(amounts.map(item => [item.metric, item.value]));
+    let amount = numerator ? inputs[numerator] : null;
+    if (!numerator) {
+      inputs.capex_outflow = analysisCapex(index, amounts[2]);
+      if (inputs.capex_outflow === null) return emptyAnalysisCell('資本支出來源或符號不明');
+      amount = inputs.cfo - inputs.capex_outflow;
+    }
+    const value = amount / revenue.value * 100;
+    if (!Number.isFinite(value)) return emptyAnalysisCell('數值非有限值');
+    return { value, reason: null, formula: numerator ? `${numerator} / revenue * 100` : '(cfo - capex_outflow) / revenue * 100', inputs, evidenceIds: [...new Set(amounts.flatMap(item => item.evidence_ids))], delta: null };
+  }
+  function analysisCell(index, rows, metric) {
+    const directRows = rows.filter(item => item.metric === metric && item.unit === '%');
+    if (!directRows.length) return derivedAnalysisCell(index, rows, metric);
+    const result = uniqueAnalysisObservation(index, directRows);
+    if (result.reason) return emptyAnalysisCell(result.reason);
+    const item = result.item;
+    if (metric === 'fcf_margin' && !validDirectFcf(item)) return emptyAnalysisCell('自由現金流公式或輸入不完整');
+    return { value: item.value, reason: null, formula: item.formula, inputs: copy(item.inputs), evidenceIds: item.evidence_ids, delta: null };
+  }
+  function previousAnalysisPeriod(period) {
+    if (!period) return null;
+    const previous = period.split('~').map(date => `${String(Number(date.slice(0, 4)) - 1).padStart(4, '0')}${date.slice(4)}`).join('~');
+    return completePeriod(previous);
+  }
+  function financialSummary(index, companyId, period, basis, scope) {
+    const selectedPeriod = completePeriod(period);
+    const company = index.entities.get(companyId) || null;
+    const rows = index.observations.get(companyId) || [];
+    const selectionValid = selectedPeriod && knownAnalysisField(basis) && knownAnalysisField(scope);
+    const atPeriod = target => rows.filter(item => completePeriod(item.period) === target && item.basis === basis && item.scope === scope);
+    const cells = {};
+    analysisMetrics.forEach(metric => {
+      const missingReason = !company || !rows.length ? '未匯入' : '期別或口徑不完整';
+      const cell = selectionValid && company && rows.length ? analysisCell(index, atPeriod(selectedPeriod), metric) : emptyAnalysisCell(missingReason);
+      const priorPeriod = previousAnalysisPeriod(selectedPeriod);
+      if (cell.value !== null && priorPeriod) {
+        const prior = analysisCell(index, atPeriod(priorPeriod), metric);
+        if (prior.value !== null) {
+          cell.delta = cell.value - prior.value;
+          cell.currentPeriod = selectedPeriod;
+          cell.priorPeriod = priorPeriod;
+          cell.priorEvidenceIds = prior.evidenceIds;
+        }
+      }
+      cells[metric] = cell;
+    });
+    return { companyId, company, period: selectedPeriod, basis, scope, cells, deltaUnit: '百分點' };
+  }
+  function analysisComparison(index, companyIds, options = {}) {
+    const ids = [...new Set(companyIds)];
+    const periods = analysisPeriods(index, ids);
+    const selection = options.period === undefined ? (periods[0] || { period: null, basis: null, scope: null }) : { period: options.period, basis: options.basis, scope: options.scope };
+    return { ...selection, periods, rows: ids.map(id => financialSummary(index, id, selection.period, selection.basis, selection.scope)) };
   }
   // Graph IDs occupy a client-only namespace; entity identity remains unchanged.
   const graphId = (kind, value) => `map:${kind}:${JSON.stringify(value)}`;
@@ -357,6 +487,102 @@
     function evidenceButton(record) {
       return actionButton('查看來源', () => showGraphEvidence(record.evidence_ids || []));
     }
+    let analysisGroup = '', analysisSelection = null;
+    const ratioLabels = { gross_margin: '毛利率', operating_margin: '營業利益率', net_margin: '稅後淨利率', fcf_margin: '自由現金流／營收' };
+    function analysisCompanyIds() {
+      const companies = visible.nodes.filter(node => node.kind === 'company').map(node => node.id);
+      if (index.entities.has(centerId)) {
+        const downstream = visible.edges.filter(edge => edge.predicate === 'supplies_to' && edge.source_id === centerId).map(edge => edge.target_id);
+        const peers = visible.edges.filter(edge => edge.predicate === 'competes_with' && [edge.source_id, edge.target_id].includes(centerId)).map(edge => edge.source_id === centerId ? edge.target_id : edge.source_id);
+        return [...new Set([centerId, ...(downstream.length ? downstream : peers)])].filter(id => companies.includes(id));
+      }
+      return companies;
+    }
+    function showRatioSource(cell, row) {
+      showGraphEvidence([...new Set([...cell.evidenceIds, ...(cell.priorEvidenceIds || [])])]);
+      const panel = byId('evidence');
+      panel.prepend(html('p', `公式：${readable(cell.formula)}；輸入：${readable(cell.inputs)}`),
+        html('p', `當期：${row.period || '未知'}；去年：${cell.priorPeriod || '未匯入'}；同比：${cell.delta == null ? '—' : `${cell.delta.toFixed(2)} 百分點`}`));
+      panel.tabIndex = -1; panel.focus({ preventScroll: true });
+      panel.scrollIntoView({ block: 'nearest' });
+    }
+    function renderAnalysis() {
+      const ids = analysisCompanyIds(), group = `${centerId}|${ids.join('|')}`;
+      if (group !== analysisGroup) { analysisGroup = group; analysisSelection = null; }
+      const result = analysisComparison(index, ids, analysisSelection || {});
+      const select = byId('analysis-period'); select.replaceChildren();
+      result.periods.forEach((selection, number) => {
+        const option = html('option', `${number === 0 ? '最新：' : ''}${selection.period}／${selection.basis}／${selection.scope}`);
+        option.value = String(number);
+        option.selected = selection.period === result.period && selection.basis === result.basis && selection.scope === result.scope;
+        select.append(option);
+      });
+      select.disabled = !result.periods.length;
+      const panel = byId('analysis-comparison'); panel.replaceChildren();
+      if (!ids.length) { panel.append(html('p', '請選產業或公司，以查看四率。')); return; }
+      panel.append(html('p', `公司整體；不代表單筆交易。共用期別：${result.period || '未匯入'}；口徑：${result.basis || '未知'}／${result.scope || '未知'}。同比單位：百分點。`));
+      const table = html('table'), head = html('tr');
+      head.append(html('th', '公司'));
+      Object.values(ratioLabels).forEach(label => head.append(html('th', label)));
+      const thead = html('thead'); thead.append(head); table.append(thead);
+      const body = html('tbody');
+      result.rows.forEach(row => {
+        const tr = html('tr'); tr.dataset.companyId = row.companyId;
+        const company = html('th', row.company?.name || row.companyId); company.scope = 'row'; tr.append(company);
+        Object.entries(ratioLabels).forEach(([metric, label]) => {
+          const cell = row.cells[metric], td = html('td'); td.dataset.metric = metric;
+          if (cell.value === null) td.append(html('span', `缺資料：${cell.reason}`));
+          else {
+            const button = actionButton(`${cell.value.toFixed(2)}%`, () => showRatioSource(cell, row));
+            button.setAttribute('aria-label', `${row.company?.name} ${label} ${cell.value.toFixed(2)}% 查看來源`);
+            const bar = html('span'); bar.className = `ratio-bar${cell.value < 0 ? ' negative' : ''}`;
+            bar.style.width = `${Math.min(100, Math.abs(cell.value))}%`; bar.setAttribute('aria-hidden', 'true');
+            td.append(button, bar, html('small', `同比 ${cell.delta == null ? '—' : `${cell.delta >= 0 ? '+' : ''}${cell.delta.toFixed(2)} 百分點`}`));
+          }
+          tr.append(td);
+        });
+        body.append(tr);
+      });
+      table.append(body); panel.append(table);
+    }
+    byId('analysis-period').addEventListener('change', () => {
+      analysisSelection = analysisPeriods(index, analysisCompanyIds())[Number(byId('analysis-period').value)];
+      renderAnalysis();
+    });
+    const disclosureNames = { order_quantity: '下單量', order_amount: '下單金額', backlog_amount: '在手訂單', sales_amount: '已實現銷貨', purchase_amount: '已實現進貨' };
+    function disclosureText(record) {
+      const label = disclosureNames[record.kind] || '交易';
+      const amount = record.kind !== 'order_quantity';
+      const hasProof = Array.isArray(record.evidence_ids) && record.evidence_ids.length && record.evidence_ids.every(id => index.evidence.has(id));
+      const complete = Number.isFinite(record.value) && record.value >= 0 && record.unit && record.unit !== 'unknown' && completePeriod(record.period) && hasProof && (!amount || record.currency && record.currency !== 'unknown');
+      if (!complete) return `${label}：資料不完整；期別：${readable(record.period)}`;
+      return `${label}：${record.value} ${record.unit}${amount ? ` ${record.currency}` : ''}；${completePeriod(record.period)}`;
+    }
+    function disclosureConflict(records) {
+      return records.some((record, number) => records.slice(number + 1).some(other => record.kind === other.kind && completePeriod(record.period) === completePeriod(other.period) && (record.value !== other.value || record.unit !== other.unit || record.currency !== other.currency)));
+    }
+    function supplyLabel(edge) {
+      const records = edge.disclosures || [], orders = records.filter(record => record.kind === 'order_quantity');
+      if (disclosureConflict(orders)) return '下單量：揭露衝突';
+      const quantities = orders.length ? orders.map(disclosureText).join('／') : '下單量未揭露';
+      const amounts = records.filter(record => record.kind !== 'order_quantity');
+      if (!amounts.length) return quantities;
+      return `${quantities}；${disclosureConflict(amounts) ? '交易金額：揭露衝突' : amounts.map(disclosureText).join('／')}`;
+    }
+    function showDisclosures(edge, panel) {
+      const records = edge.disclosures || [];
+      if (!records.some(record => record.kind === 'order_quantity')) panel.append(html('p', '下單量未揭露'));
+      if (disclosureConflict(records)) panel.append(html('p', '交易揭露衝突；不可擇一或合計。'));
+      records.forEach(record => {
+        const row = html('p', disclosureText(record)); row.append(evidenceButton(record)); panel.append(row);
+      });
+    }
+    function emphasizeEdges() {
+      [...edgesLayer.children].forEach(group => {
+        const unrelated = selectedEdgeId ? group.dataset.edgeId !== selectedEdgeId : ![group.dataset.sourceId, group.dataset.targetId].includes(selectedId);
+        group.classList.toggle('muted', unrelated);
+      });
+    }
     function describe(id) {
       const detail = graphDetail(index, graph, visible, id), panel = byId('detail');
       panel.replaceChildren(); byId('financials').replaceChildren();
@@ -370,6 +596,7 @@
         const target = graph.nodes.find(node => node.id === item.target_id);
         panel.append(html('p', `來源：${source?.name || item.source_id} → 對象：${target?.name || item.target_id}`),
           html('p', `產品／服務：${readable(item.product)}；期別：${readable(item.period)}；${statusText(item.status)}`), evidenceButton(item));
+        if (item.predicate === 'supplies_to') showDisclosures(item, panel);
       } else {
         panel.append(html('p', kinds[item.kind] || '節點'), actionButton('以此為中心', () => setCenter(item.id)));
         if (detail.owner) panel.append(html('p', `匿名對象；披露公司：${detail.owner.name}（${detail.owner.id}）`));
@@ -391,6 +618,8 @@
           panel.append(actionButton(comparisonIds.has(id) ? '移出財務比較' : '加入財務比較', () => {
             if (comparisonIds.has(id)) comparisonIds.delete(id); else comparisonIds.add(id);
             describe(id); renderGraphComparison();
+            byId('comparison-panel').open = true;
+            byId('comparison-panel').scrollIntoView({ block: 'nearest' });
           }));
         }
         detail.neighbors.forEach(({ edge, node }) => {
@@ -494,8 +723,21 @@
         const label = `${source} ${competing ? '競爭' : edge.predicate === 'supplies_to' ? '供貨給' : '連結'} ${target}${edge.status === 'pending' ? '（待查核）' : ''}`;
         const hit = makeSVG('path', { d: path, class: 'edge-hit', tabindex: 0, role: 'button', 'aria-label': label });
         hit.append(makeSVG('title', {}, label));
-        bindActivation(hit, () => { if (suppressClick) { suppressClick = false; return; } selectedEdgeId = edge.id; describe(edge.id); });
-        group.append(line, hit); edgesLayer.append(group);
+        bindActivation(hit, () => { if (suppressClick) { suppressClick = false; return; } selectedEdgeId = edge.id; describe(edge.id); emphasizeEdges(); });
+        group.dataset.edgeId = edge.id; group.dataset.sourceId = edge.source_id; group.dataset.targetId = edge.target_id;
+        group.append(line, hit);
+        if (edge.predicate === 'supplies_to') {
+          const start = positions[edge.source_id], end = positions[edge.target_id];
+          const full = supplyLabel(edge);
+          const orders = (edge.disclosures || []).filter(record => record.kind === 'order_quantity');
+          const otherKinds = [...new Set((edge.disclosures || []).filter(record => record.kind !== 'order_quantity').map(record => disclosureNames[record.kind] || '交易'))];
+          const short = orders.length ? full.split('；').slice(0, 2).join('；') : `下單量未揭露${otherKinds.length ? `；${otherKinds.join('／')}` : ''}`;
+          const dated = short.replace(/(\d{4})-01-01~\1-06-30/g, '$1上半年').replace(/(\d{4})-01-01~\1-12-31/g, '$1全年');
+          const compact = Array.from(dated).length > 30 ? `${Array.from(dated).slice(0, 29).join('')}…` : dated;
+          const badge = makeSVG('text', { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 - 12, class: 'supply-label', 'text-anchor': 'middle' }, compact);
+          badge.append(makeSVG('title', {}, full)); group.append(badge);
+        }
+        edgesLayer.append(group);
       });
       visible.nodes.forEach(item => {
         const point = positions[item.id];
@@ -511,11 +753,11 @@
       });
       byId('map-empty').hidden = graph.nodes.some(item => item.kind !== 'root');
       byId('collapse-node').textContent = collapsed ? '展開中心一層' : '收合中心一層';
-      applyCamera();
+      applyCamera(); emphasizeEdges();
       if (refreshDetail) {
         if (selectedEdgeId && !visible.edges.some(edge => edge.id === selectedEdgeId)) selectedEdgeId = null;
         describe(selectedEdgeId || selectedId);
-        renderGraphComparison();
+        renderGraphComparison(); renderAnalysis();
       }
       if (focused) [...nodesLayer.children].find(element => element.getAttribute('data-node-id') === focused)?.focus();
     }
@@ -589,7 +831,7 @@
     byId('finance-panel').addEventListener('toggle', () => { if (byId('finance-panel').open) renderFinancials(); });
     draw(); camera = fitCenteredGraph(visible, positions); applyCamera();
   }
-  const api = { pagedCenteredGraph, fitCenteredGraph, centeredGraph, centeredLayout, createIndex, filter, select, selectEvidence, compare, completePeriod, createGraph, createGraphState, expandGraph, collapseGraph, resetGraph, visibleGraph, searchGraph, focusGraph, graphRelations, layoutGraph, edgeGeometry, fitGraph, zoomGraph, graphDetail };
+  const api = { financialSummary, analysisPeriods, analysisComparison, pagedCenteredGraph, fitCenteredGraph, centeredGraph, centeredLayout, createIndex, filter, select, selectEvidence, compare, completePeriod, createGraph, createGraphState, expandGraph, collapseGraph, resetGraph, visibleGraph, searchGraph, focusGraph, graphRelations, layoutGraph, edgeGeometry, fitGraph, zoomGraph, graphDetail };
   if (typeof window !== 'undefined') window.IndustryMap = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof document === 'undefined') return;

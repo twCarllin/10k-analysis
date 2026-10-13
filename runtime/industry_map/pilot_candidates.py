@@ -1,5 +1,7 @@
 """Pure PDF evidence, role and T8 candidates used by the local pilot."""
 
+import json
+import math
 import re
 import unicodedata
 
@@ -262,6 +264,32 @@ def _t8_candidates(
                     if kind == "sales"
                     else (target["id"], company_id)
                 )
+                disclosures = []
+                amount = entry.get("amount")
+                if type(amount) in (int, float) and math.isfinite(amount):
+                    amount_pointer = pointer.rsplit("/", 1)[0] + "/amount"
+                    amount_proof = evidence(
+                        str(source_path),
+                        document_hash=source_hash,
+                        locator={"pointer": amount_pointer},
+                        quote=json.dumps(amount, ensure_ascii=False),
+                        period=period,
+                        source_type="analysis",
+                    )
+                    fragment["evidence"].append(amount_proof)
+                    unit = table.get("unit") or "unknown"
+                    disclosures.append(
+                        dict(
+                            kind=(
+                                "sales_amount" if kind == "sales" else "purchase_amount"
+                            ),
+                            value=amount,
+                            unit=unit,
+                            currency="TWD" if "新台幣" in unit else None,
+                            period=period,
+                            evidence_ids=[amount_proof["id"]],
+                        )
+                    )
                 fragment["relations"].append(
                     relation(
                         source,
@@ -270,5 +298,6 @@ def _t8_candidates(
                         period=period,
                         status="pending",
                         evidence_ids=[proof["id"]],
+                        disclosures=disclosures,
                     )
                 )

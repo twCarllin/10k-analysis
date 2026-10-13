@@ -366,6 +366,9 @@ def test_chrome_click_collapse_search_and_empty_direction(graph_snapshot, tmp_pa
         assert (
             page.locator("#map .center").get_attribute("data-node-id") == supplier_id
         ), "C2 明確換中心"
+        page.get_by_role("button", name="加入財務比較", exact=True).click()
+        playwright.expect(page.locator("#comparison")).to_be_visible()
+        playwright.expect(page.locator("#comparison")).to_contain_text("設備公司")
         assert page.locator('[data-node-id="map:root"]').count() == 0, "C2 無前層導航"
         supplier_ids = page.locator("#map .map-node").evaluate_all(
             "nodes => nodes.map(n => n.dataset.nodeId)"
@@ -388,7 +391,9 @@ def test_chrome_click_collapse_search_and_empty_direction(graph_snapshot, tmp_pa
         assert page.locator("#map .center").get_attribute("data-node-id") == supplier_id
         page.locator("#pending").check()
         page.locator("#map .edge-hit").first.click()
-        page.get_by_role("button", name="查看來源", exact=True).click()
+        page.locator("#detail").get_by_role(
+            "button", name="查看來源", exact=True
+        ).click()
         assert (
             graph_snapshot["evidence"][0]["quote"]
             in page.locator("#evidence").inner_text()

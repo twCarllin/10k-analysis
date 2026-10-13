@@ -63,8 +63,8 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 #map {
   display: block;
   width: 100%;
-  height: min(72vh, 780px);
-  min-height: 420px;
+  height: min(48vh, 520px);
+  min-height: 320px;
   touch-action: none;
   background-color: #f8fbff;
   background-image: radial-gradient(#cbd9e7 1px, transparent 1px);
@@ -109,3 +109,16 @@ th, td { padding: .4rem; border-bottom: 1px solid #d3dce5; text-align: left; }
 .zone-label { fill: #526a80; font-size: 16px; pointer-events: none; }
 
 #section-more { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .75rem; }
+
+#analysis-panel { padding: .5rem .75rem; border-block: 1px solid #d3dce5; }
+#analysis-panel h2 { margin: .2rem 0; font-size: 1.1rem; }
+#analysis-comparison { overflow: auto; max-height: 280px; }
+#analysis-comparison thead { position: sticky; top: 0; background: white; }
+#analysis-comparison p { margin: .3rem 0; font-size: .85rem; }
+#analysis-comparison table { min-width: 650px; }
+#analysis-comparison td { min-width: 125px; vertical-align: top; }
+#analysis-comparison small { display: block; white-space: nowrap; }
+.ratio-bar { display: block; height: 4px; margin: .2rem 0; background: #8296a8; }
+.ratio-bar.negative { background: #5d6976; border-inline-start: 2px solid #18324b; }
+.supply-label { pointer-events: none; font-size: 11px; fill: #18324b; stroke: #f8fbff; stroke-width: 4px; paint-order: stroke; }
+.map-edge.muted { opacity: .4; }

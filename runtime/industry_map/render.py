@@ -228,6 +228,9 @@ def render(snapshot, out):
 <label><input id="pending" type="checkbox" checked>顯示待查核</label></div>
 <div id="section-more" aria-label="各區更多鄰居" aria-live="polite"></div>
 <nav id="center-path" aria-label="中心路徑"></nav>
+<div id="analysis-panel" aria-label="公司四率比較">
+<h2>公司四率比較</h2><label>共同期別 <select id="analysis-period"></select></label>
+<div id="analysis-comparison" aria-live="polite"></div></div>
 <svg id="map" viewBox="0 0 1000 650" role="group" aria-label="產業節點與連線；Tab 選取，Enter 或空白鍵查看詳情"></svg>
 <p id="map-empty" class="empty" hidden>尚無產業資料。可使用 Tab 選取起點，或使用重置按鈕。</p>
 <div class="map-legend" aria-label="圖例">

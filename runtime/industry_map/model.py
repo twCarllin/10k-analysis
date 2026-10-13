@@ -116,8 +116,9 @@ def relation(
     period=None,
     status="pending",
     evidence_ids=(),
+    disclosures=(),
 ):
-    return dict(
+    result = dict(
         id=stable_id("relation", source_id, predicate, target_id, product, period),
         source_id=source_id,
         predicate=predicate,
@@ -127,6 +128,9 @@ def relation(
         status=status,
         evidence_ids=sorted(set(evidence_ids)),
     )
+    if disclosures:
+        result["disclosures"] = deepcopy(list(disclosures))
+    return result
 
 
 def observation(
@@ -298,6 +302,7 @@ def merge(fragments, *, sources=None, previous_period=None, current_period=None)
                     "missing",
                     "warnings",
                     "excluded",
+                    "disclosures",
                 ):
                     if field in item:
                         values = existing.get(field, []) + item[field]

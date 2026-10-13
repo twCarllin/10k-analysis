@@ -97,7 +97,11 @@ def test_cli_pdf_build_history_and_safe_comparison(
             + json.dumps(current)
             + ";"
             + "const result=api.compare(api.createIndex(snapshot),['company:TW:1234','company:TW:2360'],'revenue','2025-01-01~2025-06-30');"
-            + "assert.equal(result.comparable,false,'mixed basis blocked');assert.ok(result.reasons.length);",
+            + "assert.equal(result.comparable,true,'ROC114 and ISO2025 same period and H1 basis');"
+            + "const mixed=structuredClone(snapshot);"
+            + "mixed.observations.filter(o=>o.company_id==='company:TW:2360').forEach(o=>{o.basis='FY'});"
+            + "const blocked=api.compare(api.createIndex(mixed),['company:TW:1234','company:TW:2360'],'revenue','2025-01-01~2025-06-30');"
+            + "assert.equal(blocked.comparable,false,'mixed basis blocked');assert.ok(blocked.reasons.includes('basis: incompatible'));",
         ],
         capture_output=True,
         text=True,

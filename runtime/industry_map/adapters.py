@@ -320,6 +320,8 @@ def _xbrl_observations(metadata, result, company_id):
         "RevenueFromContractWithCustomerExcludingAssessedTax": "revenue",
         "Revenues": "revenue",
         "NetIncomeLoss": "net_income",
+        "GrossProfit": "gross_profit",
+        "OperatingIncomeLoss": "operating_income",
         "NetCashProvidedByUsedInOperatingActivities": "cfo",
         "PaymentsToAcquirePropertyPlantAndEquipment": "capex",
     }
