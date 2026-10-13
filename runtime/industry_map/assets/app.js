@@ -626,6 +626,74 @@
       if (signal.threshold) panel.prepend(html('p', `持平門檻：同比變動絕對值小於 ${signal.threshold.absoluteDeltaBelow} ${signal.threshold.unit}`));
       panel.tabIndex = -1; panel.focus({ preventScroll: true }); panel.scrollIntoView({ block: 'nearest' });
     }
+    let highlightedCompanyId = null, traceEdgeId = null;
+    function applyHighlight() {
+      const connected = new Set([highlightedCompanyId]);
+      visible.edges.filter(edge => edge.predicate === 'supplies_to' && [edge.source_id, edge.target_id].includes(highlightedCompanyId)).forEach(edge => { connected.add(edge.source_id); connected.add(edge.target_id); });
+      [...nodesLayer.children].forEach(node => node.classList.toggle('change-muted', !!highlightedCompanyId && !connected.has(node.dataset.nodeId)));
+      [...edgesLayer.children].forEach(edge => edge.classList.toggle('change-muted', !!highlightedCompanyId && !(visible.edges.some(item => item.id === edge.dataset.edgeId && item.predicate === 'supplies_to') && [edge.dataset.sourceId, edge.dataset.targetId].includes(highlightedCompanyId))));
+    }
+    function renderChanges(ids, selection) {
+      const panel = byId('change-highlights'); panel.replaceChildren();
+      const signals = ids.flatMap(id => researchSignals(index, id, selection)).filter(signal => (signal.current || []).some(cell => Number.isFinite(cell.delta) && cell.delta !== 0)).slice(0, 3);
+      if (!signals.length) panel.append(html('p', '目前可見公司沒有可核對的同比變化。'));
+      signals.forEach(signal => {
+        const card = html('article'); card.className = 'change-card';
+        card.append(actionButton(`${signal.company?.name || signal.companyId}：${signal.text}`, () => { highlightedCompanyId = signal.companyId; applyHighlight(); byId('clear-highlight').disabled = false; }), actionButton('變化來源', () => showSignalSource(signal)));
+        panel.append(card);
+      });
+      byId('clear-highlight').disabled = !highlightedCompanyId;
+      applyHighlight();
+    }
+    byId('clear-highlight').addEventListener('click', () => { highlightedCompanyId = null; applyHighlight(); byId('clear-highlight').disabled = true; });
+    function traceAmount(companyId, metric, selection) {
+      const rows = (index.observations.get(companyId) || []).filter(item => item.metric === metric && completePeriod(item.period) === selection.period && item.basis === selection.basis && item.scope === selection.scope && knownAnalysisField(item.unit) && item.unit !== '%' && knownAnalysisField(item.currency));
+      const result = uniqueAnalysisObservation(index, rows);
+      if (result.reason) return { reason: result.reason };
+      if (metric === 'capex' && analysisCapex(index, result.item) === null) return { reason: '資本支出來源或符號不明' };
+      return { item: result.item };
+    }
+    function renderTrace(selection = currentAnalysis?.selection || {}) {
+      const panel = byId('supply-trace'); panel.replaceChildren();
+      const edge = visible.edges.find(item => item.id === traceEdgeId && item.predicate === 'supplies_to');
+      panel.hidden = !edge;
+      if (!edge) { traceEdgeId = null; return; }
+      const supplier = index.entities.get(edge.source_id), buyer = index.entities.get(edge.target_id);
+      panel.append(html('h2', `供應關係追查：${supplier?.name || edge.source_id} → ${buyer?.name || edge.target_id}`), html('p', `財務期別：${selection.period || '未知'}；${selection.basis || '未知'}／${selection.scope || '未知'}。交易獨立標期；不混期求比，不代表因果。`));
+      const steps = html('div'); steps.className = 'trace-steps';
+      function step(label, company) {
+        const card = html('article'); card.className = 'trace-step'; card.append(html('h3', label), html('p', `公司：${company?.name || '未知'}`)); steps.append(card); return card;
+      }
+      function amount(card, companyId, metric, label) {
+        const result = traceAmount(companyId, metric, selection);
+        const text = result.item ? `${result.item.value} ${result.item.unit} ${result.item.currency}` : `缺口：${result.reason}`;
+        const row = html('p', `${label}：${text}；${selection.period || '期別未知'}`);
+        if (result.item) row.append(actionButton('追查來源', () => showGraphEvidence(result.item.evidence_ids)));
+        card.append(row);
+      }
+      const demand = step('1 需求', buyer);
+      const records = edge.disclosures || [];
+      const orders = records.filter(record => ['order_quantity', 'order_amount', 'backlog_amount'].includes(record.kind));
+      if (!orders.length) demand.append(html('p', '給此供應商的訂單：未揭露'));
+      [...orders, ...records.filter(record => ['sales_amount', 'purchase_amount'].includes(record.kind))].forEach(record => {
+        const row = html('p', disclosureConflict(records.filter(other => other.kind === record.kind)) ? `${disclosureNames[record.kind]}：揭露衝突；${record.period || '期別未知'}` : disclosureText(record));
+        row.append(actionButton('追查來源', () => showGraphEvidence(record.evidence_ids || []))); demand.append(row);
+      });
+      amount(demand, edge.target_id, 'capex', '客戶資本支出');
+      demand.append(html('p', '客戶資本支出是公司整體支出，不能代替給此供應商的訂單。已實現銷貨／進貨不是訂單。'));
+      const revenue = step('2 營收', supplier); amount(revenue, edge.source_id, 'revenue', '公司整體營收');
+      const profit = step('3 利益', supplier), cash = step('4 現金流', supplier);
+      amount(cash, edge.source_id, 'cfo', '營業現金流金額');
+      const summary = financialSummary(index, edge.source_id, selection.period, selection.basis, selection.scope);
+      analysisMetrics.forEach(metric => {
+        const cell = summary.cells[metric], card = metric === 'fcf_margin' ? cash : profit;
+        const row = html('p', `${ratioLabels[metric]}：${cell.value === null ? `缺口：${cell.reason}` : `${cell.value.toFixed(2)} %`}；${selection.period || '期別未知'}`);
+        if (cell.value !== null) row.append(actionButton('追查來源', () => showRatioSource(cell, summary)));
+        card.append(row);
+      });
+      cash.append(html('p', '自由現金流營收率使用公司整體資料，不代表這筆交易的現金流。'));
+      panel.append(steps);
+    }
     function renderResearch(ids, selection) {
       currentAnalysis = { ids, selection };
       const select = byId('research-company'); select.replaceChildren();
@@ -667,6 +735,7 @@
       select.disabled = !result.periods.length;
       const panel = byId('analysis-comparison'); panel.replaceChildren();
       renderResearch(ids, result);
+      renderChanges(visible.nodes.filter(node => node.kind === 'company').map(node => node.id), result); renderTrace(result);
       if (!ids.length) { panel.append(html('p', '請選產業或公司，以查看四率。')); return; }
       panel.append(html('p', `公司整體；不代表單筆交易。共用期別：${result.period || '未匯入'}；口徑：${result.basis || '未知'}／${result.scope || '未知'}。同比單位：百分點。`));
       const table = html('table'), head = html('tr');
@@ -768,7 +837,7 @@
           detail.relations.forEach(edge => {
             const otherId = edge.source_id === id ? edge.target_id : edge.source_id;
             const other = graph.nodes.find(node => node.id === otherId);
-            panel.append(actionButton(`${relationText(edge)}：${other?.name || otherId}；${statusText(edge.status)}`, () => { selectedEdgeId = edge.id; describe(edge.id); }));
+            panel.append(actionButton(`${relationText(edge)}：${other?.name || otherId}；${statusText(edge.status)}`, () => { selectedEdgeId = edge.id; traceEdgeId = edge.predicate === 'supplies_to' ? edge.id : null; describe(edge.id); renderTrace(); }));
           });
           panel.append(actionButton(comparisonIds.has(id) ? '移出財務比較' : '加入財務比較', () => {
             if (comparisonIds.has(id)) comparisonIds.delete(id); else comparisonIds.add(id);
@@ -836,6 +905,7 @@
     function setCenter(id, record = true) {
       if (!graph.nodes.some(node => node.id === id)) return;
       if (record && id !== centerId) history.push(id);
+      highlightedCompanyId = null;
       centerId = id; selectedId = id; selectedEdgeId = null; collapsed = false; limits = {};
       byId('direction').value = ''; positions = {};
       draw(); camera = fitCenteredGraph(visible, positions); applyCamera();
@@ -881,7 +951,7 @@
         const label = `${source} ${competing ? '競爭' : edge.predicate === 'supplies_to' ? '供貨給' : '連結'} ${target}${edge.status === 'pending' ? '（待查核）' : ''}`;
         const hit = makeSVG('path', { d: path, class: 'edge-hit', tabindex: 0, role: 'button', 'aria-label': label });
         hit.append(makeSVG('title', {}, label));
-        bindActivation(hit, () => { if (suppressClick) { suppressClick = false; return; } selectedEdgeId = edge.id; describe(edge.id); emphasizeEdges(); });
+        bindActivation(hit, () => { if (suppressClick) { suppressClick = false; return; } selectedEdgeId = edge.id; traceEdgeId = edge.predicate === 'supplies_to' ? edge.id : null; describe(edge.id); renderTrace(); emphasizeEdges(); });
         group.dataset.edgeId = edge.id; group.dataset.sourceId = edge.source_id; group.dataset.targetId = edge.target_id;
         group.append(line, hit);
         if (edge.predicate === 'supplies_to') {
@@ -915,7 +985,7 @@
       });
       byId('map-empty').hidden = graph.nodes.some(item => item.kind !== 'root');
       byId('collapse-node').textContent = collapsed ? '展開中心一層' : '收合中心一層';
-      applyCamera(); emphasizeEdges();
+      applyCamera(); emphasizeEdges(); applyHighlight();
       if (refreshDetail) {
         if (selectedEdgeId && !visible.edges.some(edge => edge.id === selectedEdgeId)) selectedEdgeId = null;
         describe(selectedEdgeId || selectedId);
@@ -962,6 +1032,7 @@
     byId('collapse-node').addEventListener('click', () => { collapsed = !collapsed; positions = {}; draw(); });
     byId('back-center').addEventListener('click', () => { if (history.length > 1) { history.pop(); setCenter(history.at(-1), false); } });
     byId('reset-map').addEventListener('click', () => {
+      highlightedCompanyId = null;
       centerId = 'map:root'; history = [centerId]; collapsed = false; limits = {}; positions = {}; selectedId = centerId; selectedEdgeId = null; comparisonIds.clear();
       byId('direction').value = ''; byId('pending').checked = true;
       byId('search').value = ''; byId('search-results').replaceChildren();
@@ -981,7 +1052,7 @@
       });
     });
     ['direction', 'pending'].forEach(id => byId(id).addEventListener('change', () => {
-      positions = {}; draw();
+      highlightedCompanyId = null; positions = {}; draw();
     }));
     for (const metric of new Set(index.snapshot.observations.map(record => record.metric))) {
       const option = html('option', metric); option.value = metric; byId('metric').append(option);

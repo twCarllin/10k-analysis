@@ -140,3 +140,20 @@ th, td { padding: .4rem; border-bottom: 1px solid #323b47; text-align: left; }
 #analysis-comparison small.trend-summary { white-space: normal; max-width: 150px; }
 
 #research-panel h2 { font-size: 1.1rem; margin: .2rem 0; }
+
+#change-panel { margin: 8px 0; border-top: 1px solid #354255; }
+#change-panel h2 { display: inline-block; margin: .5rem .75rem .5rem 0; font-size: 1.1rem; }
+#change-highlights { display: flex; gap: 6px; flex-wrap: wrap; }
+#change-highlights p { margin: 4px 0; }
+.change-card { display: flex; gap: 6px; flex: 1; min-width: 220px; font-size: .8rem; }
+.change-card button:first-child { flex: 1; text-align: left; white-space: normal; }
+.change-muted { opacity: .15; }
+#supply-trace { border: 1px solid #526881; padding: 8px; margin: 8px 0; }
+.trace-steps { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.trace-step { background: #11151b; padding: 8px; overflow-wrap: anywhere; min-width: 0; }
+.trace-step p { margin: 6px 0; }
+@media (max-width: 700px) { .trace-steps { grid-template-columns: 1fr; } .change-card { flex-wrap: wrap; } }
+
+#supply-trace h2 { font-size: 1.05rem; margin: .2rem 0; }
+#supply-trace h3 { font-size: 1rem; margin: .2rem 0; }
+#supply-trace { font-size: .85rem; }

@@ -232,6 +232,7 @@ def render(snapshot, out):
 <h2>公司四率比較</h2><label>共同期別 <select id="analysis-period"></select></label>
 <div id="analysis-comparison" aria-live="polite"></div>
 </div>
+<div id="change-panel" aria-label="變化重點"><h2>變化重點</h2><button id="clear-highlight" type="button" disabled>清除突出</button><div id="change-highlights" aria-live="polite"></div></div>
 <svg id="map" viewBox="0 0 1000 650" role="group" aria-label="產業節點與連線；Tab 選取，Enter 或空白鍵查看詳情"></svg>
 <p id="map-empty" class="empty" hidden>尚無產業資料。可使用 Tab 選取起點，或使用重置按鈕。</p>
 <div class="map-legend" aria-label="圖例">
@@ -239,7 +240,8 @@ def render(snapshot, out):
 <span class="legend-product">● 產品／服務</span><span>→ 供貨</span>
 <span>線寬：最新銷貨／營收占比，無合法銷貨占比時採進貨占比；未知不是零</span><span>─ · ─ 競爭</span><span>┄┄ 待查核</span><span>── 分類／提供</span></div>
 <div id="overview" hidden></div></section>
-<aside aria-label="節點與連線詳情"><div id="research-panel" aria-label="研究重點"><h2>研究重點</h2>
+<aside aria-label="節點與連線詳情"><div id="supply-trace" aria-label="供應關係追查" aria-live="polite" hidden></div>
+<div id="research-panel" aria-label="研究重點"><h2>研究重點</h2>
 <label>研究公司 <select id="research-company"></select></label>
 <div id="research-signals" aria-live="polite"></div></div>
 <h2>詳情</h2><div id="detail">請選取節點或連線</div>
