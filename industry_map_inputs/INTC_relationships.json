@@ -1,0 +1,223 @@
+{
+  "ticker": "INTC",
+  "company_name": "Intel",
+  "results": {
+    "supply_chain": {
+      "named_suppliers": [
+        {
+          "name": "TSMC",
+          "ticker": "TSM",
+          "material_or_service": "CPU tiles及晶圓製造",
+          "period": "2025",
+          "note": "來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Manufacturing and Assembly and Test。Intel記錄已使用TSMC外部製造產能；同時TSMC在晶圓代工市場也是競爭者。 原文節錄：utilized third-party foundry manufacturing capacity。"
+        }
+      ]
+    },
+    "competitor_mapping": {
+      "named_competitors": [
+        {
+          "name": "AMD",
+          "ticker": "AMD",
+          "markets": [
+            "PC client processors (x86)",
+            "data center CPUs",
+            "GPUs",
+            "accelerators"
+          ],
+          "yoy_status": "baseline",
+          "note": "CCG 主要競爭對手（同為 x86 架構），DCAI 跨 CPU/GPU/加速器全方位競爭；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "Apple",
+          "ticker": "AAPL",
+          "markets": [
+            "PC client processors (ARM-based M series)"
+          ],
+          "yoy_status": "baseline",
+          "note": "自 2020 年推出自研 ARM 架構 M 系列產品，形成獨立生態系統並搶佔 PC 市佔；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "Qualcomm",
+          "ticker": "QCOM",
+          "markets": [
+            "PC client processors (ARM-based Snapdragon)"
+          ],
+          "yoy_status": "baseline",
+          "note": "ARM 架構處理器（Snapdragon）競爭者；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "MediaTek",
+          "ticker": "",
+          "markets": [
+            "PC client processors (ARM-based Kompanio)"
+          ],
+          "yoy_status": "baseline",
+          "note": "ARM 架構處理器（Kompanio）競爭者；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "NVIDIA",
+          "ticker": "NVDA",
+          "markets": [
+            "data center GPU systems",
+            "AI workloads"
+          ],
+          "yoy_status": "baseline",
+          "note": "GPU 系統主導 AI 運算市場，成為數據中心客戶支出的主要目標；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "Amazon",
+          "ticker": "AMZN",
+          "markets": [
+            "data center custom silicon"
+          ],
+          "yoy_status": "baseline",
+          "note": "超大規模雲端廠商，自研客製化晶片；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "Google",
+          "ticker": "GOOGL",
+          "markets": [
+            "data center custom silicon"
+          ],
+          "yoy_status": "baseline",
+          "note": "超大規模雲端廠商，自研客製化晶片；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "Meta",
+          "ticker": "META",
+          "markets": [
+            "data center custom silicon"
+          ],
+          "yoy_status": "baseline",
+          "note": "超大規模雲端廠商，自研客製化晶片；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "Microsoft",
+          "ticker": "MSFT",
+          "markets": [
+            "data center custom silicon"
+          ],
+          "yoy_status": "baseline",
+          "note": "超大規模雲端廠商，自研客製化晶片；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "Broadcom",
+          "ticker": "AVGO",
+          "markets": [
+            "custom ASICs development"
+          ],
+          "yoy_status": "baseline",
+          "note": "客製化 ASIC 開發市場競爭者；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "TSMC",
+          "ticker": "TSM",
+          "markets": [
+            "semiconductor foundry (leading-edge nodes)"
+          ],
+          "yoy_status": "baseline",
+          "note": "Intel Foundry 主要競爭對手，領先先進製程代工並掌握規模製造優勢；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "Samsung",
+          "ticker": "",
+          "markets": [
+            "semiconductor foundry (leading-edge nodes)"
+          ],
+          "yoy_status": "baseline",
+          "note": "Intel Foundry 直接競爭對手，同樣投資 2nm 製程技術；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "GlobalFoundries",
+          "ticker": "GFS",
+          "markets": [
+            "semiconductor foundry (mature process technologies)"
+          ],
+          "yoy_status": "baseline",
+          "note": "Intel Foundry 成熟製程代工競爭者；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "UMC",
+          "ticker": "UMC",
+          "markets": [
+            "semiconductor foundry (mature process technologies)"
+          ],
+          "yoy_status": "baseline",
+          "note": "Intel Foundry 成熟製程代工競爭者；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        },
+        {
+          "name": "SMIC",
+          "ticker": "",
+          "markets": [
+            "semiconductor foundry (mature process technologies)"
+          ],
+          "yoy_status": "baseline",
+          "note": "Intel Foundry 成熟製程代工競爭者，中國政府支持的半導體企業；來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Competition。市場範圍競爭，不代表所有業務互斥。 原文節錄：We face intense competition。",
+          "period": "2025"
+        }
+      ]
+    },
+    "footnotes_segment": {
+      "major_customers": [
+        {
+          "name": "Amazon",
+          "ticker": "AMZN",
+          "material_or_service": "Intel CPU產品（客戶使用；直接採購及占比未揭露）",
+          "period": "2025",
+          "note": "來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Note 21: Eire Og Innovations v IBM et al.；2025年報於Intel/AMD客戶CPU專利案件中列明AWS、Dell、HP、Lenovo、Oracle等使用Intel CPU之客戶。此處不認定三大匿名客戶姓名，亦不推定採購占比。 原文節錄：Intel is indemnifying。"
+        },
+        {
+          "name": "Dell",
+          "ticker": "DELL",
+          "material_or_service": "Intel CPU產品（客戶使用；直接採購及占比未揭露）",
+          "period": "2025",
+          "note": "來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Note 21: Eire Og Innovations v IBM et al.；2025年報於Intel/AMD客戶CPU專利案件中列明AWS、Dell、HP、Lenovo、Oracle等使用Intel CPU之客戶。此處不認定三大匿名客戶姓名，亦不推定採購占比。 原文節錄：Intel is indemnifying。"
+        },
+        {
+          "name": "HP",
+          "ticker": "HPQ",
+          "material_or_service": "Intel CPU產品（客戶使用；直接採購及占比未揭露）",
+          "period": "2025",
+          "note": "來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Note 21: Eire Og Innovations v IBM et al.；2025年報於Intel/AMD客戶CPU專利案件中列明AWS、Dell、HP、Lenovo、Oracle等使用Intel CPU之客戶。此處不認定三大匿名客戶姓名，亦不推定採購占比。 原文節錄：Intel is indemnifying。"
+        },
+        {
+          "name": "Lenovo",
+          "ticker": null,
+          "material_or_service": "Intel CPU產品（客戶使用；直接採購及占比未揭露）",
+          "period": "2025",
+          "note": "來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Note 21: Eire Og Innovations v IBM et al.；2025年報於Intel/AMD客戶CPU專利案件中列明AWS、Dell、HP、Lenovo、Oracle等使用Intel CPU之客戶。此處不認定三大匿名客戶姓名，亦不推定採購占比。 原文節錄：Intel is indemnifying。"
+        },
+        {
+          "name": "Oracle",
+          "ticker": "ORCL",
+          "material_or_service": "Intel CPU產品（客戶使用；直接採購及占比未揭露）",
+          "period": "2025",
+          "note": "來源：https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm，Note 21: Eire Og Innovations v IBM et al.；2025年報於Intel/AMD客戶CPU專利案件中列明AWS、Dell、HP、Lenovo、Oracle等使用Intel CPU之客戶。此處不認定三大匿名客戶姓名，亦不推定採購占比。 原文節錄：Intel is indemnifying。"
+        },
+        {
+          "name": "Apple",
+          "ticker": "AAPL",
+          "material_or_service": "Mac處理器（歷史客戶；非現行供貨判定）",
+          "period": "2020-06-22",
+          "note": "來源：https://www.apple.com/newsroom/2020/06/apple-announces-mac-transition-to-apple-silicon/ ，2020-06-22。Apple公布Mac轉向自研晶片，並說明仍開發Intel-based Macs。此條只記錄公告時期，未推定2025/2026仍向Intel採購。 原文節錄：new Intel-based Macs in development。"
+        }
+      ]
+    }
+  },
+  "eval": {},
+  "synthesis": {}
+}

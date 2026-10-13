@@ -385,12 +385,17 @@ def test_us_pending_relations_placeholders_and_no_llm_finance(producer_records):
     ]
     assert result["relations"][0]["target_id"] == "company:US:HWM"
     assert result["relations"][-1]["target_id"] == "company:US:REAL"
-    assert [item["locator"]["pointer"] for item in result["evidence"]] == [
+    name_proofs = [
+        item
+        for item in result["evidence"]
+        if item["locator"]["pointer"].endswith("/name")
+    ]
+    assert [item["locator"]["pointer"] for item in name_proofs] == [
         "/results/supply_chain/named_suppliers/0/name",
         "/results/supply_chain/named_suppliers/2/name",
         "/results/competitor_mapping/named_competitors/0/name",
     ]
-    assert [item["quote"] for item in result["evidence"]] == [
+    assert [item["quote"] for item in name_proofs] == [
         "Real Materials",
         "Mockingbird Industries",
         "Real Competitor",

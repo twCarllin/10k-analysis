@@ -18,6 +18,8 @@ JP 輸出範例：`6315_20260517_1639_jp_report.pdf`（TOWA FY2026 Q4 決算短�
 
 ## Changelog
 
+- **2026-10-13** — 新增本地產業地圖與官方資料抓取。關聯圖／四率表格分頁；工具、圖例與詳情可收合，圖表使用全寬。關係保留產品範圍、期別與來源，同公司可同時為客戶、供應商及競爭者。抓取支援版本保存、續跑及缺件查核；資料覆蓋仍有缺口，分析關係維持待查核。
+
 - **2026-10** — TW pipeline（`--market tw-equity`）：年報／財報解析、三表帳本與勾稽（前 100 大 98/101 通過）、金控 fh schema、30 項指標與變動歸因、FY 損益／TTM、批次 runner、年報三章節解析、會計問答（`runtime.tw_equity.qa`）。
 - **2026-05-17** — JP pipeline Phase 1A–1C：EDINET 有報 / 半期報 / 臨時報、jpcrp iXBRL 解析、7 個 jp_* narrative skill、TDNET scraper（決算短信 PDF 用 markitdown 抽 key_metrics / segment / forward_guidance）、logmi Stagehand adapter、watch / event 模式。報告按公司分子目錄。
 - **2026-05-01** — 新增 earnings call transcript 抓取（Stagehand LOCAL 模式 + Yahoo Finance）與 `transcript_analysis` skill。報告章節重排，transcript 三節置頂。
@@ -62,6 +64,42 @@ python main.py 6315 2026 --market jp --quarter Q4
 # 4e. 台股（先準備 tw_equity_inputs/<ticker>.json 與 PDF，見下方「台股」）
 python main.py 2330 --market tw-equity
 ```
+
+## 產業地圖與資料抓取
+
+產業地圖使用本地報告、財報與來源證據。核心試點為 20 家台股；INTC 為美股補充。圖與表格共用同一快照。
+
+```bash
+# 盤點本地分析報告
+.venv/bin/python -m runtime.industry_map inventory --root data/output --out data/industry_map
+
+# 建立離線地圖（本地 PDF 試點；不呼叫模型或付費 OCR）
+.venv/bin/python -m runtime.industry_map build --root data/output --inputs tw_equity_inputs --out data/industry_map --pilot
+
+# 開啟地圖；其他系統可直接用瀏覽器開啟 index.html
+open data/industry_map/index.html
+```
+
+- **關聯圖**：公司置中，上游在左、客戶在右、競爭者在下。搜尋可換中心；點節點或連線可讀詳情與來源。
+- **表格**：公司四率、同比與已匯入歷史趨勢。期別、幣別及口徑必須相符；缺值不補、不換匯、不年化。
+- 圖表使用全寬及剩餘視窗高度；工具、圖例、下方詳情可收合。表格沒有 220px 高度限制。
+- 關係按產品與時期判讀，允許同公司多種關係。Apple 的歷史 Mac 客戶關係不等於現行供貨；INTC 補充來源見 `industry_map_inputs/INTC_relationships.json`。
+- 分析輸出只建立 `pending`。`confirmed`／`terminated` 須有原始來源支持；匿名客戶不推定名稱，未再披露不表示關係終止。
+
+官方資料抓取與地圖建置分開。先盤點、查來源、下載，再用既有本地 parser 查核。
+
+```bash
+.venv/bin/python -m runtime.industry_collection plan --tickers 2360 2404 6139 6223 6515
+.venv/bin/python -m runtime.industry_collection discover --root data/industry_collection --tickers 2360 2404 6139 6223 6515
+.venv/bin/python -m runtime.industry_collection collect --root data/industry_collection --manifest data/industry_collection/source-manifest.json
+.venv/bin/python -m runtime.industry_collection validate --root data/industry_collection --tickers 2360 2404 6139 6223 6515
+```
+
+原檔按內容雜湊保存。續跑檢查快取；`collect --refresh` 可重新下載已列來源並保存修訂版本。網路失敗、缺件及未支援 parser 均記錄原因，不當作成功或未披露。查核結果不等於人工確認，也不會自動匯入地圖。抓取結果與本地 PDF 不進 Git。
+
+操作及限制：[產業地圖](docs/industry_map.md)、[資料抓取](docs/industry_collection.md)、[試跑覆蓋與缺口](docs/industry_collection_acceptance.md)。
+
+`main` 提供 US、JP 與 `tw-equity`。台股徵信另保留在 `tw-credit` 分支。
 
 ## API Key 申請
 
@@ -362,6 +400,8 @@ tenk/
 │   └── tw/                          # tw_* 台股分析、tw_accounting_qa 問答
 ├── docs/jp/                         # JP 資料來源使用條款
 ├── runtime/
+│   ├── industry_map/                # 本地證據地圖、四率表格與離線畫面
+│   ├── industry_collection/         # 官方來源、下載版本與解析查核
 │   ├── agent_runner.py              # LLM 呼叫（依 config provider 切換）+ context log + dry-run
 │   ├── mock_outputs.json            # dry-run 用的 mock skill 結果
 │   ├── orchestrator.py              # 多階段執行 + eval loop + checkpoint

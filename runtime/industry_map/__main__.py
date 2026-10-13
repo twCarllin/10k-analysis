@@ -140,6 +140,35 @@ def _confirmed_sources(fragments):
     return sources
 
 
+def _refresh_analysis_relations(previous, fragments):
+    """Recompute pending relations for an imported immutable source version."""
+    documents = {
+        proof["document"] for fragment in fragments for proof in fragment["evidence"]
+    }
+    proofs = {proof["id"]: proof for proof in previous["evidence"]}
+
+    def replaced(item):
+        ids = item.get("evidence_ids") or []
+        return (
+            item.get("status") == "pending"
+            and bool(ids)
+            and all(
+                identifier in proofs
+                and proofs[identifier].get("source_type") == "analysis"
+                and proofs[identifier]["document"] in documents
+                and (
+                    proofs[identifier].get("locator", {}).get("pointer") or ""
+                ).startswith("/results/")
+                for identifier in ids
+            )
+        )
+
+    return {
+        **previous,
+        "relations": [item for item in previous["relations"] if not replaced(item)],
+    }
+
+
 def _build(args, discovered):
     fragments, xbrl = [], {}
     for record in discovered["records"]:
@@ -171,7 +200,7 @@ def _build(args, discovered):
         fragments.append(build_pilot(args.inputs, tw, args.out))
     database = args.out / "industry_map.sqlite"
     if database.exists():
-        fragments.append(load(database))
+        fragments.append(_refresh_analysis_relations(load(database), fragments))
     combined = merge(fragments, sources=_confirmed_sources(fragments))
     save(combined, database)
     combined = load(database)

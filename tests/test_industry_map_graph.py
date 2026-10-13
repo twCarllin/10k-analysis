@@ -413,15 +413,13 @@ def test_chrome_click_collapse_search_and_empty_direction(graph_snapshot, tmp_pa
             )
             == industry_ids
         ), "C3 返回前中心"
-        page.locator("#center-path").get_by_role(
-            "button", name="產業地圖", exact=True
-        ).click()
+        page.locator("#back-center").click()
         assert (
             page.locator("#map .map-node").evaluate_all(
                 "nodes => nodes.map(n => n.dataset.nodeId)"
             )
             == initial_ids
-        ), "C3 路徑返回入口"
+        ), "C3 返回前中心可回到入口"
 
         page.locator("#reset-map").click()
         page.locator("#search").fill("INLOCAL")

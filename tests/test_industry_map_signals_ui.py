@@ -33,7 +33,7 @@ def signals_snapshot():
     ]
     for row in data["observations"]:
         if row["metric"] == "gross_margin" and row["period"] == PERIOD:
-            row["value"] = 30
+            row["value"] = 30.123456789
         if row["metric"] == "fcf_margin" and row["period"] == PRIOR:
             row["value"] = -5.05
             row["inputs"]["capex"] = 10.05
@@ -42,6 +42,8 @@ def signals_snapshot():
 
 def test_share_width_trend_research_and_navigation(tmp_path):
     data = signals_snapshot()
+    data["evidence"][0]["quote"] = "30.123456789"
+    data["evidence"][0]["source_type"] = "analysis"
     render(data, tmp_path)
     with sync_playwright() as driver:
         browser = driver.chromium.launch(channel="chrome", headless=True)
@@ -80,6 +82,7 @@ def test_share_width_trend_research_and_navigation(tmp_path):
             "披露買方同期總進貨" in detail.inner_text()
             and "披露公司：客戶3" in detail.inner_text()
         ), "B4 進貨分母屬買方"
+        page.locator("#table-tab").click()
         row = page.locator("#analysis-comparison tbody tr").first
         gross = row.locator('[data-metric="gross_margin"]')
         expect(gross.locator(".sparkline")).to_be_visible()
@@ -106,7 +109,7 @@ def test_share_width_trend_research_and_navigation(tmp_path):
             and "營業利益率同比上升" in research.inner_text()
         ), "B5 客觀組合提示"
         assert "0.1 百分點" in research.inner_text(), "B5 持平門檻明示"
-        research.locator("article").nth(1).get_by_role(
+        research.locator("article").filter(has_text="毛利率同比下降").get_by_role(
             "button", name="提示來源"
         ).click()
         assert (
@@ -115,6 +118,16 @@ def test_share_width_trend_research_and_navigation(tmp_path):
             and PRIOR in source.inner_text()
             and PERIOD in source.inner_text()
         ), "B5 提示當期與去年來源"
+        text = source.inner_text()
+        assert "毛利率：30.12%" in text and "毛利率：35.00%" in text
+        assert "下降 4.88 百分點" in text
+        assert all(
+            raw not in text
+            for raw in ['"metric"', '"evidenceIds"', "30.123456789", "文件："]
+        )
+        source.get_by_text("查看原始資料與定位", exact=True).click()
+        assert "30.123456789" in source.inner_text()
+        assert "文件：annual.pdf" in source.inner_text()
         assert "不代表因果、預測或投資排序" in source.inner_text(), "B5 不宣稱因果"
         company_ids = page.locator("#research-company option").evaluate_all(
             "nodes => nodes.map(node => node.value)"
@@ -122,22 +135,27 @@ def test_share_width_trend_research_and_navigation(tmp_path):
         assert set(company_ids) == {
             company["id"] for company in data["entities"][:6]
         }, "B5 公司選單限比較群組"
+        page.locator("#graph-tab").click()
         page.locator('#section-more [data-zone="downstream"]').click()
         assert (
             page.locator("#research-company option").count() == 8
         ), "B5 更多同步研究公司群組"
+        page.locator("#graph-tab").click()
         page.locator("#pending").uncheck()
         assert (
             page.locator("#research-company option").count() == 7
         ), "B5 篩選移除不可見待查核公司"
+        page.locator("#graph-tab").click()
         page.locator("#pending").check()
         page.locator("#research-company").select_option(data["entities"][2]["id"])
         expect(research).to_contain_text("缺少可核對資料")
         page.locator("#research-company").select_option(data["entities"][0]["id"])
+        page.locator("#table-tab").click()
         page.locator("#analysis-period").select_option("1")
         assert gross.locator(".trend-point").count() == 1, "B5 歷史選期不納入未來點"
         assert "僅1期；無法判趨勢" in gross.inner_text(), "B5 一期無法判趨勢"
         assert "同比下降" not in research.inner_text(), "B5 不沿用未來提示"
+        page.locator("#graph-tab").click()
         page.locator('[data-node-id="' + data["entities"][1]["id"] + '"]').press(
             "Enter"
         )
@@ -205,6 +223,7 @@ def test_trend_null_gap_future_cutoff_and_latest_share_conflict(tmp_path):
         page.goto((tmp_path / "index.html").as_uri())
         page.locator("#search").fill("供應公司")
         page.locator("#search-results button").click()
+        page.locator("#table-tab").click()
         page.locator("#analysis-period").select_option("1")
         gross = page.locator("#analysis-comparison tbody tr").first.locator(
             '[data-metric="gross_margin"]'

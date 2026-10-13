@@ -5,28 +5,19 @@
   background: #050505;
 }
 * { box-sizing: border-box; }
-body { margin: 0; }
-header {
-  padding: 1rem 1.5rem;
-  background: #11151b;
-  border-bottom: 1px solid #323b47;
-}
-h1 { margin: 0 0 .5rem; font-size: 1.6rem; }
-header p { color: #aab5c3; margin: .5rem 0; }
+body { margin: 0; height: 100dvh; display: flex; flex-direction: column; }
+header { padding: .6rem 1rem; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; background: #11151b; border-bottom: 1px solid #323b47; flex: none; }
+h1 { margin: 0; font-size: 1.2rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 label { display: inline-block; margin: .4rem; }
-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 1rem;
-  padding: 1rem;
-}
+main { flex: 1; min-height: 0; padding: .5rem; }
 section, aside {
   background: #11151b;
   padding: 1rem;
   border-radius: .5rem;
   min-width: 0;
 }
-aside { max-height: 80vh; overflow-y: auto; }
+aside { max-height: min(35dvh, 320px); overflow: auto; }
 button, input, select { font: inherit; padding: .4rem; max-width: 100%; }
 input, select { color: #e4eaf1; background: #111923; border: 1px solid #526b85; }
 button {
@@ -37,13 +28,15 @@ button {
   border-radius: .3rem;
 }
 button:disabled { opacity: .5; cursor: default; }
-button:focus-visible, input:focus-visible, select:focus-visible {
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
   outline: 3px solid #7dbdff;
   outline-offset: 2px;
 }
 [hidden] { display: none !important; }
-#search { width: min(100%, 360px); }
+#search { flex: 1; width: min(100%, 360px); max-width: 360px; }
+#search-results:empty { display: none; }
 #search-results {
+  flex-basis: 100%;
   display: flex;
   flex-wrap: wrap;
   gap: .4rem;
@@ -51,7 +44,10 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   overflow-y: auto;
 }
 #search-results button { overflow-wrap: anywhere; text-align: left; }
-.map-panel { padding: 0; overflow: hidden; }
+.map-panel { padding: 0; overflow: hidden; height: 100%; display: flex; flex-direction: column; }
+#graph-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.map-legend-panel { flex: none; }
+.map-legend-panel > summary { padding: .4rem .75rem; cursor: pointer; font-size: .85rem; }
 .map-toolbar, .map-legend {
   display: flex;
   align-items: center;
@@ -59,14 +55,23 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   gap: .6rem;
   padding: .75rem;
 }
+.map-tools { border-bottom: 1px solid #323b47; }
+.map-tools > summary {
+  cursor: pointer;
+  padding: .75rem;
+  color: #d5e9fc;
+  font-weight: 600;
+}
+.map-tools > summary:hover { background: #1a2635; }
 .map-legend { font-size: .85rem; border-top: 1px solid #323b47; }
 .legend-industry { color: #72b6f3; }
 .legend-product { color: #7fcda6; }
 #map {
   display: block;
   width: 100%;
-  height: min(48vh, 520px);
-  min-height: 320px;
+  height: auto;
+  flex: 1;
+  min-height: 240px;
   touch-action: none;
   background-color: #080a0e;
   background-image: radial-gradient(#253140 1px, transparent 1px);
@@ -100,21 +105,17 @@ th, td { padding: .4rem; border-bottom: 1px solid #323b47; text-align: left; }
 .blocked { color: #ffad98; }
 @media (max-width: 760px) {
   header { padding: 1rem; }
-  main { grid-template-columns: minmax(0, 1fr); padding: .5rem; }
-  aside { max-height: none; }
-  #map { height: 55vh; min-height: 320px; }
+  main { padding: .25rem; }
 }
 
-#center-path { padding: .5rem .75rem; overflow-wrap: anywhere; }
-#center-path button { margin: .2rem; }
 .map-node.center rect { stroke: #72b6f3; stroke-width: 5; }
 .zone-label { fill: #b8c5d5; font-size: 16px; pointer-events: none; }
 
 #section-more { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .75rem; }
 
-#analysis-panel { padding: .5rem .75rem; border-block: 1px solid #323b47; }
+#analysis-panel { padding: .5rem .75rem; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 #analysis-panel h2 { margin: .2rem 0; font-size: 1.1rem; }
-#analysis-comparison { overflow: auto; max-height: 220px; }
+#analysis-comparison { overflow: auto; flex: 1; min-height: 0; }
 #analysis-comparison thead { position: sticky; top: 0; background: #11151b; }
 #analysis-comparison p { margin: .3rem 0; font-size: .85rem; }
 #analysis-comparison table { min-width: 650px; }
@@ -141,13 +142,6 @@ th, td { padding: .4rem; border-bottom: 1px solid #323b47; text-align: left; }
 
 #research-panel h2 { font-size: 1.1rem; margin: .2rem 0; }
 
-#change-panel { margin: 8px 0; border-top: 1px solid #354255; }
-#change-panel h2 { display: inline-block; margin: .5rem .75rem .5rem 0; font-size: 1.1rem; }
-#change-highlights { display: flex; gap: 6px; flex-wrap: wrap; }
-#change-highlights p { margin: 4px 0; }
-.change-card { display: flex; gap: 6px; flex: 1; min-width: 220px; font-size: .8rem; }
-.change-card button:first-child { flex: 1; text-align: left; white-space: normal; }
-.change-muted { opacity: .15; }
 #supply-trace { border: 1px solid #526881; padding: 8px; margin: 8px 0; }
 .trace-steps { display: grid; grid-template-columns: 1fr; gap: 8px; }
 .trace-step { background: #11151b; padding: 8px; overflow-wrap: anywhere; min-width: 0; }
@@ -157,3 +151,11 @@ th, td { padding: .4rem; border-bottom: 1px solid #323b47; text-align: left; }
 #supply-trace h2 { font-size: 1.05rem; margin: .2rem 0; }
 #supply-trace h3 { font-size: 1rem; margin: .2rem 0; }
 #supply-trace { font-size: .85rem; }
+
+.view-tabs { display: flex; gap: .5rem; padding: .75rem; border-bottom: 1px solid #323b47; }
+.view-tabs [aria-selected="true"] { background: #294764; border-color: #7dbdff; }
+#table-view { min-width: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; }
+
+.details-panel { position: fixed; right: .75rem; bottom: .75rem; z-index: 10; background: #11151b; border: 1px solid #526b85; border-radius: .5rem; box-shadow: 0 6px 24px #0008; max-width: calc(100vw - 1.5rem); }
+.details-panel[open] { position: static; flex: none; width: 100%; max-width: 100%; border-radius: 0; box-shadow: none; }
+.details-panel > summary { padding: .5rem .75rem; cursor: pointer; }

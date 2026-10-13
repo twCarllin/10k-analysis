@@ -209,11 +209,17 @@ def render(snapshot, out):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>產業地圖</title><link rel="stylesheet" href="style.css"></head>
 <body><header><h1>產業地圖</h1>
-<p>點節點查看詳情；按「以此為中心」切換一層關係。拖動其他節點或背景，使用滾輪縮放。</p>
-<label for="search">搜尋公司、產業或產品／服務</label>
+<label class="sr-only" for="search">搜尋公司、產業或產品／服務</label>
 <input id="search" type="search" autocomplete="off" placeholder="輸入名稱或代號">
 <div id="search-results" aria-label="搜尋結果" aria-live="polite"></div></header>
-<main><section class="map-panel" aria-label="產業關係地圖">
+<main><section class="map-panel" aria-label="產業資料">
+<div class="view-tabs" role="tablist" aria-label="資料檢視">
+<button id="graph-tab" type="button" role="tab" aria-selected="true" aria-controls="graph-view" tabindex="0">關聯圖</button>
+<button id="table-tab" type="button" role="tab" aria-selected="false" aria-controls="table-view" tabindex="-1">表格</button>
+</div>
+<div id="graph-view" role="tabpanel" aria-labelledby="graph-tab">
+<details id="map-tools" class="map-tools" open>
+<summary>地圖工具</summary>
 <div class="map-toolbar" aria-label="畫布操作">
 <button id="zoom-in" type="button" aria-label="放大">＋</button>
 <button id="zoom-out" type="button" aria-label="縮小">−</button>
@@ -226,20 +232,23 @@ def render(snapshot, out):
 <option value="upstream">上游供應商</option><option value="downstream">下游客戶</option>
 <option value="competitor">競爭者</option></select></label>
 <label><input id="pending" type="checkbox" checked>顯示待查核</label></div>
+</details>
 <div id="section-more" aria-label="各區更多鄰居" aria-live="polite"></div>
-<nav id="center-path" aria-label="中心路徑"></nav>
-<div id="analysis-panel" aria-label="公司四率比較">
-<h2>公司四率比較</h2><label>共同期別 <select id="analysis-period"></select></label>
-<div id="analysis-comparison" aria-live="polite"></div>
-</div>
-<div id="change-panel" aria-label="變化重點"><h2>變化重點</h2><button id="clear-highlight" type="button" disabled>清除突出</button><div id="change-highlights" aria-live="polite"></div></div>
 <svg id="map" viewBox="0 0 1000 650" role="group" aria-label="產業節點與連線；Tab 選取，Enter 或空白鍵查看詳情"></svg>
 <p id="map-empty" class="empty" hidden>尚無產業資料。可使用 Tab 選取起點，或使用重置按鈕。</p>
+<details class="map-legend-panel"><summary>圖例</summary>
 <div class="map-legend" aria-label="圖例">
+<span>關係包含歷史紀錄；請依產品與期別判讀。同公司可有多種關係。</span>
 <span class="legend-industry">● 產業</span><span>□ 公司</span>
 <span class="legend-product">● 產品／服務</span><span>→ 供貨</span>
 <span>線寬：最新銷貨／營收占比，無合法銷貨占比時採進貨占比；未知不是零</span><span>─ · ─ 競爭</span><span>┄┄ 待查核</span><span>── 分類／提供</span></div>
-<div id="overview" hidden></div></section>
+</details><div id="overview" hidden></div></div>
+<div id="table-view" role="tabpanel" aria-labelledby="table-tab" hidden><div id="analysis-panel" aria-label="公司四率比較">
+<h2>公司四率比較</h2><label>共同期別 <select id="analysis-period"></select></label>
+<div id="analysis-comparison" aria-live="polite"></div>
+</div>
+</div></section></main>
+<details id="details-panel" class="details-panel"><summary>資料詳情</summary>
 <aside aria-label="節點與連線詳情"><div id="supply-trace" aria-label="供應關係追查" aria-live="polite" hidden></div>
 <div id="research-panel" aria-label="研究重點"><h2>研究重點</h2>
 <label>研究公司 <select id="research-company"></select></label>
@@ -251,7 +260,7 @@ def render(snapshot, out):
 <p>在公司詳情加入比較。僅比較目前圖中可見公司。</p>
 <label>指標 <select id="metric"></select></label>
 <label>完整期別 <select id="period"></select></label><div id="comparison"></div></details>
-<h2>證據</h2><div id="evidence">請選取來源</div></aside></main>
+<h2>證據</h2><div id="evidence">請選取來源</div></aside></details>
 <script id="snapshot" type="application/json">SNAPSHOT</script>
 <script src="app.js"></script></body></html>""".replace("SNAPSHOT", embedded)
     (destination / "index.html").write_text(page, encoding="utf-8")

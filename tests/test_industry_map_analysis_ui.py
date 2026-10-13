@@ -115,6 +115,7 @@ def test_automatic_four_ratios_period_sources_and_orders(tmp_path):
         page.goto((tmp_path / "index.html").as_uri())
         page.locator("#search").fill("供應公司")
         page.locator("#search-results button").click()
+        page.locator("#table-tab").click()
         panel = page.locator("#analysis-comparison")
         expect(panel).to_be_visible()
         rows = panel.locator("tbody tr")
@@ -156,6 +157,7 @@ def test_automatic_four_ratios_period_sources_and_orders(tmp_path):
             "<script>來源原文</script>" in source.inner_text()
             and source.locator("script").count() == 0
         ), "A7 原文安全"
+        page.locator("#table-tab").click()
         page.locator("#analysis-period").select_option("1")
         assert (
             supplier.locator('[data-metric="gross_margin"] button').inner_text()
@@ -168,26 +170,34 @@ def test_automatic_four_ratios_period_sources_and_orders(tmp_path):
         ), "A7 零下單量與期別"
         assert any("已實現銷貨" in label for label in labels), "A7 實現交易分開標示"
         assert any("下單量未揭露" in label for label in labels), "A7 缺訂單明示"
+        page.locator("#graph-tab").click()
         page.locator("#map .edge-hit").first.press("Enter")
         detail = page.locator("#detail")
         assert "已實現銷貨：120 千元 TWD" in detail.inner_text(), "A7 連線完整揭露"
         detail.get_by_role("button", name="查看來源", exact=True).first.click()
         expect(source).to_contain_text("來源原文")
+        page.locator("#graph-tab").click()
         page.locator('#section-more [data-zone="downstream"]').click()
         assert rows.count() == 8, "A8 更多同步比較"
+        page.locator("#graph-tab").click()
         page.locator("#pending").uncheck()
         assert rows.count() == 7, "A8 篩選同步比較"
+        page.locator("#graph-tab").click()
         page.locator("#direction").select_option("upstream")
         assert rows.count() == 1, "A8 沒可見下游時保留中心"
+        page.locator("#graph-tab").click()
         page.locator("#direction").select_option("")
+        page.locator("#graph-tab").click()
         page.locator('[data-node-id="' + data["entities"][1]["id"] + '"]').press(
             "Enter"
         )
         assert (
             rows.first.locator("th").inner_text() == "供應公司"
         ), "A8 點卡不改比較中心"
+        page.locator("#table-tab").click()
         page.locator("#analysis-period").select_option("1")
         expected_supplier_ids = {company["id"] for company in data["entities"][:7]}
+        page.locator("#graph-tab").click()
         page.locator('[data-node-id="' + buyer["id"] + '"]').press("Enter")
         assert (
             set(rows.evaluate_all("nodes => nodes.map(node => node.dataset.companyId)"))
@@ -207,7 +217,9 @@ def test_automatic_four_ratios_period_sources_and_orders(tmp_path):
         assert (
             PERIOD in page.locator("#analysis-period option:checked").inner_text()
         ), "A5 換中心使用新群組最新期別"
+        page.locator("#table-tab").click()
         page.locator("#analysis-period").select_option("1")
+        page.locator("#graph-tab").click()
         page.locator('[data-node-id="' + peer["id"] + '"]').press("Enter")
         assert (
             set(rows.evaluate_all("nodes => nodes.map(node => node.dataset.companyId)"))
@@ -230,7 +242,9 @@ def test_automatic_four_ratios_period_sources_and_orders(tmp_path):
             assert (
                 PERIOD in page.locator("#analysis-period option:checked").inner_text()
             ), f"A5 {center_name}中心預設最新期別"
+            page.locator("#table-tab").click()
             page.locator("#analysis-period").select_option("1")
+            page.locator("#graph-tab").click()
             page.locator('[data-node-id="' + buyer["id"] + '"]').press("Enter")
             assert (
                 set(
@@ -247,6 +261,7 @@ def test_automatic_four_ratios_period_sources_and_orders(tmp_path):
         assert page.evaluate(
             "document.documentElement.scrollWidth <= innerWidth"
         ), "A8 手機無外部溢出"
+        page.locator("#graph-tab").click()
         page.locator("#reset-map").click()
         expect(panel).to_contain_text("請選產業或公司")
         assert errors == [], "A8 保留圖狀態且無瀏覽器錯誤"

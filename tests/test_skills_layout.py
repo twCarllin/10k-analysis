@@ -5,6 +5,7 @@ skills/ 分子目錄後的版面與 loader 契約（run 2026-10-08-skills-reorg�
 - runtime/agent_runner.skill_path 能解析既有 skill 名稱
 - 找不到的名稱 raise FileNotFoundError 並列出搜尋目錄
 """
+
 from __future__ import annotations
 
 import importlib
@@ -21,8 +22,14 @@ SUBDIRS = ("common", "us", "jp", "tw")
 
 # mock_outputs.json 的 key 是 orchestrator／jp_pipeline／eval_runner 引用的 skill 名稱集合；
 # 下列四個未在 mock 內但被 orchestrator／section_splitter 直接引用
-_EXTRA_REFERENCED = {"rerate_narrative", "rerate_quality", "rerate_structure",
-                     "footnotes_combined", "transcript_analysis", "section_splitter"}
+_EXTRA_REFERENCED = {
+    "rerate_narrative",
+    "rerate_quality",
+    "rerate_structure",
+    "footnotes_combined",
+    "transcript_analysis",
+    "section_splitter",
+}
 
 
 def _referenced_skill_names() -> set[str]:
@@ -36,7 +43,9 @@ def _import_agent_runner():
     if runtime_path not in sys.path:
         sys.path.insert(0, runtime_path)
     sys.modules.pop("agent_runner", None)
-    with mock.patch.dict("sys.modules", {"anthropic": mock.MagicMock(), "openai": mock.MagicMock()}):
+    with mock.patch.dict(
+        "sys.modules", {"anthropic": mock.MagicMock(), "openai": mock.MagicMock()}
+    ):
         return importlib.import_module("agent_runner")
 
 
@@ -49,9 +58,12 @@ def test_four_subdirs_exist_and_basenames_unique():
     for d in SUBDIRS:
         assert (SKILLS / d).is_dir(), f"missing skills/{d}/"
         for f in (SKILLS / d).glob("*.md"):
-            assert f.stem not in names, f"duplicate skill name {f.stem} in {d} and {names[f.stem]}"
+            assert (
+                f.stem not in names
+            ), f"duplicate skill name {f.stem} in {d} and {names[f.stem]}"
             names[f.stem] = d
-    assert len(names) == 55  # 48（skills-reorg）＋3 個 tw_equity skill（run 2026-10-08-tw-equity-phase-1a，Spec §3）＋4 個（run 2026-10-08-tw-equity-phase-1b1，Spec §3）
+    # main 保留 US/JP/tw-equity 的 48 個 skill；徵信專用 skill 不在此分支。
+    assert len(names) == 48
 
 
 def test_skill_path_resolves_every_referenced_skill():

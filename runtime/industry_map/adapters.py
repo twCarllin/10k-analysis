@@ -230,15 +230,31 @@ def _us_relations(record, result, company_id, source_path, period, excluded):
     for section, key, predicate in (
         ("supply_chain", "named_suppliers", "supplies_to"),
         ("competitor_mapping", "named_competitors", "competes_with"),
+        ("footnotes_segment", "major_customers", "supplies_to"),
     ):
         analysis = record["results"].get(section) or {}
-        if not analysis:
+        if not analysis and section != "footnotes_segment":
             excluded.append(
                 dict(pointer=_pointer("results", section), reason="empty_analysis")
             )
         for index, candidate in enumerate(analysis.get(key) or []):
+            is_name = isinstance(candidate, str)
+            candidate = {"name": candidate} if is_name else candidate
+            if not isinstance(candidate, dict):
+                continue
             name = candidate.get("name")
-            tokens = ("results", section, key, index, "name")
+            tokens = ("results", section, key, index) + (() if is_name else ("name",))
+            if section == "footnotes_segment" and re.fullmatch(
+                r"customer\s+[A-Z0-9]|unknown|not disclosed|未揭露", str(name), re.I
+            ):
+                excluded.append(
+                    dict(
+                        pointer=_pointer(*tokens),
+                        name=name,
+                        reason="anonymous_customer",
+                    )
+                )
+                continue
             if not name or is_placeholder(name):
                 excluded.append(
                     dict(
@@ -250,10 +266,33 @@ def _us_relations(record, result, company_id, source_path, period, excluded):
                 continue
             target = entity(name, market="US", ticker=candidate.get("ticker") or None)
             result["entities"].append(target)
-            ids = _proof(result, source_path, tokens, name, period)
+            relationship_period = candidate.get("period") or period
+            ids = _proof(result, source_path, tokens, name, relationship_period)
+            for field in ("note", "markets", "material_or_service", "period"):
+                if candidate.get(field):
+                    ids.extend(
+                        _proof(
+                            result,
+                            source_path,
+                            ("results", section, key, index, field),
+                            candidate[field],
+                            relationship_period,
+                        )
+                    )
+            markets = candidate.get("markets") or []
+            product = candidate.get("material_or_service")
+            if predicate == "competes_with" and isinstance(markets, list):
+                product = (
+                    "; ".join(
+                        market
+                        for market in markets
+                        if isinstance(market, str) and market.strip()
+                    )
+                    or product
+                )
             source, destination = (
                 (target["id"], company_id)
-                if predicate == "supplies_to"
+                if section == "supply_chain"
                 else (company_id, target["id"])
             )
             result["relations"].append(
@@ -261,8 +300,8 @@ def _us_relations(record, result, company_id, source_path, period, excluded):
                     source,
                     predicate,
                     destination,
-                    product=candidate.get("material_or_service"),
-                    period=period,
+                    product=product,
+                    period=relationship_period,
                     evidence_ids=ids,
                 )
             )

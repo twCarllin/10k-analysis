@@ -516,6 +516,26 @@
   }
   function startGraphUI(index) {
     const byId = id => document.getElementById(id);
+    const viewTabs = [byId('graph-tab'), byId('table-tab')];
+    function selectViewTab(selected) {
+      viewTabs.forEach(tab => {
+        const active = tab === selected;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+        byId(tab.getAttribute('aria-controls')).hidden = !active;
+      });
+    }
+    viewTabs.forEach((tab, position) => {
+      tab.addEventListener('click', () => selectViewTab(tab));
+      tab.addEventListener('keydown', event => {
+        let next;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') next = viewTabs[1 - position];
+        if (event.key === 'Home') next = viewTabs[0];
+        if (event.key === 'End') next = viewTabs[viewTabs.length - 1];
+        if (!next) return;
+        event.preventDefault(); selectViewTab(next); next.focus();
+      });
+    });
     const svg = byId('map'), graph = createGraph(index);
     const namespace = 'http://www.w3.org/2000/svg';
     const makeSVG = (tag, attributes = {}, text) => {
@@ -554,6 +574,7 @@
       const button = html('button', label); button.type = 'button'; button.addEventListener('click', action); return button;
     }
     function showGraphEvidence(ids) {
+      byId('details-panel').open = true;
       const panel = byId('evidence'); panel.replaceChildren();
       const proofs = selectEvidence(index, ids);
       if (!proofs.length) panel.append(html('p', '無證據／待查核'));
@@ -620,32 +641,28 @@
     function showSignalSource(signal) {
       showGraphEvidence(signal.evidenceIds || []);
       const panel = byId('evidence');
+      const raw = html('details');
+      raw.append(html('summary', '查看原始資料與定位'), ...panel.childNodes);
+      panel.append(raw);
+      const comparison = html('section');
+      const labels = { ...ratioLabels, sales_share: '銷貨／營收占比', purchase_share: '進貨占比' };
+      for (const [title, records] of [['當期', signal.current], ['去年', signal.prior]]) {
+        comparison.append(html('h3', `${title}：`));
+        if (!records?.length) comparison.append(html('p', '無可核對資料'));
+        (records || []).forEach(record => {
+          const value = Number.isFinite(record.value) ? `${record.value.toFixed(2)}%` : '缺資料';
+          comparison.append(html('p', `${labels[record.metric || record.kind] || '指標'}：${value}；期間：${record.period || '未知'}`));
+          if (record.denominator) comparison.append(html('p', `分母：${record.denominator}`));
+          if (record.reason) comparison.append(html('p', `缺資料原因：${record.reason}`));
+        });
+      }
       panel.prepend(html('p', `${signal.company?.name || signal.companyId}；${signal.period}；${signal.text}`),
         html('p', '這是已匯入資料的事實與可追查事項，不代表因果、預測或投資排序。'),
-        html('pre', `當期：${readable(signal.current)}\n去年：${readable(signal.prior)}`));
+        comparison);
       if (signal.threshold) panel.prepend(html('p', `持平門檻：同比變動絕對值小於 ${signal.threshold.absoluteDeltaBelow} ${signal.threshold.unit}`));
       panel.tabIndex = -1; panel.focus({ preventScroll: true }); panel.scrollIntoView({ block: 'nearest' });
     }
-    let highlightedCompanyId = null, traceEdgeId = null;
-    function applyHighlight() {
-      const connected = new Set([highlightedCompanyId]);
-      visible.edges.filter(edge => edge.predicate === 'supplies_to' && [edge.source_id, edge.target_id].includes(highlightedCompanyId)).forEach(edge => { connected.add(edge.source_id); connected.add(edge.target_id); });
-      [...nodesLayer.children].forEach(node => node.classList.toggle('change-muted', !!highlightedCompanyId && !connected.has(node.dataset.nodeId)));
-      [...edgesLayer.children].forEach(edge => edge.classList.toggle('change-muted', !!highlightedCompanyId && !(visible.edges.some(item => item.id === edge.dataset.edgeId && item.predicate === 'supplies_to') && [edge.dataset.sourceId, edge.dataset.targetId].includes(highlightedCompanyId))));
-    }
-    function renderChanges(ids, selection) {
-      const panel = byId('change-highlights'); panel.replaceChildren();
-      const signals = ids.flatMap(id => researchSignals(index, id, selection)).filter(signal => (signal.current || []).some(cell => Number.isFinite(cell.delta) && cell.delta !== 0)).slice(0, 3);
-      if (!signals.length) panel.append(html('p', '目前可見公司沒有可核對的同比變化。'));
-      signals.forEach(signal => {
-        const card = html('article'); card.className = 'change-card';
-        card.append(actionButton(`${signal.company?.name || signal.companyId}：${signal.text}`, () => { highlightedCompanyId = signal.companyId; applyHighlight(); byId('clear-highlight').disabled = false; }), actionButton('變化來源', () => showSignalSource(signal)));
-        panel.append(card);
-      });
-      byId('clear-highlight').disabled = !highlightedCompanyId;
-      applyHighlight();
-    }
-    byId('clear-highlight').addEventListener('click', () => { highlightedCompanyId = null; applyHighlight(); byId('clear-highlight').disabled = true; });
+    let traceEdgeId = null;
     function traceAmount(companyId, metric, selection) {
       const rows = (index.observations.get(companyId) || []).filter(item => item.metric === metric && completePeriod(item.period) === selection.period && item.basis === selection.basis && item.scope === selection.scope && knownAnalysisField(item.unit) && item.unit !== '%' && knownAnalysisField(item.currency));
       const result = uniqueAnalysisObservation(index, rows);
@@ -735,7 +752,7 @@
       select.disabled = !result.periods.length;
       const panel = byId('analysis-comparison'); panel.replaceChildren();
       renderResearch(ids, result);
-      renderChanges(visible.nodes.filter(node => node.kind === 'company').map(node => node.id), result); renderTrace(result);
+      renderTrace(result);
       if (!ids.length) { panel.append(html('p', '請選產業或公司，以查看四率。')); return; }
       panel.append(html('p', `公司整體；不代表單筆交易。共用期別：${result.period || '未匯入'}；口徑：${result.basis || '未知'}／${result.scope || '未知'}。同比單位：百分點。`));
       const table = html('table'), head = html('tr');
@@ -837,7 +854,7 @@
           detail.relations.forEach(edge => {
             const otherId = edge.source_id === id ? edge.target_id : edge.source_id;
             const other = graph.nodes.find(node => node.id === otherId);
-            panel.append(actionButton(`${relationText(edge)}：${other?.name || otherId}；${statusText(edge.status)}`, () => { selectedEdgeId = edge.id; traceEdgeId = edge.predicate === 'supplies_to' ? edge.id : null; describe(edge.id); renderTrace(); }));
+            panel.append(actionButton(`${relationText(edge)}：${other?.name || otherId}；${readable(edge.product)}；${readable(edge.period)}；${statusText(edge.status)}`, () => { selectedEdgeId = edge.id; traceEdgeId = edge.predicate === 'supplies_to' ? edge.id : null; byId('details-panel').open = true; describe(edge.id); renderTrace(); }));
           });
           panel.append(actionButton(comparisonIds.has(id) ? '移出財務比較' : '加入財務比較', () => {
             if (comparisonIds.has(id)) comparisonIds.delete(id); else comparisonIds.add(id);
@@ -890,6 +907,7 @@
       });
     }
     function activate(item) {
+      byId('details-panel').open = true;
       if (suppressClick) { suppressClick = false; return; }
       selectedId = item.id; selectedEdgeId = null;
       draw();
@@ -905,7 +923,6 @@
     function setCenter(id, record = true) {
       if (!graph.nodes.some(node => node.id === id)) return;
       if (record && id !== centerId) history.push(id);
-      highlightedCompanyId = null;
       centerId = id; selectedId = id; selectedEdgeId = null; collapsed = false; limits = {};
       byId('direction').value = ''; positions = {};
       draw(); camera = fitCenteredGraph(visible, positions); applyCamera();
@@ -930,11 +947,6 @@
         const points = visible.nodes.filter(node => node.id !== centerId && neighborZone(visible, centerId, node.id) === zone).map(node => positions[node.id]);
         if (points.length) zonesLayer.append(makeSVG('text', { x: points.reduce((sum, point) => sum + point.x, 0) / points.length, y: Math.min(...points.map(point => point.y)) - 60, class: 'zone-label', 'text-anchor': 'middle' }, label));
       });
-      const path = byId('center-path'); path.replaceChildren();
-      history.forEach((id, number) => {
-        if (number) path.append(html('span', ' → '));
-        path.append(actionButton(graph.nodes.find(node => node.id === id)?.name || id, () => { history = history.slice(0, number + 1); setCenter(id, false); }));
-      });
       byId('back-center').disabled = history.length < 2;
       edgesLayer.replaceChildren(); nodesLayer.replaceChildren();
       visible.edges.forEach(edge => {
@@ -951,7 +963,7 @@
         const label = `${source} ${competing ? '競爭' : edge.predicate === 'supplies_to' ? '供貨給' : '連結'} ${target}${edge.status === 'pending' ? '（待查核）' : ''}`;
         const hit = makeSVG('path', { d: path, class: 'edge-hit', tabindex: 0, role: 'button', 'aria-label': label });
         hit.append(makeSVG('title', {}, label));
-        bindActivation(hit, () => { if (suppressClick) { suppressClick = false; return; } selectedEdgeId = edge.id; traceEdgeId = edge.predicate === 'supplies_to' ? edge.id : null; describe(edge.id); renderTrace(); emphasizeEdges(); });
+        bindActivation(hit, () => { if (suppressClick) { suppressClick = false; return; } selectedEdgeId = edge.id; traceEdgeId = edge.predicate === 'supplies_to' ? edge.id : null; byId('details-panel').open = true; describe(edge.id); renderTrace(); emphasizeEdges(); });
         group.dataset.edgeId = edge.id; group.dataset.sourceId = edge.source_id; group.dataset.targetId = edge.target_id;
         group.append(line, hit);
         if (edge.predicate === 'supplies_to') {
@@ -985,7 +997,7 @@
       });
       byId('map-empty').hidden = graph.nodes.some(item => item.kind !== 'root');
       byId('collapse-node').textContent = collapsed ? '展開中心一層' : '收合中心一層';
-      applyCamera(); emphasizeEdges(); applyHighlight();
+      applyCamera(); emphasizeEdges();
       if (refreshDetail) {
         if (selectedEdgeId && !visible.edges.some(edge => edge.id === selectedEdgeId)) selectedEdgeId = null;
         describe(selectedEdgeId || selectedId);
@@ -1032,7 +1044,6 @@
     byId('collapse-node').addEventListener('click', () => { collapsed = !collapsed; positions = {}; draw(); });
     byId('back-center').addEventListener('click', () => { if (history.length > 1) { history.pop(); setCenter(history.at(-1), false); } });
     byId('reset-map').addEventListener('click', () => {
-      highlightedCompanyId = null;
       centerId = 'map:root'; history = [centerId]; collapsed = false; limits = {}; positions = {}; selectedId = centerId; selectedEdgeId = null; comparisonIds.clear();
       byId('direction').value = ''; byId('pending').checked = true;
       byId('search').value = ''; byId('search-results').replaceChildren();
@@ -1052,7 +1063,7 @@
       });
     });
     ['direction', 'pending'].forEach(id => byId(id).addEventListener('change', () => {
-      highlightedCompanyId = null; positions = {}; draw();
+      positions = {}; draw();
     }));
     for (const metric of new Set(index.snapshot.observations.map(record => record.metric))) {
       const option = html('option', metric); option.value = metric; byId('metric').append(option);
